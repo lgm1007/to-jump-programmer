@@ -79,6 +79,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       [
         'react-native-google-mobile-ads',
         {
+          // 기본값(classic)이지만 명시해야 한다. 값이 없으면 라이브러리 build.gradle 이 app.json 의
+          // react-native-google-mobile-ads 항목을 찾다가 오타 버그(googleAdsJson)로 Android 빌드가 실패한다. (v17.2.0)
+          androidSdk: 'classic',
           androidAppId: appId.android ?? SAMPLE_APP_ID.android,
           iosAppId: appId.ios ?? SAMPLE_APP_ID.ios,
           // 동의 확인 전에는 광고 SDK 의 측정 데이터를 보내지 않는다
