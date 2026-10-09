@@ -19,7 +19,7 @@ Expo EAS 로 맥/Xcode 없이 클라우드에서 빌드하고 App Store · Googl
 - [ ] `ios.bundleIdentifier`, `android.package` 를 본인 도메인 기반으로 변경 (예: `com.mycompany.tojump`) — **출시 후에는 바꿀 수 없음**
 - [ ] `version` (사용자에게 보이는 버전) — 빌드 번호는 `eas.json` 의 `autoIncrement` 가 관리
 - [ ] 아이콘/스플래시 교체 시 `scripts/generate-icons.py` 수정 후 재생성
-- [ ] (선택) Java·C++ 실행 서버 기본값: EAS 환경 변수 `EXPO_PUBLIC_RUNNER_URL`
+- [ ] (선택) Java·Kotlin·C++ 실행 서버 기본값: EAS 환경 변수 `EXPO_PUBLIC_RUNNER_URL`
 - [ ] AdMob 앱 ID · 광고 단위 ID 를 EAS 환경 변수(production)에 등록 — 없으면 production 빌드가 중단됨 (아래 참고)
 
 ## 광고(AdMob) 설정

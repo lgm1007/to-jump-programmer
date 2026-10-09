@@ -5,6 +5,7 @@ import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { CodeBlock, type LineMark } from '@/components/code-block';
 import { DiffView } from '@/components/diff-view';
+import { ReviewLanguageToggle } from '@/components/review-language-toggle';
 import { Inline, RichText } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,14 +18,17 @@ import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
 import {
   CHALLENGE_MAP,
+  resolveChallenge,
   REVIEW_CATEGORY_LABEL,
   REVIEW_CONTENT,
   REVIEW_FRAMEWORK_MAP,
   SEVERITY_LABEL,
+  type CodeLanguage,
   type ReviewChallenge,
   type Severity,
 } from '@/content';
 import { showInterstitialAtBreak } from '@/features/ads';
+import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
 import { useColors } from '@/theme/theme-provider';
@@ -58,7 +62,10 @@ const SEVERITY_TONE: Record<Severity, 'danger' | 'warning' | 'neutral'> = {
 export default function ChallengeScreen() {
   const c = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const ch = CHALLENGE_MAP[id];
+  const base = CHALLENGE_MAP[id];
+  const { language, languages, setLanguage } = useReviewLanguage(base?.framework ?? 'spring');
+  // 언어마다 코드와 채점 줄 번호가 다르다
+  const ch = useMemo(() => (base ? resolveChallenge(base, language) : undefined), [base, language]);
   const record = useProgress((s) => s.challenges[id]);
   const recordChallenge = useProgress((s) => s.recordChallenge);
   const [step, setStep] = useState<Step>('read');
@@ -81,6 +88,11 @@ export default function ChallengeScreen() {
   const fw = REVIEW_FRAMEWORK_MAP[ch.framework];
   const list = REVIEW_CONTENT[ch.framework].challenges;
   const next = list[list.findIndex((x) => x.id === ch.id) + 1];
+
+  const changeLanguage = (next: CodeLanguage) => {
+    setLanguage(next);
+    setLines(new Set());
+  };
 
   const toggleLine = (n: number) => {
     haptic('selection');
@@ -176,6 +188,12 @@ export default function ChallengeScreen() {
                 </Text>
                 <RichText text={ch.context} variant="callout" />
               </Card>
+              <ReviewLanguageToggle
+                languages={languages}
+                value={language}
+                onChange={changeLanguage}
+                hint={lines.size ? '언어를 바꾸면 줄 번호가 달라져 선택한 줄이 초기화돼요.' : undefined}
+              />
               <View style={[styles.instruction, { backgroundColor: c.reviewSoft }]}>
                 <Ionicons name="finger-print" size={18} color={c.review} />
                 <Text variant="caption" color="textSecondary" style={{ flex: 1 }}>

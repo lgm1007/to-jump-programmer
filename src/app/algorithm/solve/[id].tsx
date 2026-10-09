@@ -33,6 +33,7 @@ const TIME_LIMIT_MS: Record<SolveLanguage, number> = {
   python: 8000,
   javascript: 4000,
   java: 5000,
+  kotlin: 5000,
   cpp: 4000,
 };
 

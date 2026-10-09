@@ -4160,6 +4160,43 @@ class Solution {
     }
 }
 `,
+    kotlin: `class Solution {
+    private lateinit var parent: IntArray
+
+    fun solution(n: Int, cables: Array<IntArray>): Int {
+        parent = IntArray(n + 1) { it }
+
+        var total = 0
+        var installed = 0
+        // 비용이 싼 케이블부터 확인합니다.
+        for ((a, b, cost) in cables.sortedBy { it[2] }) {
+            if (installed == n - 1) break
+            val rootA = find(a)
+            val rootB = find(b)
+            if (rootA == rootB) continue // 이미 연결된 건물: 설치하면 사이클
+            parent[rootA] = rootB
+            total += cost
+            installed++
+        }
+        return if (installed == n - 1) total else -1
+    }
+
+    private fun find(x: Int): Int {
+        // 루트를 찾은 뒤, 지나온 건물들을 루트에 바로 연결합니다(경로 압축).
+        var root = x
+        while (parent[root] != root) {
+            root = parent[root]
+        }
+        var node = x
+        while (parent[node] != root) {
+            val nextNode = parent[node]
+            parent[node] = root
+            node = nextNode
+        }
+        return root
+    }
+}
+`,
     cpp: `#include <algorithm>
 #include <numeric>
 #include <vector>

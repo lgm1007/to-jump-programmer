@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { FrameworkId, SolveLanguage } from '@/content/types';
+import type { CodeLanguage, FrameworkId, SolveLanguage } from '@/content/types';
 import { dayKey } from '@/lib/date';
 
 export type CareerGoal = 'new' | 'career';
@@ -21,10 +21,12 @@ export interface Profile {
 
 export interface Settings {
   theme: ThemePreference;
-  /** Piston 호환 원격 실행 서버 주소 (Java/C++ 실행용) */
+  /** Piston 호환 원격 실행 서버 주소 (Java/Kotlin/C++ 실행용) */
   runnerUrl: string;
   editorFontSize: number;
   haptics: boolean;
+  /** 코드 리뷰에서 마지막으로 고른 코드 언어 (예: spring → kotlin). 없으면 풀이 언어를 따른다 */
+  reviewLanguage: Partial<Record<FrameworkId, CodeLanguage>>;
 }
 
 export interface QuizRecord {
@@ -114,6 +116,7 @@ const DEFAULT_SETTINGS: Settings = {
   runnerUrl: process.env.EXPO_PUBLIC_RUNNER_URL ?? '',
   editorFontSize: 14,
   haptics: true,
+  reviewLanguage: {},
 };
 
 const EMPTY_PROGRESS = {

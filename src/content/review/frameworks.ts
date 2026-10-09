@@ -4,8 +4,9 @@ export const REVIEW_FRAMEWORKS: ReviewFramework[] = [
   {
     id: 'spring',
     title: 'Spring Boot',
-    subtitle: 'Java · Spring Data JPA',
+    subtitle: 'Java · Kotlin · Spring Data JPA',
     language: 'java',
+    variants: ['kotlin'],
     icon: 'leaf',
     accent: '#16A34A',
   },

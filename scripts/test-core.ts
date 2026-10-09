@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 
 import { resultsMatch } from '../src/features/runner/core/compare';
 import { parseHarnessOutput } from '../src/features/runner/core/protocol';
-import { starterCode } from '../src/features/runner/core/languages';
+import { signatureText, starterCode } from '../src/features/runner/core/languages';
 import { computeBestStreak, computeStreak, dayKey } from '../src/lib/date';
 import { diffLines, diffStats } from '../src/lib/diff';
 import { highlightLines } from '../src/lib/highlight';
@@ -86,6 +86,9 @@ test('언어별 시작 코드', () => {
   const sig = { params: [{ name: 'nums', type: 'int[]' as const }, { name: 'k', type: 'int' as const }], returns: 'string[]' as const };
   assert.match(starterCode('python', sig), /^def solution\(nums, k\):/);
   assert.match(starterCode('java', sig), /public String\[\] solution\(int\[\] nums, int k\)/);
+  assert.match(starterCode('kotlin', sig), /^class Solution \{\n {4}fun solution\(nums: IntArray, k: Int\): Array<String> \{/);
+  assert.match(starterCode('kotlin', sig), /var answer: Array<String> = arrayOf<String>\(\)/);
+  assert.equal(signatureText('kotlin', sig), 'fun solution(nums: IntArray, k: Int): Array<String>');
   assert.match(starterCode('cpp', sig), /vector<string> solution\(vector<int> nums, int k\)/);
   assert.match(starterCode('javascript', sig), /^function solution\(nums, k\)/);
 });

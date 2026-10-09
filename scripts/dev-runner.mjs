@@ -1,7 +1,11 @@
-// 개발용 Piston 호환 실행 서버 — 로컬 JDK(java)와 C++ 컴파일러(g++/clang++)로 Java·C++ 코드를 실행한다.
+// 개발용 Piston 호환 실행 서버 — 로컬 JDK(java), Kotlin 컴파일러(kotlinc), C++ 컴파일러(g++/clang++)로
+// Java·Kotlin·C++ 코드를 실행한다.
 //
 //   node scripts/dev-runner.mjs          # http://127.0.0.1:2000
 //   앱 › 마이 › 설정 › 코드 실행 서버에 http://127.0.0.1:2000 입력 (웹/시뮬레이터용)
+//
+//   Kotlin 은 KOTLINC(컴파일러 경로, 기본 kotlinc)와 KOTLIN_JAVA_HOME(컴파일·실행 JDK)로 바꿀 수 있다.
+//   Piston 과 같은 조합: Kotlin 1.8.20 + JDK 8
 //
 // ⚠️ 샌드박스가 없으므로 로컬 개발·테스트 용도로만 사용하세요. (127.0.0.1 에만 바인딩)
 // 운영 환경에서는 infra/runner 의 Piston 서버를 사용하세요.
@@ -13,11 +17,21 @@ import { join } from 'node:path';
 
 const PORT = Number(process.env.PORT ?? 2000);
 const RUN_TIMEOUT_MS = 15_000;
+// kotlinc 는 JVM 을 띄워 컴파일하므로 넉넉히 둔다 (infra/runner 의 Piston 설정과 맞춤)
+const KOTLIN_COMPILE_TIMEOUT_MS = 60_000;
 const CXX = spawnSync('g++', ['--version']).status === 0 ? 'g++' : 'clang++';
+const KOTLINC = process.env.KOTLINC ?? 'kotlinc';
+const KOTLIN_ENV = process.env.KOTLIN_JAVA_HOME ? { ...process.env, JAVA_HOME: process.env.KOTLIN_JAVA_HOME } : process.env;
+const KOTLIN_JAVA = process.env.KOTLIN_JAVA_HOME ? join(process.env.KOTLIN_JAVA_HOME, 'bin', 'java') : 'java';
+const kotlinVersion = (() => {
+  const r = spawnSync(KOTLINC, ['-version'], { env: KOTLIN_ENV });
+  if (r.status !== 0) return null;
+  return /kotlinc-jvm\s+([\d.]+)/.exec(`${r.stdout}${r.stderr}`)?.[1] ?? 'unknown';
+})();
 
-function exec(cmd, args, cwd, timeoutMs) {
+function exec(cmd, args, cwd, timeoutMs, env = process.env) {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { cwd });
+    const child = spawn(cmd, args, { cwd, env });
     let stdout = '';
     let stderr = '';
     let signal = null;
@@ -51,6 +65,17 @@ async function execute(body) {
       const run = await exec('java', ['--source', '15', name], dir, RUN_TIMEOUT_MS);
       return { status: 200, json: { language: 'java', version: '15.0.2', run } };
     }
+    if (body.language === 'kotlin' || body.language === 'kt') {
+      if (!kotlinVersion) return { status: 400, json: { message: `${KOTLINC} 를 찾을 수 없습니다 (brew install kotlin)` } };
+      // Piston 의 kotlin 패키지처럼 파일 이름에 .kt 를 붙여 jar 로 컴파일한 뒤 java -jar 로 실행
+      writeFileSync(join(dir, `${file.name ?? 'Main'}.kt`), file.content);
+      const compile = await exec(KOTLINC, [`${file.name ?? 'Main'}.kt`, '-include-runtime', '-d', 'code.jar'], dir, KOTLIN_COMPILE_TIMEOUT_MS, KOTLIN_ENV);
+      if (compile.code !== 0) {
+        return { status: 200, json: { language: 'kotlin', version: kotlinVersion, compile, run: null } };
+      }
+      const run = await exec(KOTLIN_JAVA, ['-jar', 'code.jar'], dir, RUN_TIMEOUT_MS);
+      return { status: 200, json: { language: 'kotlin', version: kotlinVersion, compile, run } };
+    }
     if (body.language === 'c++' || body.language === 'cpp') {
       const name = `${file.name ?? 'solution'}.cpp`;
       writeFileSync(join(dir, name), file.content);
@@ -82,6 +107,7 @@ const server = createServer((req, res) => {
   if (req.method === 'GET' && req.url === '/api/v2/runtimes') {
     send(200, [
       { language: 'java', version: '15.0.2', aliases: [] },
+      ...(kotlinVersion ? [{ language: 'kotlin', version: kotlinVersion, aliases: ['kt'] }] : []),
       { language: 'c++', version: '10.2.0', aliases: ['cpp', 'g++'] },
     ]);
     return;
@@ -106,5 +132,6 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`To Jump Programmer 개발용 실행 서버: http://127.0.0.1:${PORT}  (Java: java, C++: ${CXX})`);
+  const kotlin = kotlinVersion ? `Kotlin: ${KOTLINC} ${kotlinVersion}` : 'Kotlin: 없음';
+  console.log(`To Jump Programmer 개발용 실행 서버: http://127.0.0.1:${PORT}  (Java: java, ${kotlin}, C++: ${CXX})`);
 });

@@ -18,14 +18,23 @@ import { MAX_CONTENT_WIDTH, radius, spacing } from '@/theme/tokens';
 const STEPS = 4;
 
 const FEATURES = [
-  { icon: 'code-slash', title: '알고리즘 · 코딩 테스트', desc: '개념 퀴즈로 익히고 Python·Java·C++·JS로 직접 풀어요', tone: 'algo' },
+  { icon: 'code-slash', title: '알고리즘 · 코딩 테스트', desc: '개념 퀴즈로 익히고 Python·Java·Kotlin·C++·JS로 직접 풀어요', tone: 'algo' },
   { icon: 'git-pull-request', title: '코드 리뷰 테스트', desc: 'Spring·NestJS·Django 코드의 문제를 찾고 개선해요', tone: 'review' },
   { icon: 'school', title: '기술 면접 CS', desc: 'OS·네트워크·DB부터 아키텍처까지 퀴즈와 질문 카드로', tone: 'cs' },
 ] as const;
 
+const LANGUAGE_ICON: Record<SolveLanguage, keyof typeof Ionicons.glyphMap> = {
+  python: 'logo-python',
+  java: 'cafe-outline',
+  kotlin: 'diamond-outline',
+  cpp: 'hardware-chip-outline',
+  javascript: 'logo-javascript',
+};
+
 const LANGUAGE_DESC: Record<SolveLanguage, string> = {
   python: '간결한 문법, 코딩 테스트에서 가장 많이 써요',
   java: '국내 백엔드 채용에서 가장 많이 쓰는 언어',
+  kotlin: 'Spring Boot 를 Kotlin 으로 쓴다면',
   cpp: '빠른 실행 속도, STL 활용',
   javascript: 'Node.js 개발자라면 익숙한 언어로',
 };
@@ -194,7 +203,7 @@ export default function Onboarding() {
                       onPress={() => setLanguage(l.id)}
                       title={l.label}
                       description={l.local ? `${LANGUAGE_DESC[l.id]} · 기기에서 바로 채점` : `${LANGUAGE_DESC[l.id]} · 채점은 실행 서버 연결 시`}
-                      icon={l.id === 'python' ? 'logo-python' : l.id === 'javascript' ? 'logo-javascript' : l.id === 'java' ? 'cafe-outline' : 'hardware-chip-outline'}
+                      icon={LANGUAGE_ICON[l.id]}
                     />
                   ))}
                 </View>

@@ -443,6 +443,40 @@ class Solution {
     }
 }
 `,
+    kotlin: `class Solution {
+    private val dy = intArrayOf(1, -1, 0, 0)
+    private val dx = intArrayOf(0, 0, 1, -1)
+
+    fun solution(grid: Array<String>): Int {
+        val rows = grid.size
+        val cols = grid[0].length
+        val visited = Array(rows) { BooleanArray(cols) }
+        var islands = 0
+
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
+                if (grid[r][c] != '#' || visited[r][c]) continue
+                islands++ // 새 섬 발견
+                visited[r][c] = true
+                val queue = ArrayDeque<IntArray>()
+                queue.addLast(intArrayOf(r, c))
+                while (queue.isNotEmpty()) {
+                    val (y, x) = queue.removeFirst()
+                    for (d in 0 until 4) {
+                        val ny = y + dy[d]
+                        val nx = x + dx[d]
+                        if (ny !in 0 until rows || nx !in 0 until cols) continue
+                        if (grid[ny][nx] != '#' || visited[ny][nx]) continue
+                        visited[ny][nx] = true // 큐에 넣을 때 방문 표시
+                        queue.addLast(intArrayOf(ny, nx))
+                    }
+                }
+            }
+        }
+        return islands
+    }
+}
+`,
     cpp: `#include <queue>
 #include <string>
 #include <utility>

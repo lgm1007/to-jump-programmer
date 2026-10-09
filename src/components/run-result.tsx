@@ -84,7 +84,7 @@ export function RunResultView({
             {result.message}
           </Text>
           <Text variant="caption" color="textTertiary">
-            Python · JavaScript 는 기기 안에서 바로 실행돼요. Java · C++ 는 직접 운영하는 Piston 서버(무료 오픈소스)를 연결하면 채점할 수 있어요.
+            Python · JavaScript 는 기기 안에서 바로 실행돼요. Java · Kotlin · C++ 는 직접 운영하는 Piston 서버(무료 오픈소스)를 연결하면 채점할 수 있어요.
           </Text>
         </Card>
         <View style={styles.actions}>

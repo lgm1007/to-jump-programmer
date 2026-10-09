@@ -60,6 +60,13 @@ const SNIPPETS: Record<SolveLanguage, Key[]> = {
     { label: '.get()', pair: ['.get(', ')'] },
     { label: 'new', insert: 'new ' },
   ],
+  kotlin: [
+    { label: 'val', insert: 'val ' },
+    { label: '->', insert: ' -> ' },
+    { label: '?:', insert: ' ?: ' },
+    { label: '.size', insert: '.size' },
+    { label: 'until', insert: ' until ' },
+  ],
   cpp: [
     { label: '::', insert: '::' },
     { label: '.size()', insert: '.size()' },

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { ReviewLanguageToggle } from '@/components/review-language-toggle';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Chip, Divider, EmptyState } from '@/components/ui/misc';
@@ -12,12 +13,15 @@ import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
 import {
+  resolveChallenge,
+  resolvePattern,
   REVIEW_CATEGORY_LABEL,
   REVIEW_CONTENT,
   REVIEW_FRAMEWORKS,
   type FrameworkId,
   type ReviewCategory,
 } from '@/content';
+import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
 import { useColors } from '@/theme/theme-provider';
@@ -33,6 +37,7 @@ export default function ReviewTab() {
   const challenges = useProgress((s) => s.challenges);
   const [tab, setTab] = useState<Tab>('patterns');
   const [category, setCategory] = useState<ReviewCategory | null>(null);
+  const { language, languages, setLanguage } = useReviewLanguage(framework);
 
   const content = REVIEW_CONTENT[framework];
   const categories = [...new Set(content.patterns.map((p) => p.category))];
@@ -84,6 +89,8 @@ export default function ReviewTab() {
         })}
       </ScrollView>
 
+      <ReviewLanguageToggle languages={languages} value={language} onChange={setLanguage} />
+
       <SegmentedControl
         value={tab}
         onChange={setTab}
@@ -121,7 +128,8 @@ export default function ReviewTab() {
             <EmptyState icon="construct-outline" title="콘텐츠를 준비하고 있어요" />
           ) : (
             <Card padded={false}>
-              {patterns.map((p, i) => {
+              {patterns.map((base, i) => {
+                const p = resolvePattern(base, language);
                 const read = !!readPatterns[p.id];
                 return (
                   <View key={p.id}>
@@ -172,7 +180,8 @@ export default function ReviewTab() {
           {content.challenges.length === 0 ? (
             <EmptyState icon="construct-outline" title="콘텐츠를 준비하고 있어요" />
           ) : (
-            content.challenges.map((ch, i) => {
+            content.challenges.map((base, i) => {
+              const ch = resolveChallenge(base, language);
               const rec = challenges[ch.id];
               return (
                 <Card key={ch.id} onPress={() => router.push(`/review/challenge/${ch.id}`)} style={styles.challenge}>

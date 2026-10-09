@@ -7,11 +7,14 @@
  *   npx tsx scripts/validate-content.ts --section cs --only os,network
  *
  * --section: cs | review | algo-quiz | problems (쉼표로 여러 개)
+ * --langs: python | javascript | java | kotlin | cpp (기본: 전부)
+ *
+ * Kotlin 은 KOTLINC(컴파일러 경로)와 KOTLIN_JAVA_HOME(컴파일·실행 JDK)로 Piston 과 같은 조합을 지정할 수 있다.
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import vm from 'node:vm';
 
@@ -25,7 +28,9 @@ import type {
   CsCategoryContent,
   InterviewCard,
   QuizQuestion,
+  ReviewChallenge,
   ReviewFrameworkContent,
+  ReviewVariantContent,
   SolveLanguage,
   TestCase,
   ValueType,
@@ -33,11 +38,12 @@ import type {
 import { formatValue, resultsMatch } from '../src/features/runner/core/compare';
 import { buildCppProgram, mapCppErrors } from '../src/features/runner/core/cpp-harness';
 import { buildJavaProgram, mapJavaErrors } from '../src/features/runner/core/java-harness';
+import { buildKotlinProgram, mapKotlinErrors } from '../src/features/runner/core/kotlin-harness';
 import { parseHarnessOutput } from '../src/features/runner/core/protocol';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-// 학습 데이터 (npm run content:sync 로 채워진 전체 또는 샘플 콘텐츠)
-const CONTENT = join(ROOT, 'src', 'content', 'data');
+// 학습 데이터 (npm run content:sync 로 채워진 전체 또는 샘플 콘텐츠). TJ_CONTENT_DATA 로 비공개 콘텐츠 폴더를 직접 지정할 수 있다
+const CONTENT = process.env.TJ_CONTENT_DATA ? resolve(process.env.TJ_CONTENT_DATA) : join(ROOT, 'src', 'content', 'data');
 
 /* ------------------------------------------------------------------ */
 /* CLI                                                                  */
@@ -54,7 +60,12 @@ function option(name: string): string | undefined {
 const QUICK = flag('quick');
 const ONLY = option('only')?.split(',').filter(Boolean);
 const SECTIONS = new Set((option('section') ?? 'cs,review,algo-quiz,problems').split(','));
-const LANGS = (option('langs') ?? 'python,javascript,java,cpp').split(',') as SolveLanguage[];
+const ALL_LANGS: SolveLanguage[] = ['python', 'javascript', 'java', 'kotlin', 'cpp'];
+const LANGS = (option('langs')?.split(',') ?? ALL_LANGS) as SolveLanguage[];
+
+const KOTLINC = process.env.KOTLINC ?? 'kotlinc';
+const KOTLIN_ENV = process.env.KOTLIN_JAVA_HOME ? { ...process.env, JAVA_HOME: process.env.KOTLIN_JAVA_HOME } : process.env;
+const KOTLIN_JAVA = process.env.KOTLIN_JAVA_HOME ? join(process.env.KOTLIN_JAVA_HOME, 'bin', 'java') : 'java';
 
 /* ------------------------------------------------------------------ */
 /* 리포트                                                               */
@@ -291,6 +302,113 @@ function lineCount(source: string): number {
   return source.replace(/^\n+/, '').replace(/\s+$/, '').split('\n').length;
 }
 
+/** 리뷰 퀴즈 이슈의 줄 번호가 코드 범위 안에 있고 의미 있는 줄인지 */
+function checkIssueLines(lines: unknown, source: string | undefined, iw: string) {
+  const total = source ? lineCount(source) : 0;
+  const srcLines = source ? source.replace(/^\n+/, '').split('\n') : [];
+  if (!Array.isArray(lines) || lines.length === 0) {
+    err(iw, 'lines 가 비어있습니다');
+    return;
+  }
+  lines.forEach((n) => {
+    if (!Number.isInteger(n) || n < 1 || n > total) err(iw, `라인 번호 범위 오류: ${n} (코드 ${total}줄)`);
+    else if (srcLines[n - 1]?.trim() === '') warn(iw, `${n}번째 줄은 빈 줄입니다`);
+    else if (/^\s*[}\])]+;?\s*$/.test(srcLines[n - 1] ?? '')) warn(iw, `${n}번째 줄은 닫는 괄호뿐입니다`);
+  });
+}
+
+function checkChallengeQuestion(question: ReviewChallenge['question'] | undefined, w: string) {
+  const opts = question?.options;
+  nonEmpty(question?.prompt, w, 'question.prompt', 5);
+  if (!Array.isArray(opts) || opts.length < 4 || opts.length > 7) err(w, 'question.options 는 4~7개');
+  else {
+    const correct = opts.filter((o) => o.correct).length;
+    if (correct < 1 || correct > 5) err(w, `정답 선택지는 1~5개여야 합니다 (현재 ${correct})`);
+    if (correct === opts.length) err(w, '모든 선택지가 정답입니다');
+    opts.forEach((o, i) => nonEmpty(o.text, w, `options[${i}]`) && checkInline(o.text, w, `options[${i}]`));
+  }
+}
+
+/** 설명에 기본 언어 코드 블록(예: ```java)이 있는데 다른 언어 버전이 덮어쓰지 않았으면 그 언어 화면에 Java 코드가 보인다 */
+function checkFenceOverride(base: unknown, override: unknown, baseLang: string, lang: string, w: string, field: string) {
+  const fence = (t: unknown, l: string) => typeof t === 'string' && new RegExp('^\\s*```' + l + '\\s*$', 'm').test(t);
+  if (override === undefined && fence(base, baseLang)) {
+    err(w, `${field} 에 ${baseLang} 코드 블록이 있어 ${lang} 버전에서 그대로 보입니다 — ${field} 를 ${lang} 로 덮어쓰세요`);
+  }
+  if (fence(override, baseLang)) warn(w, `${lang} 버전 ${field} 에 ${baseLang} 코드 블록이 있습니다`);
+}
+
+async function validateReviewVariants(fwId: string, baseLang: string, lang: string, content: ReviewFrameworkContent) {
+  const where = `review/${fwId}-${lang}`;
+  const v = await importDefault<ReviewVariantContent>(join(CONTENT, 'review', `${fwId}-${lang}.ts`));
+  if (!v) {
+    err(where, '파일 없음');
+    return;
+  }
+  if (v.language !== lang) err(where, `language 가 '${lang}' 이어야 합니다`);
+  const snippet = (s: { language?: string } | undefined, w: string, field: string) => {
+    checkSnippet(s as never, w, field);
+    if (s && s.language !== lang) err(w, `${field}.language 가 '${lang}' 이어야 합니다 (현재 '${s.language}')`);
+  };
+  for (const id of Object.keys(v.patterns ?? {})) if (!content.patterns.some((p) => p.id === id)) err(where, `없는 패턴 id: ${id}`);
+  for (const id of Object.keys(v.challenges ?? {})) if (!content.challenges.some((c) => c.id === id)) err(where, `없는 리뷰 퀴즈 id: ${id}`);
+
+  for (const p of content.patterns) {
+    const w = `${where}/${p.id}`;
+    const pv = v.patterns?.[p.id];
+    if (!pv) {
+      err(w, `${lang} 버전이 없습니다`);
+      continue;
+    }
+    snippet(pv.before, w, 'before');
+    snippet(pv.after, w, 'after');
+    if (pv.before?.source?.trim() === pv.after?.source?.trim()) err(w, 'before 와 after 코드가 같습니다');
+    if (pv.title !== undefined) nonEmpty(pv.title, w, 'title', 3);
+    if (pv.summary !== undefined) nonEmpty(pv.summary, w, 'summary', 8);
+    if (pv.problem !== undefined) checkRich(pv.problem, w, 'problem', 30);
+    if (pv.explanation !== undefined) checkRich(pv.explanation, w, 'explanation', 50);
+    if (pv.checklist !== undefined) {
+      if (!Array.isArray(pv.checklist) || pv.checklist.length < 2 || pv.checklist.length > 6) err(w, 'checklist 는 2~6개');
+      else pv.checklist.forEach((c, i) => nonEmpty(c, w, `checklist[${i}]`) && checkInline(c, w, `checklist[${i}]`));
+    }
+    checkFenceOverride(p.problem, pv.problem, baseLang, lang, w, 'problem');
+    checkFenceOverride(p.explanation, pv.explanation, baseLang, lang, w, 'explanation');
+  }
+
+  for (const c of content.challenges) {
+    const w = `${where}/${c.id}`;
+    const cv = v.challenges?.[c.id];
+    if (!cv) {
+      err(w, `${lang} 버전이 없습니다`);
+      continue;
+    }
+    snippet(cv.code, w, 'code');
+    snippet(cv.improved, w, 'improved');
+    if (cv.code?.source?.trim() === cv.improved?.source?.trim()) err(w, 'code 와 improved 가 같습니다');
+    if (cv.title !== undefined) nonEmpty(cv.title, w, 'title', 3);
+    if (cv.context !== undefined) checkRich(cv.context, w, 'context', 20);
+    if (cv.summary !== undefined) checkRich(cv.summary, w, 'summary', 30);
+    if (cv.question !== undefined) checkChallengeQuestion(cv.question, w);
+    checkFenceOverride(c.context, cv.context, baseLang, lang, w, 'context');
+    checkFenceOverride(c.summary, cv.summary, baseLang, lang, w, 'summary');
+    if (!Array.isArray(cv.issues) || cv.issues.length !== c.issues.length) {
+      err(w, `issues 는 기본 버전과 같은 ${c.issues.length}개여야 합니다 (현재 ${cv.issues?.length ?? 0}개)`);
+      continue;
+    }
+    cv.issues.forEach((is, i) => {
+      const iw = `${w}/issues[${i}]`;
+      checkIssueLines(is.lines, cv.code?.source, iw);
+      if (is.title !== undefined) nonEmpty(is.title, iw, 'title', 4);
+      if (is.description !== undefined) checkRich(is.description, iw, 'description', 20);
+      if (is.suggestion !== undefined) checkRich(is.suggestion, iw, 'suggestion', 10);
+      checkFenceOverride(c.issues[i].description, is.description, baseLang, lang, iw, 'description');
+      checkFenceOverride(c.issues[i].suggestion, is.suggestion, baseLang, lang, iw, 'suggestion');
+    });
+  }
+  const done = (o: object | undefined) => Object.keys(o ?? {}).length;
+  console.log(`  review/${fwId}-${lang}: 패턴 ${done(v.patterns)}/${content.patterns.length} · 챌린지 ${done(v.challenges)}/${content.challenges.length}`);
+}
+
 async function validateReview() {
   for (const fw of REVIEW_FRAMEWORKS.filter((f) => !ONLY || ONLY.includes(f.id))) {
     const file = join(CONTENT, 'review', `${fw.id}.ts`);
@@ -326,8 +444,6 @@ async function validateReview() {
       checkSnippet(c.code, w, 'code');
       checkSnippet(c.improved, w, 'improved');
       if (c.code?.source?.trim() === c.improved?.source?.trim()) err(w, 'code 와 improved 가 같습니다');
-      const total = c.code?.source ? lineCount(c.code.source) : 0;
-      const srcLines = c.code?.source ? c.code.source.replace(/^\n+/, '').split('\n') : [];
       if (!Array.isArray(c.issues) || c.issues.length < 1 || c.issues.length > 5) err(w, 'issues 는 1~5개');
       c.issues?.forEach((is, i) => {
         const iw = `${w}/issues[${i}]`;
@@ -336,25 +452,13 @@ async function validateReview() {
         nonEmpty(is.title, iw, 'title', 4);
         checkRich(is.description, iw, 'description', 20);
         checkRich(is.suggestion, iw, 'suggestion', 10);
-        if (!Array.isArray(is.lines) || is.lines.length === 0) err(iw, 'lines 가 비어있습니다');
-        is.lines?.forEach((n) => {
-          if (!Number.isInteger(n) || n < 1 || n > total) err(iw, `라인 번호 범위 오류: ${n} (코드 ${total}줄)`);
-          else if (srcLines[n - 1]?.trim() === '') warn(iw, `${n}번째 줄은 빈 줄입니다`);
-          else if (/^\s*[}\])]+;?\s*$/.test(srcLines[n - 1] ?? '')) warn(iw, `${n}번째 줄은 닫는 괄호뿐입니다`);
-        });
+        checkIssueLines(is.lines, c.code?.source, iw);
       });
-      const opts = c.question?.options;
-      nonEmpty(c.question?.prompt, w, 'question.prompt', 5);
-      if (!Array.isArray(opts) || opts.length < 4 || opts.length > 7) err(w, 'question.options 는 4~7개');
-      else {
-        const correct = opts.filter((o) => o.correct).length;
-        if (correct < 1 || correct > 5) err(w, `정답 선택지는 1~5개여야 합니다 (현재 ${correct})`);
-        if (correct === opts.length) err(w, '모든 선택지가 정답입니다');
-        opts.forEach((o, i) => nonEmpty(o.text, w, `options[${i}]`) && checkInline(o.text, w, `options[${i}]`));
-      }
+      checkChallengeQuestion(c.question, w);
       checkRich(c.summary, w, 'summary', 30);
     }
     console.log(`  review/${fw.id}: 패턴 ${content.patterns.length} · 챌린지 ${content.challenges.length}`);
+    for (const lang of fw.variants ?? []) await validateReviewVariants(fw.id, fw.language, lang, content);
   }
 }
 
@@ -481,8 +585,16 @@ function checkProblemStructure(p: AlgoProblem, file: string): boolean {
   checkCases(p.tests, 'tests', 5);
   const size = JSON.stringify([p.examples, p.tests]).length;
   if (size > 15000) warn(w, `테스트 데이터가 큽니다 (${(size / 1024).toFixed(1)}KB > 15KB)`);
-  for (const lang of ['python', 'javascript', 'java', 'cpp'] as SolveLanguage[]) {
+  for (const lang of ALL_LANGS) {
     if (!nonEmpty(p.solutions?.[lang], w, `solutions.${lang}`, 20)) ok = false;
+  }
+  // Piston 의 Kotlin 은 1.8.20 이므로 1.9 이후 문법은 실행 서버에서 컴파일되지 않는다
+  if (p.solutions?.kotlin && /\.\.<|\b[A-Z]\w*\.entries\b|\bdata\s+object\b|\benumEntries\b/.test(p.solutions.kotlin)) {
+    warn(w, 'Kotlin 모범 답안은 Kotlin 1.8 호환이어야 합니다 (..<, enum 의 entries, data object 금지)');
+  }
+  if (p.solutions?.kotlin && !/\bclass\s+Solution\b[\s\S]*\bfun\s+solution\s*\(/.test(p.solutions.kotlin)) {
+    err(w, 'Kotlin 모범 답안은 class Solution { fun solution(...) } 형태여야 합니다');
+    ok = false;
   }
   if (p.solutions?.java && /\brecord\s+\w+\s*\(|\.toList\(\)|instanceof\s+\w+\s+\w+\s*[)&|]/.test(p.solutions.java)) {
     warn(w, 'Java 모범 답안은 Java 15 호환이어야 합니다 (record, Stream.toList(), instanceof 패턴 금지)');
@@ -499,9 +611,13 @@ interface ExecOutput {
   timedOut: boolean;
 }
 
-function exec(cmd: string, args: string[], opts: { cwd?: string; input?: string; timeoutMs: number }): Promise<ExecOutput> {
+function exec(
+  cmd: string,
+  args: string[],
+  opts: { cwd?: string; input?: string; timeoutMs: number; env?: NodeJS.ProcessEnv },
+): Promise<ExecOutput> {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { cwd: opts.cwd });
+    const child = spawn(cmd, args, { cwd: opts.cwd, env: opts.env ?? process.env });
     let stdout = '';
     let stderr = '';
     let timedOut = false;
@@ -563,10 +679,18 @@ async function runJavascript(p: AlgoProblem, cases: TestCase[]): Promise<LangRun
   return { outputs };
 }
 
-async function runCompiled(lang: 'java' | 'cpp', p: AlgoProblem, cases: TestCase[]): Promise<LangRun> {
+async function runCompiled(lang: 'java' | 'kotlin' | 'cpp', p: AlgoProblem, cases: TestCase[]): Promise<LangRun> {
   const dir = mkdtempSync(join(tmpdir(), `tj-${lang}-`));
   try {
     const userCode = p.solutions[lang];
+    if (lang === 'kotlin') {
+      const prog = buildKotlinProgram(userCode, p.signature, cases);
+      writeFileSync(join(dir, 'Main.kt'), prog.source);
+      const c = await exec(KOTLINC, ['-nowarn', 'Main.kt', '-include-runtime', '-d', 'code.jar'], { cwd: dir, timeoutMs: 180_000, env: KOTLIN_ENV });
+      if (c.code !== 0) return { fatal: mapKotlinErrors(c.stderr || c.stdout, prog.offset).slice(0, 3000), outputs: [] };
+      const r = await exec(KOTLIN_JAVA, ['-jar', 'code.jar'], { cwd: dir, timeoutMs: 60_000 });
+      return collectHarness(r, cases.length);
+    }
     if (lang === 'java') {
       const prog = buildJavaProgram(userCode, p.signature, cases);
       writeFileSync(join(dir, 'Main.java'), prog.source);
@@ -651,6 +775,14 @@ async function validateProblems() {
   }
   console.log(`  problems: ${files.length}개 (구조 검증 통과 ${problems.length}개)`);
   if (QUICK) return;
+  if (LANGS.includes('kotlin')) {
+    const v = spawnSync(KOTLINC, ['-version'], { env: KOTLIN_ENV });
+    if (v.status !== 0) {
+      err('problems', `${KOTLINC} 를 찾을 수 없어 Kotlin 모범 답안을 실행하지 못했습니다. (brew install kotlin 또는 --langs 로 제외)`);
+      return;
+    }
+    console.log(`  ${`${v.stdout}${v.stderr}`.trim()}`);
+  }
   const queue = [...problems];
   const workers = Array.from({ length: 4 }, async () => {
     while (queue.length) {

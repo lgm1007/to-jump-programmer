@@ -12,6 +12,7 @@ export interface SolveLanguageInfo {
 export const SOLVE_LANGUAGES: SolveLanguageInfo[] = [
   { id: 'python', label: 'Python', local: true, piston: 'python' },
   { id: 'java', label: 'Java', local: false, piston: 'java' },
+  { id: 'kotlin', label: 'Kotlin', local: false, piston: 'kotlin' },
   { id: 'cpp', label: 'C++', local: false, piston: 'c++' },
   { id: 'javascript', label: 'JavaScript', local: true, piston: 'javascript' },
 ];
@@ -34,6 +35,22 @@ export const JAVA_TYPE: Record<ValueType, string> = {
   'string[]': 'String[]',
   'int[][]': 'int[][]',
   'string[][]': 'String[][]',
+};
+
+/** 프로그래머스 Kotlin 과 같은 매핑 (기본형 배열은 IntArray 등, 2차원은 Array<IntArray>) */
+export const KOTLIN_TYPE: Record<ValueType, string> = {
+  int: 'Int',
+  long: 'Long',
+  double: 'Double',
+  bool: 'Boolean',
+  string: 'String',
+  'int[]': 'IntArray',
+  'long[]': 'LongArray',
+  'double[]': 'DoubleArray',
+  'bool[]': 'BooleanArray',
+  'string[]': 'Array<String>',
+  'int[][]': 'Array<IntArray>',
+  'string[][]': 'Array<Array<String>>',
 };
 
 export const CPP_TYPE: Record<ValueType, string> = {
@@ -80,6 +97,30 @@ function javaDefault(t: ValueType): string {
   }
 }
 
+function kotlinDefault(t: ValueType): string {
+  switch (t) {
+    case 'int':
+    case 'long':
+      return '0';
+    case 'double':
+      return '0.0';
+    case 'bool':
+      return 'false';
+    case 'string':
+      return '""';
+    case 'int[]':
+      return 'intArrayOf()';
+    case 'long[]':
+      return 'longArrayOf()';
+    case 'double[]':
+      return 'doubleArrayOf()';
+    case 'bool[]':
+      return 'booleanArrayOf()';
+    default:
+      return `arrayOf<${KOTLIN_TYPE[t].slice('Array<'.length, -1)}>()`;
+  }
+}
+
 function cppDefault(t: ValueType): string {
   switch (t) {
     case 'int':
@@ -114,6 +155,11 @@ export function starterCode(lang: SolveLanguage, sig: Signature): string {
       const params = sig.params.map((p) => `${JAVA_TYPE[p.type]} ${p.name}`).join(', ');
       return `class Solution {\n    public ${JAVA_TYPE[sig.returns]} solution(${params}) {\n        ${javaDefault(sig.returns)}\n        return answer;\n    }\n}\n`;
     }
+    case 'kotlin': {
+      const params = sig.params.map((p) => `${p.name}: ${KOTLIN_TYPE[p.type]}`).join(', ');
+      const ret = KOTLIN_TYPE[sig.returns];
+      return `class Solution {\n    fun solution(${params}): ${ret} {\n        var answer: ${ret} = ${kotlinDefault(sig.returns)}\n        return answer\n    }\n}\n`;
+    }
     case 'cpp': {
       const params = sig.params.map((p) => `${CPP_TYPE[p.type]} ${p.name}`).join(', ');
       return `#include <string>\n#include <vector>\n\nusing namespace std;\n\n${CPP_TYPE[sig.returns]} solution(${params}) {\n    ${cppDefault(sig.returns)}\n    return answer;\n}\n`;
@@ -131,6 +177,8 @@ export function signatureText(lang: SolveLanguage, sig: Signature): string {
       return `function solution(${names.join(', ')})`;
     case 'java':
       return `${JAVA_TYPE[sig.returns]} solution(${sig.params.map((p) => `${JAVA_TYPE[p.type]} ${p.name}`).join(', ')})`;
+    case 'kotlin':
+      return `fun solution(${sig.params.map((p) => `${p.name}: ${KOTLIN_TYPE[p.type]}`).join(', ')}): ${KOTLIN_TYPE[sig.returns]}`;
     case 'cpp':
       return `${CPP_TYPE[sig.returns]} solution(${sig.params.map((p) => `${CPP_TYPE[p.type]} ${p.name}`).join(', ')})`;
   }

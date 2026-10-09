@@ -17,9 +17,12 @@ import {
   CS_CATEGORY_MAP,
   PATTERN_MAP,
   PROBLEM_MAP,
+  resolveChallenge,
+  resolvePattern,
   REVIEW_FRAMEWORK_MAP,
   topicLabel,
 } from '@/content';
+import { useReviewLanguageMap } from '@/features/progress/review-language';
 import { pickReview, trackProgress, trackSummary, useDailyPlan, wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress, useTodayCount } from '@/features/progress/store';
 import { computeStreak, dayKey } from '@/lib/date';
@@ -52,7 +55,12 @@ export default function Home() {
   const problem = plan.problemId ? PROBLEM_MAP[plan.problemId] : undefined;
   const card = plan.cardId ? CARD_MAP[plan.cardId] : undefined;
   const review = pickReview(state);
-  const reviewItem = review ? (review.kind === 'pattern' ? PATTERN_MAP[review.id] : CHALLENGE_MAP[review.id]) : undefined;
+  const reviewLanguage = useReviewLanguageMap();
+  const reviewItem = !review
+    ? undefined
+    : review.kind === 'pattern'
+      ? PATTERN_MAP[review.id] && resolvePattern(PATTERN_MAP[review.id], reviewLanguage(PATTERN_MAP[review.id].framework))
+      : CHALLENGE_MAP[review.id] && resolveChallenge(CHALLENGE_MAP[review.id], reviewLanguage(CHALLENGE_MAP[review.id].framework));
   const fw = REVIEW_FRAMEWORK_MAP[state.profile.framework];
   const goalDone = today >= goal;
 

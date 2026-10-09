@@ -12,7 +12,16 @@ import { cpp } from '@codemirror/lang-cpp';
 import { java } from '@codemirror/lang-java';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
-import { bracketMatching, HighlightStyle, indentOnInput, indentUnit, syntaxHighlighting } from '@codemirror/language';
+import {
+  bracketMatching,
+  HighlightStyle,
+  indentOnInput,
+  indentUnit,
+  StreamLanguage,
+  syntaxHighlighting,
+} from '@codemirror/language';
+// CodeMirror 6 에는 Kotlin 전용 패키지가 없어 공식 legacy mode(clike)를 쓴다
+import { kotlin } from '@codemirror/legacy-modes/mode/clike';
 import { Compartment, EditorState } from '@codemirror/state';
 import {
   drawSelection,
@@ -24,7 +33,7 @@ import {
 } from '@codemirror/view';
 import { tags as t } from '@lezer/highlight';
 
-type Lang = 'python' | 'java' | 'cpp' | 'javascript';
+type Lang = 'python' | 'java' | 'kotlin' | 'cpp' | 'javascript';
 type Scheme = 'light' | 'dark';
 
 interface InMessage {
@@ -129,12 +138,16 @@ function themeFor(scheme: Scheme, fontSize: number) {
   ];
 }
 
+const kotlinLanguage = StreamLanguage.define(kotlin);
+
 function languageFor(lang: Lang) {
   switch (lang) {
     case 'python':
       return python();
     case 'java':
       return java();
+    case 'kotlin':
+      return kotlinLanguage;
     case 'cpp':
       return cpp();
     default:
