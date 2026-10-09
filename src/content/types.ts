@@ -207,12 +207,55 @@ export interface ReviewFrameworkContent {
   challenges: ReviewChallenge[];
 }
 
+/*
+ * 리뷰 콘텐츠의 다른 언어 버전 (예: Spring Boot 의 Kotlin 코드).
+ * 코드는 반드시 새로 쓰고, 설명 필드는 그 언어에 맞게 달라지는 것만 덮어쓴다. 지정하지 않은 필드는 기본 언어 버전을 그대로 쓴다.
+ */
+
+export interface ReviewPatternVariant {
+  before: CodeSnippet;
+  after: CodeSnippet;
+  title?: string;
+  summary?: string;
+  problem?: RichText;
+  explanation?: RichText;
+  checklist?: string[];
+}
+
+export interface ReviewIssueVariant {
+  /** 이 언어 버전 code 기준 라인 번호 */
+  lines: number[];
+  title?: string;
+  description?: RichText;
+  suggestion?: RichText;
+}
+
+export interface ReviewChallengeVariant {
+  code: CodeSnippet;
+  improved: CodeSnippet;
+  /** 기본 버전 issues 와 같은 순서 · 같은 개수 (채점 줄 번호가 언어마다 다르므로 필수) */
+  issues: ReviewIssueVariant[];
+  title?: string;
+  context?: RichText;
+  question?: ReviewChallenge['question'];
+  summary?: RichText;
+}
+
+/** 다른 언어 버전 파일(src/content/review/<framework>-<language>.ts)이 export 하는 형태. 키는 패턴 · 챌린지 id */
+export interface ReviewVariantContent {
+  language: CodeLanguage;
+  patterns: Record<string, ReviewPatternVariant>;
+  challenges: Record<string, ReviewChallengeVariant>;
+}
+
 export interface ReviewFramework {
   id: FrameworkId;
   title: string;
   subtitle: string;
   /** 대표 언어 (코드 하이라이팅 기본값) */
   language: CodeLanguage;
+  /** 대표 언어 외에 코드 예제를 함께 제공하는 언어 (예: Spring Boot → kotlin) */
+  variants?: CodeLanguage[];
   icon: string;
   accent: string;
 }
@@ -269,7 +312,7 @@ export interface TestCase {
 }
 
 /** 코딩 문제 풀이 언어 */
-export type SolveLanguage = 'python' | 'java' | 'cpp' | 'javascript';
+export type SolveLanguage = 'python' | 'java' | 'kotlin' | 'cpp' | 'javascript';
 
 /**
  * 결과 비교 방식

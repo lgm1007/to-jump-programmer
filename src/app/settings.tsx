@@ -146,7 +146,7 @@ export default function SettingsScreen() {
         </View>
       </Card>
 
-      <SectionHeader title="코드 실행 서버" subtitle="Java · C++ 채점용 (Python · JavaScript 는 기기에서 실행)" />
+      <SectionHeader title="코드 실행 서버" subtitle="Java · Kotlin · C++ 채점용 (Python · JavaScript 는 기기에서 실행)" />
       <Card style={{ gap: spacing.md }}>
         <Text variant="caption" color="textSecondary">
           오픈소스 코드 실행 엔진 Piston 서버 주소를 입력하세요. 저장소의 infra/runner 폴더에 무료 클라우드에 직접 띄우는 방법이 있어요.

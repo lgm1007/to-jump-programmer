@@ -38,9 +38,12 @@ import csSpring from './data/cs/spring';
 import reviewDjango from './data/review/django';
 import reviewNest from './data/review/nest';
 import reviewSpring from './data/review/spring';
+import reviewSpringKotlin from './data/review/spring-kotlin';
+import { REVIEW_FRAMEWORK_MAP } from './review/frameworks';
 import type {
   AlgoProblem,
   AlgoTopicContent,
+  CodeLanguage,
   CsCategoryContent,
   FrameworkId,
   InterviewCard,
@@ -48,6 +51,7 @@ import type {
   ReviewChallenge,
   ReviewFrameworkContent,
   ReviewPattern,
+  ReviewVariantContent,
 } from './types';
 
 export * from './types';
@@ -100,6 +104,58 @@ export const REVIEW_CONTENT: Record<FrameworkId, ReviewFrameworkContent> = {
   nest: reviewNest,
   django: reviewDjango,
 };
+
+/** 리뷰 콘텐츠의 다른 언어 버전 (프레임워크 → 언어 → id 별 코드 · 설명) */
+export const REVIEW_VARIANTS: Partial<Record<FrameworkId, Partial<Record<CodeLanguage, ReviewVariantContent>>>> = {
+  spring: { kotlin: reviewSpringKotlin },
+};
+
+/** 프레임워크가 코드 예제를 제공하는 언어 (대표 언어 + 다른 언어 버전) */
+export function reviewLanguages(framework: FrameworkId): CodeLanguage[] {
+  const fw = REVIEW_FRAMEWORK_MAP[framework];
+  return [fw.language, ...(fw.variants ?? [])];
+}
+
+/** 패턴을 해당 언어 버전으로 바꾼다. 그 언어 버전이 없으면 원본 그대로 */
+export function resolvePattern(p: ReviewPattern, language?: CodeLanguage): ReviewPattern {
+  const v = language ? REVIEW_VARIANTS[p.framework]?.[language]?.patterns[p.id] : undefined;
+  if (!v) return p;
+  return {
+    ...p,
+    before: v.before,
+    after: v.after,
+    title: v.title ?? p.title,
+    summary: v.summary ?? p.summary,
+    problem: v.problem ?? p.problem,
+    explanation: v.explanation ?? p.explanation,
+    checklist: v.checklist ?? p.checklist,
+  };
+}
+
+/** 리뷰 퀴즈를 해당 언어 버전으로 바꾼다. 채점 줄 번호도 그 언어의 코드 기준으로 바뀐다 */
+export function resolveChallenge(ch: ReviewChallenge, language?: CodeLanguage): ReviewChallenge {
+  const v = language ? REVIEW_VARIANTS[ch.framework]?.[language]?.challenges[ch.id] : undefined;
+  if (!v || v.issues.length !== ch.issues.length) return ch;
+  return {
+    ...ch,
+    code: v.code,
+    improved: v.improved,
+    title: v.title ?? ch.title,
+    context: v.context ?? ch.context,
+    question: v.question ?? ch.question,
+    summary: v.summary ?? ch.summary,
+    issues: ch.issues.map((issue, i) => {
+      const o = v.issues[i];
+      return {
+        ...issue,
+        lines: o.lines,
+        title: o.title ?? issue.title,
+        description: o.description ?? issue.description,
+        suggestion: o.suggestion ?? issue.suggestion,
+      };
+    }),
+  };
+}
 
 const LEVEL_ORDER = (a: AlgoProblem, b: AlgoProblem) => a.level - b.level || a.title.localeCompare(b.title, 'ko');
 

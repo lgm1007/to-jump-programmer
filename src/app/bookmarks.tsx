@@ -6,8 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Divider, EmptyState, IconBadge, ListRow, SectionHeader } from '@/components/ui/misc';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
-import { CARD_MAP, CHALLENGE_MAP, PATTERN_MAP, PROBLEM_MAP, QUESTION_MAP } from '@/content';
+import { CARD_MAP, CHALLENGE_MAP, PATTERN_MAP, PROBLEM_MAP, QUESTION_MAP, resolveChallenge, resolvePattern } from '@/content';
 import { plainText } from '@/lib/markdown';
+import { useReviewLanguageMap } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { useColors } from '@/theme/theme-provider';
 import { spacing } from '@/theme/tokens';
@@ -15,6 +16,7 @@ import { spacing } from '@/theme/tokens';
 export default function BookmarksScreen() {
   const c = useColors();
   const bookmarks = useProgress((s) => s.bookmarks);
+  const reviewLanguage = useReviewLanguageMap();
   const entries = Object.entries(bookmarks).sort((a, b) => b[1].at - a[1].at);
   const questions = entries.filter(([id]) => QUESTION_MAP[id]).map(([id]) => id);
   const cards = entries.filter(([id]) => CARD_MAP[id]).map(([id]) => id);
@@ -100,7 +102,7 @@ export default function BookmarksScreen() {
             <View key={id}>
               {i > 0 && <Divider />}
               <ListRow
-                title={PATTERN_MAP[id].title}
+                title={resolvePattern(PATTERN_MAP[id], reviewLanguage(PATTERN_MAP[id].framework)).title}
                 subtitle="개선 패턴"
                 left={<IconBadge name="book" color={c.review} background={c.reviewSoft} size={32} />}
                 onPress={() => router.push(`/review/pattern/${id}`)}
@@ -111,7 +113,7 @@ export default function BookmarksScreen() {
             <View key={id}>
               {(i > 0 || patterns.length > 0) && <Divider />}
               <ListRow
-                title={CHALLENGE_MAP[id].title}
+                title={resolveChallenge(CHALLENGE_MAP[id], reviewLanguage(CHALLENGE_MAP[id].framework)).title}
                 subtitle="리뷰 퀴즈"
                 left={<IconBadge name="git-pull-request" color={c.review} background={c.reviewSoft} size={32} />}
                 onPress={() => router.push(`/review/challenge/${id}`)}

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CodeBlock } from '@/components/code-block';
 import { DiffView } from '@/components/diff-view';
+import { ReviewLanguageToggle } from '@/components/review-language-toggle';
 import { Inline, RichText } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,8 @@ import { EmptyState, SectionHeader } from '@/components/ui/misc';
 import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import { PATTERN_MAP, REVIEW_CATEGORY_LABEL, REVIEW_CONTENT, REVIEW_FRAMEWORK_MAP } from '@/content';
+import { PATTERN_MAP, resolvePattern, REVIEW_CATEGORY_LABEL, REVIEW_CONTENT, REVIEW_FRAMEWORK_MAP } from '@/content';
+import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
 import { useColors } from '@/theme/theme-provider';
@@ -24,7 +26,9 @@ type View_ = 'before' | 'after' | 'diff';
 export default function PatternScreen() {
   const c = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const pattern = PATTERN_MAP[id];
+  const base = PATTERN_MAP[id];
+  const { language, languages, setLanguage } = useReviewLanguage(base?.framework ?? 'spring');
+  const pattern = base ? resolvePattern(base, language) : undefined;
   const read = useProgress((s) => !!s.patterns[id]);
   const markPatternRead = useProgress((s) => s.markPatternRead);
   const bookmarked = useProgress((s) => !!s.bookmarks[id]);
@@ -90,6 +94,8 @@ export default function PatternScreen() {
           {pattern.summary}
         </Text>
       </View>
+
+      <ReviewLanguageToggle languages={languages} value={language} onChange={setLanguage} />
 
       <Card style={{ gap: spacing.sm }}>
         <Text variant="captionStrong" tint={c.danger}>

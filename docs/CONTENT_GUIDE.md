@@ -11,12 +11,13 @@
 | 코딩 문제 | `algorithm/problems/<문제 id>.ts` (파일 1개 = 문제 1개) |
 | CS 퀴즈 + 면접 카드 | `cs/<카테고리 id>.ts` |
 | 코드 리뷰 패턴 + 리뷰 퀴즈 | `review/<spring\|nest\|django>.ts` |
+| 코드 리뷰의 다른 언어 버전 (Spring Boot Kotlin) | `review/spring-kotlin.ts` = `spring-kotlin-patterns.ts` + `spring-kotlin-challenges.ts` |
 
 콘텐츠를 추가/수정한 뒤에는 반드시 동기화하고 검증 스크립트를 실행하세요.
 
 ```bash
 npm run content:sync        # 비공개 콘텐츠 → src/content/data
-npm run validate            # 구조 검증 + 알고리즘 모범 답안 실행 검증(Python/JS/Java/C++)
+npm run validate            # 구조 검증 + 알고리즘 모범 답안 실행 검증(Python/JS/Java/Kotlin/C++)
 npm run validate -- --quick # 구조 검증만
 ```
 
@@ -92,31 +93,51 @@ nums.sort()
   - `question.options`는 5~6개, 그중 정답(`correct: true`) 2~4개. 오답 선택지는 코드에 실제로 없는 문제여야 합니다.
   - `improved`는 모든 이슈를 해결한 베스트 개선안입니다.
 
+### 5-1. 다른 언어 버전 (Spring Boot 의 Kotlin)
+
+Spring Boot 리뷰 콘텐츠는 Java(기본)와 Kotlin 두 언어로 제공합니다. 앱에서는 코드 언어를 바꾸면 코드와 설명이 함께 바뀌고, 학습 기록은 언어와 관계없이 하나로 유지됩니다.
+
+- Kotlin 버전은 `review/spring-kotlin.ts`(`ReviewVariantContent`)에 패턴 · 리뷰 퀴즈 **id 별로** 작성합니다. `review/spring.ts`의 모든 항목에 Kotlin 버전이 있어야 합니다(검증 스크립트가 확인).
+- **코드는 반드시 Kotlin 으로 새로** 씁니다. 설명(`problem`, `explanation`, `checklist`, 이슈 `description`/`suggestion`, `summary` 등)은 **Kotlin 에서 달라지는 것만** 덮어쓰고, 나머지는 Java 버전을 그대로 씁니다.
+  - Java 코드 블록(` ```java `)이나 Java 전용 표현(Lombok, `final` 필드, `Optional.get()` 등)이 들어 있는 설명은 Kotlin 버전에서 덮어씁니다. 덮어쓰지 않은 필드에 Java 코드 블록이 있으면 검증 스크립트가 오류를 냅니다.
+  - 제목(`title`)과 요약(`summary`)도 Java 전용 표현이 있으면 덮어씁니다. 목록 화면에도 선택한 언어의 제목이 보입니다.
+- 리뷰 퀴즈의 `issues`는 Java 버전과 **같은 순서 · 같은 개수**로 작성하고, `lines`는 Kotlin `code` 기준 줄 번호입니다. 숨긴 문제 자체는 Java 버전과 같아야 합니다(같은 개념을 언어만 바꿔 연습).
+- Kotlin 코드 기준: Spring Boot 3.x, Kotlin 1.9+, `kotlin-spring`(all-open) · `kotlin-jpa`(no-arg) 플러그인을 적용한 일반적인 프로젝트.
+  - 의존성은 주 생성자의 `private val`로 주입합니다. Lombok 은 쓰지 않습니다.
+  - Spring Data 조회는 `findByIdOrNull` + `?: throw` 처럼 Kotlin 다운 null 처리를 씁니다. (개선 전 코드에서는 의도적으로 `!!`, `Optional.get()` 등을 쓸 수 있음)
+  - JPA 엔티티는 `data class`가 아닌 일반 `class`로 쓰고, DTO 는 `data class`로 씁니다.
+  - Kotlin 문자열 템플릿의 `${…}` 는 TypeScript 템플릿 리터럴 안에서 `\${…}` 로 이스케이프합니다(`$id` 형태는 그대로 써도 됩니다). 코드 안의 `\n` 같은 백슬래시는 `\\n` 처럼 두 번 씁니다.
+
 ## 6. 알고리즘 코딩 문제 (AlgoProblem)
 
 프로그래머스 스타일의 `solution` 함수 형식을 사용합니다.
 
-| ValueType | Python | JavaScript | Java | C++ |
-| --- | --- | --- | --- | --- |
-| `int` | int | number | int | int |
-| `long` | int | number | long | long long |
-| `double` | float | number | double | double |
-| `bool` | bool | boolean | boolean | bool |
-| `string` | str | string | String | string |
-| `int[]` | list[int] | number[] | int[] | vector&lt;int&gt; |
-| `long[]` | list[int] | number[] | long[] | vector&lt;long long&gt; |
-| `double[]` | list[float] | number[] | double[] | vector&lt;double&gt; |
-| `bool[]` | list[bool] | boolean[] | boolean[] | vector&lt;bool&gt; |
-| `string[]` | list[str] | string[] | String[] | vector&lt;string&gt; |
-| `int[][]` | list[list[int]] | number[][] | int[][] | vector&lt;vector&lt;int&gt;&gt; |
-| `string[][]` | list[list[str]] | string[][] | String[][] | vector&lt;vector&lt;string&gt;&gt; |
+| ValueType | Python | JavaScript | Java | Kotlin | C++ |
+| --- | --- | --- | --- | --- | --- |
+| `int` | int | number | int | Int | int |
+| `long` | int | number | long | Long | long long |
+| `double` | float | number | double | Double | double |
+| `bool` | bool | boolean | boolean | Boolean | bool |
+| `string` | str | string | String | String | string |
+| `int[]` | list[int] | number[] | int[] | IntArray | vector&lt;int&gt; |
+| `long[]` | list[int] | number[] | long[] | LongArray | vector&lt;long long&gt; |
+| `double[]` | list[float] | number[] | double[] | DoubleArray | vector&lt;double&gt; |
+| `bool[]` | list[bool] | boolean[] | boolean[] | BooleanArray | vector&lt;bool&gt; |
+| `string[]` | list[str] | string[] | String[] | Array&lt;String&gt; | vector&lt;string&gt; |
+| `int[][]` | list[list[int]] | number[][] | int[][] | Array&lt;IntArray&gt; | vector&lt;vector&lt;int&gt;&gt; |
+| `string[][]` | list[list[str]] | string[][] | String[][] | Array&lt;Array&lt;String&gt;&gt; | vector&lt;vector&lt;string&gt;&gt; |
 
 - 모범 답안 형식
   - Python: `def solution(...):`
   - JavaScript: `function solution(...) { }`
   - Java: `class Solution { public <반환타입> solution(...) { } }` (필요한 `import`는 맨 위에)
+  - Kotlin: `class Solution { fun solution(...): <반환타입> { } }` (필요한 `import`는 맨 위에, `main` 함수 없이)
   - C++: `#include` + `using namespace std;` + `<반환타입> solution(...) { }`
 - `long` 값은 JavaScript 안전 정수 범위(±9,007,199,254,740,991)를 넘지 않게 합니다.
+- Java 모범 답안은 실행 서버(Piston)의 **Java 15**, Kotlin 모범 답안은 **Kotlin 1.8.20 · JDK 8** 에서 컴파일되어야 합니다.
+  - Kotlin 1.9 이후 문법(`..<`, enum 의 `entries`, `data object`)과 JDK 9 이후 API(`List.of`, `Stream.toList()` 등)는 쓰지 않습니다. 범위는 `until`, 컬렉션은 Kotlin 표준 함수(`listOf`, `mutableListOf`)를 씁니다.
+  - `java.util.PriorityQueue` 처럼 Java 클래스를 쓰면 `import` 를 명시합니다. (Kotlin 의 `ArrayDeque` 는 import 없이 쓸 수 있음)
+  - 실행 서버와 같은 조합으로 검증하려면 `KOTLINC=<kotlinc-1.8.20 경로> KOTLIN_JAVA_HOME=<JDK 8 경로> npm run validate`
 - 테스트 데이터는 앱 번들에 포함되므로 문제당 JSON 크기 15KB 이내로 유지합니다.
 - `tests`에는 경계값(최소 입력, 최대에 가까운 입력, 중복, 음수 등)을 포함합니다.
 - `compare: 'unordered'`는 1차원 배열 반환에서 순서를 무시할 때만 사용합니다.

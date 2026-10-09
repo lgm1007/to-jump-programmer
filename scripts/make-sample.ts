@@ -3,7 +3,7 @@
  *   npm run content:sync && npm run content:sample
  *
  * 샘플 범위: 알고리즘 토픽마다 개념 첫 단락 + 퀴즈 2문항, CS 카테고리마다 퀴즈 2문항 + 카드 1장,
- * 프레임워크마다 개선 패턴 2개 + 리뷰 퀴즈 1개, 코딩 문제는 난이도별 1개.
+ * 프레임워크마다 개선 패턴 2개 + 리뷰 퀴즈 1개(다른 언어 버전 포함), 코딩 문제는 난이도별 1개.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -12,7 +12,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { ALGO_TOPICS } from '../src/content/algorithm/topics';
 import { CS_CATEGORIES } from '../src/content/cs/categories';
 import { REVIEW_FRAMEWORKS } from '../src/content/review/frameworks';
-import type { AlgoProblem, AlgoTopicContent, CsCategoryContent, ReviewFrameworkContent } from '../src/content/types';
+import type {
+  AlgoProblem,
+  AlgoTopicContent,
+  CsCategoryContent,
+  ReviewFrameworkContent,
+  ReviewVariantContent,
+} from '../src/content/types';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = join(ROOT, 'src', 'content', 'data');
@@ -90,10 +96,19 @@ async function main() {
 
   for (const fw of REVIEW_FRAMEWORKS) {
     const c = await load<ReviewFrameworkContent>(join(DATA, 'review', `${fw.id}.ts`));
-    writeModule(join(SAMPLE, 'review', `${fw.id}.ts`), 'ReviewFrameworkContent', {
-      patterns: c.patterns.slice(0, 2),
-      challenges: c.challenges.slice(0, 1),
-    });
+    const patterns = c.patterns.slice(0, 2);
+    const challenges = c.challenges.slice(0, 1);
+    writeModule(join(SAMPLE, 'review', `${fw.id}.ts`), 'ReviewFrameworkContent', { patterns, challenges });
+    for (const lang of fw.variants ?? []) {
+      const v = await load<ReviewVariantContent>(join(DATA, 'review', `${fw.id}-${lang}.ts`));
+      const pick = <T>(all: Record<string, T>, ids: string[]) =>
+        Object.fromEntries(ids.filter((id) => all[id]).map((id) => [id, all[id]]));
+      writeModule(join(SAMPLE, 'review', `${fw.id}-${lang}.ts`), 'ReviewVariantContent', {
+        language: lang,
+        patterns: pick(v.patterns, patterns.map((p) => p.id)),
+        challenges: pick(v.challenges, challenges.map((ch) => ch.id)),
+      });
+    }
   }
 
   const dir = join(DATA, 'algorithm', 'problems');

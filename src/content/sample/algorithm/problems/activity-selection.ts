@@ -2690,6 +2690,23 @@ class Solution {
     }
 }
 `,
+    kotlin: `class Solution {
+    fun solution(sessions: Array<IntArray>): Int {
+        // 종료 시각이 빠른 세션부터 확인합니다.
+        val sorted = sessions.sortedBy { it[1] }
+
+        var attended = 0
+        var lastEnd = 0 // 마지막으로 들은 세션의 종료 시각 (시각은 0 이상)
+        for ((start, end) in sorted) {
+            if (start >= lastEnd) { // 직전 세션이 끝난 뒤(같은 시각 포함)에 시작
+                attended++
+                lastEnd = end
+            }
+        }
+        return attended
+    }
+}
+`,
     cpp: `#include <algorithm>
 #include <vector>
 
