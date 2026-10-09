@@ -1,0 +1,16 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "node node_modules/expo/bin/cli start --web --port 8081 < /dev/null"],
+      "port": 8081
+    },
+    {
+      "name": "web-attach",
+      "url": "http://localhost:8081",
+      "port": 8081
+    }
+  ]
+}

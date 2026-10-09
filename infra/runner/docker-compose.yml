@@ -1,0 +1,46 @@
+# Java · C++ 채점용 원격 실행 서버 (Piston + Caddy 자동 HTTPS)
+#   1) .env 파일에 RUNNER_DOMAIN=runner.example.com 지정 (DNS A 레코드가 이 서버를 가리켜야 함)
+#   2) docker compose up -d
+#   3) ./install-runtimes.sh   (Java 15, GCC 10 런타임 설치 — 최초 1회)
+#   4) 앱 › 마이 › 설정 › 코드 실행 서버에 https://<RUNNER_DOMAIN> 입력
+services:
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: piston_api
+    restart: unless-stopped
+    privileged: true # Piston 의 격리 실행(isolate)에 필요
+    environment:
+      # 하네스는 케이스별 결과를 표준 출력으로 내보내므로 출력 한도를 넉넉히 둔다 (기본 1024자)
+      PISTON_OUTPUT_MAX_SIZE: "262144"
+      # Java 는 단일 파일 실행(java Main.java)이라 컴파일이 실행 단계에 포함된다
+      PISTON_RUN_TIMEOUT: "15000"
+      PISTON_RUN_CPU_TIME: "15000"
+      PISTON_COMPILE_TIMEOUT: "20000"
+      PISTON_COMPILE_CPU_TIME: "20000"
+      PISTON_RUN_MEMORY_LIMIT: "536870912"
+      PISTON_MAX_CONCURRENT_JOBS: "8"
+      PISTON_DISABLE_NETWORKING: "true"
+    volumes:
+      - ./data/packages:/piston/packages
+    tmpfs:
+      - /tmp:exec
+    expose:
+      - "2000"
+    # 로컬 테스트용으로 직접 노출하려면 아래 주석을 해제하세요
+    # ports:
+    #   - "2000:2000"
+
+  caddy:
+    image: caddy:2
+    container_name: piston_caddy
+    restart: unless-stopped
+    depends_on:
+      - piston
+    environment:
+      RUNNER_DOMAIN: ${RUNNER_DOMAIN:?RUNNER_DOMAIN 을 .env 에 지정하세요}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data/caddy:/data

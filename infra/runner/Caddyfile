@@ -1,0 +1,29 @@
+{$RUNNER_DOMAIN} {
+	encode gzip
+
+	# 실행 API 만 공개한다 (패키지 설치 API 는 서버 내부에서만 호출)
+	@public path /api/v2/execute /api/v2/runtimes
+	@preflight method OPTIONS
+
+	header {
+		Access-Control-Allow-Origin "*"
+		Access-Control-Allow-Methods "GET, POST, OPTIONS"
+		Access-Control-Allow-Headers "Content-Type"
+		-Server
+	}
+
+	handle @preflight {
+		respond 204
+	}
+
+	handle @public {
+		request_body {
+			max_size 512KB
+		}
+		reverse_proxy piston:2000
+	}
+
+	handle {
+		respond "Not Found" 404
+	}
+}

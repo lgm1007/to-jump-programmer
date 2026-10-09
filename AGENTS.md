@@ -39,3 +39,14 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Project notes (To Jump)
+
+- Learning content lives in `src/content/` (schema: `src/content/types.ts`, writing rules + markdown-lite syntax: `docs/CONTENT_GUIDE.md`). After editing content run `npm run validate` (problems: all 4 reference solutions are executed against every test).
+- Adding/removing a coding problem file requires `npm run content:index`.
+- Code execution: `src/features/runner/` — Python/JS run on-device in a module Web Worker (hidden WebView on native, browser on web; worker/manager code are plain-JS strings so they survive Hermes). Java/C++ go to a Piston-compatible server (`infra/runner`, dev: `node scripts/dev-runner.mjs`). Harness generators in `runner/core` are shared with the Node validator — keep them free of React Native imports.
+- The code editor is CodeMirror 6 bundled into `src/features/editor/editor-html.generated.ts`; edit `editor/src/main.ts` then run `npm run build:editor`.
+- Ads: Google AdMob via `react-native-google-mobile-ads` in `src/features/ads/` (`index.tsx` native, `index.web.tsx` no-op). The library is `require`d lazily so Expo Go (no native module) still runs without ads — never import `react-native-google-mobile-ads` outside `ads/google.tsx`. AdMob IDs come from `ADMOB_*` env vars read in `app.config.ts` (test IDs when unset; `__DEV__` always uses test units). Interstitial frequency: `INTERSTITIAL_POLICY` in `ads/config.ts`.
+- `plugins/with-ios-scene-lifecycle.js` adds the UIScene life cycle (SceneDelegate → `ExpoAppSceneDelegate`) that the iOS 27 SDK requires; the SDK 57 template lacks it. It no-ops once the template already has it (SDK 58+), so remove it after upgrading.
+- Local iOS builds fail with a codesign "detritus" error while the project sits in an iCloud-synced folder (`~/Documents`, `~/Desktop`); build from a non-synced copy/location.
+- Before finishing: `npm run typecheck`, `npm run lint`, `npm test`.

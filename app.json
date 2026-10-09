@@ -1,38 +1,74 @@
 {
   "expo": {
-    "name": "to-jump-programmer",
+    "name": "To Jump",
     "slug": "to-jump-programmer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "tojumpprogrammer",
+    "scheme": "tojump",
     "userInterfaceStyle": "automatic",
+    "description": "개발자 취업·이직 준비 앱 — 알고리즘 코딩 테스트, 코드 리뷰 테스트, 기술 면접 CS를 한 곳에서.",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.tojump.programmer",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "ko",
+        "CFBundleLocalizations": [
+          "ko"
+        ]
+      }
     },
     "android": {
+      "package": "com.tojump.programmer",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#3182F6",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "name": "To Jump",
+      "shortName": "To Jump",
+      "lang": "ko",
+      "themeColor": "#3182F6",
+      "backgroundColor": "#F2F4F6"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 112,
+          "dark": {
+            "backgroundColor": "#0E1013",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
-      ]
+      ],
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "맞춤형 광고를 보여드리는 데에만 사용돼요. 허용하지 않아도 모든 학습 기능을 그대로 이용할 수 있어요."
+        }
+      ],
+      "./plugins/with-ios-scene-lifecycle"
     ],
     "experiments": {
       "typedRoutes": true,
