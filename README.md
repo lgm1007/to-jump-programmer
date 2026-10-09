@@ -14,6 +14,18 @@
 >
 > **이 공개 저장소에는 샘플 콘텐츠만 들어 있습니다.** 전체 학습 콘텐츠는 비공개 저장소로 관리하며, 샘플만으로도 앱의 모든 기능을 실행해 볼 수 있습니다. ([콘텐츠 구성](#콘텐츠-구성-공개--비공개))
 
+## 스크린샷
+
+| 홈 · 오늘의 추천 | 개념 퀴즈 · 해설 | 코드 에디터 | 채점 결과 |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/home.png" width="200" alt="홈 화면: 오늘의 학습 목표와 추천 문제"> | <img src="docs/screenshots/quiz.png" width="200" alt="알고리즘 개념 퀴즈의 정답 해설"> | <img src="docs/screenshots/editor.png" width="200" alt="Python 코드 에디터"> | <img src="docs/screenshots/result.png" width="200" alt="숨겨진 테스트까지 통과한 채점 결과"> |
+
+| 코드 리뷰 퀴즈 | 면접 질문 카드 | 다크 모드 |
+| :---: | :---: | :---: |
+| <img src="docs/screenshots/review.png" width="200" alt="Spring Boot 코드에서 문제 줄을 고르는 코드 리뷰 퀴즈"> | <img src="docs/screenshots/card.png" width="200" alt="면접 질문 카드의 모범 답안"> | <img src="docs/screenshots/algorithm-dark.png" width="200" alt="다크 모드의 알고리즘 토픽 목록"> |
+
+<sub>iPhone 17 시뮬레이터(iOS 27)에서 이 저장소의 샘플 콘텐츠로 촬영했습니다. 하단 배너는 개발 빌드에 나오는 Google 테스트 광고입니다.</sub>
+
 ---
 
 ## 기술 스택과 선정 이유 — "최소 비용으로 스토어 출시"
