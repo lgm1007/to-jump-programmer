@@ -31,7 +31,7 @@ import { INTERSTITIAL_POLICY, liveUnitId } from './config';
 import { useAds } from './store';
 
 const UNIT_IDS = {
-  banner: liveUnitId('banner') ?? TestIds.ADAPTIVE_BANNER,
+  banner: liveUnitId('banner') ?? TestIds.BANNER,
   interstitial: liveUnitId('interstitial') ?? TestIds.INTERSTITIAL,
 };
 
@@ -173,7 +173,10 @@ export function showInterstitialAtBreak(then: () => void) {
 
 // ─── 배너 ──────────────────────────────────────────────
 
-/** 하단 고정 배너(적응형). 광고가 준비되기 전이나 불러오지 못하면 공간을 차지하지 않는다. */
+/**
+ * 하단 고정 배너 (320×50). 광고가 준비되기 전이나 불러오지 못하면 공간을 차지하지 않는다.
+ * 대형 적응형 배너는 수익은 더 높지만 휴대폰에서 높이가 120pt 를 넘어 학습 화면을 많이 가려 표준 크기를 쓴다.
+ */
 export function AdBanner() {
   const c = useColors();
   const ready = useAds((s) => s.status === 'ready');
@@ -196,7 +199,7 @@ export function AdBanner() {
       <BannerAd
         ref={ref}
         unitId={UNIT_IDS.banner}
-        size={BannerAdSize.LARGE_ANCHORED_ADAPTIVE_BANNER}
+        size={BannerAdSize.BANNER}
         onAdLoaded={() => setLoaded(true)}
         onAdFailedToLoad={() => {
           clearTimeout(retry.current.timer);
