@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, type ScrollViewProps, type StyleProp, type ViewStyle } from 'react-native';
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { useColors } from '@/theme/theme-provider';
 import { MAX_CONTENT_WIDTH, spacing } from '@/theme/tokens';
@@ -55,12 +55,35 @@ export function Screen({
   );
 }
 
+/**
+ * 루트에서 잰 안전 영역만큼 여백을 주는 컨테이너.
+ * iOS 에서 전체 화면 모달(퀴즈·카드)이 처음 뜰 때 네이티브 SafeAreaView 가 inset 을 0 으로 받아
+ * 상태 표시줄·홈 인디케이터와 겹치는 문제가 있어, 모달 화면과 하단 고정 영역은 이것을 쓴다.
+ */
+export function InsetView({
+  edges = ['top', 'right', 'bottom', 'left'],
+  style,
+  children,
+}: {
+  edges?: Edge[];
+  style?: StyleProp<ViewStyle>;
+  children: ReactNode;
+}) {
+  const insets = useSafeAreaInsets();
+  const pad = (edge: Edge) => (edges.includes(edge) ? insets[edge] : 0);
+  return (
+    <View style={[{ paddingTop: pad('top'), paddingRight: pad('right'), paddingBottom: pad('bottom'), paddingLeft: pad('left') }, style]}>
+      {children}
+    </View>
+  );
+}
+
 export function Footer({ children }: { children: ReactNode }) {
   const c = useColors();
   return (
-    <SafeAreaView edges={['bottom']} style={{ backgroundColor: c.surface, borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }}>
+    <InsetView edges={['bottom']} style={{ backgroundColor: c.surface, borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }}>
       <View style={styles.footerInner}>{children}</View>
-    </SafeAreaView>
+    </InsetView>
   );
 }
 

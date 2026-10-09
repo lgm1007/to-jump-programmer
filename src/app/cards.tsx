@@ -2,7 +2,6 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { RichText } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
@@ -11,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/misc';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { ProgressBar } from '@/components/ui/progress';
-import { Footer } from '@/components/ui/screen';
+import { Footer, InsetView } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { CARD_MAP, CS_CATEGORY_MAP, CS_CONTENT } from '@/content';
 import { showInterstitialAtBreak } from '@/features/ads';
@@ -61,10 +60,10 @@ export default function CardsScreen() {
 
   if (!card) {
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: c.bg }]}>
+      <InsetView style={[styles.flex, { backgroundColor: c.bg }]}>
         <Header onClose={close} progress={0} label="" />
         <EmptyState icon="chatbubbles-outline" title="볼 카드가 없어요" description="다른 카테고리의 질문을 골라보세요." action={<Button title="돌아가기" onPress={close} />} />
-      </SafeAreaView>
+      </InsetView>
     );
   }
 
@@ -73,7 +72,7 @@ export default function CardsScreen() {
     Object.values(ratings).forEach((r) => counts[r]++);
     const retry = ids.filter((id) => ratings[id] && ratings[id] !== 'good');
     return (
-      <SafeAreaView style={[styles.flex, { backgroundColor: c.bg }]} edges={['top']}>
+      <InsetView style={[styles.flex, { backgroundColor: c.bg }]} edges={['top']}>
         <Header onClose={close} progress={1} label="완료" />
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.inner}>
@@ -116,7 +115,7 @@ export default function CardsScreen() {
           )}
           <Button title="완료" style={{ flex: 1 }} onPress={() => showInterstitialAtBreak(close)} />
         </Footer>
-      </SafeAreaView>
+      </InsetView>
     );
   }
 
@@ -137,7 +136,7 @@ export default function CardsScreen() {
   const category = CS_CATEGORY_MAP[card.categoryId];
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: c.bg }]} edges={['top']}>
+    <InsetView style={[styles.flex, { backgroundColor: c.bg }]} edges={['top']}>
       <Header onClose={close} progress={index / ids.length} label={`${index + 1}/${ids.length}`} />
       <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll}>
         <View style={styles.inner}>
@@ -261,7 +260,7 @@ export default function CardsScreen() {
           />
         )}
       </Footer>
-    </SafeAreaView>
+    </InsetView>
   );
 }
 
