@@ -122,7 +122,7 @@ export default function Onboarding() {
                   <Ionicons name="arrow-up" size={34} color="#fff" />
                 </View>
                 <View style={{ gap: spacing.sm }}>
-                  <Text variant="display">개발자 취업·이직,{'\n'}To Jump 하나로</Text>
+                  <Text variant="display">개발자 취업·이직,{'\n'}To Jump Programmer{'\n'}하나로</Text>
                   <Text variant="body" color="textSecondary">
                     코딩 테스트부터 코드 리뷰, 기술 면접까지{'\n'}하루 10분씩 꾸준히 준비해요.
                   </Text>

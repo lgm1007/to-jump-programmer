@@ -106,5 +106,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`To Jump 개발용 실행 서버: http://127.0.0.1:${PORT}  (Java: java, C++: ${CXX})`);
+  console.log(`To Jump Programmer 개발용 실행 서버: http://127.0.0.1:${PORT}  (Java: java, C++: ${CXX})`);
 });

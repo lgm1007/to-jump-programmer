@@ -1,4 +1,4 @@
-# To Jump — 개발자 취업·이직 준비 앱
+# To Jump Programmer — 개발자 취업·이직 준비 앱
 
 코딩 테스트, 코드 리뷰 테스트, 기술 면접을 **한 앱에서** 준비하는 모바일 학습 앱입니다.
 하루 10분씩 퀴즈·문제·면접 카드로 꾸준히 학습하도록 설계했습니다.
@@ -172,7 +172,7 @@ eas build --platform all --profile production
 eas submit --platform all --profile production
 ```
 
-출시 전 `app.json` 의 `ios.bundleIdentifier` · `android.package`(현재 `com.tojump.programmer`)를 본인 도메인 기반으로 바꾸세요.
+Android 패키지명은 `com.leegm.tojumpprogrammer` 로 확정했습니다(Play 스토어에 올린 뒤에는 바꿀 수 없음). iOS `ios.bundleIdentifier`(현재 임시값 `com.tojump.programmer`)는 App Store Connect 에 앱을 만들기 전에 확정하세요.
 
 ---
 
@@ -189,3 +189,8 @@ eas submit --platform all --profile production
 ## 오픈소스
 
 Expo · React Native · CodeMirror 6 · Pyodide · Piston(서버, 선택) 을 사용합니다. 각 프로젝트의 라이선스를 따릅니다.
+
+## 라이선스
+
+Copyright (c) 2026 lgm1007. All rights reserved.
+포트폴리오·참고 목적으로 열람만 허용하며, 코드와 학습 콘텐츠의 사용·복제·배포는 허용하지 않습니다. 자세한 내용은 [`LICENSE`](LICENSE) 를 참고하세요.

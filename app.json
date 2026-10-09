@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "package": "com.tojump.programmer",
+      "package": "com.leegm.tojumpprogrammer",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#3182F6",
@@ -37,12 +37,15 @@
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "permissions": [
+        "com.google.android.gms.permission.AD_ID"
       ]
     },
     "web": {
       "output": "single",
       "favicon": "./assets/images/favicon.png",
-      "name": "To Jump",
+      "name": "To Jump Programmer",
       "shortName": "To Jump",
       "lang": "ko",
       "themeColor": "#3182F6",
@@ -73,6 +76,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "207a64db-75ca-4106-8b42-7719d1b8e95d"
+      }
+    },
+    "owner": "gmlee",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/207a64db-75ca-4106-8b42-7719d1b8e95d"
     }
   }
 }

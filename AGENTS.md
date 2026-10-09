@@ -40,7 +40,7 @@ Docs: https://docs.expo.dev/eas/index.md
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
 
-## Project notes (To Jump)
+## Project notes (To Jump Programmer)
 
 - Learning content lives in `src/content/` (schema: `src/content/types.ts`, writing rules + markdown-lite syntax: `docs/CONTENT_GUIDE.md`). After editing content run `npm run validate` (problems: all 4 reference solutions are executed against every test).
 - Adding/removing a coding problem file requires `npm run content:index`.

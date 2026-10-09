@@ -15,7 +15,7 @@ Expo EAS 로 맥/Xcode 없이 클라우드에서 빌드하고 App Store · Googl
 
 ## 1. 앱 식별자 · 정보 정리 (`app.json`)
 
-- [ ] `expo.name` (홈 화면 이름, 현재 `To Jump`)
+- [ ] `expo.name` (기기 홈 화면 이름, 현재 `To Jump`) — 스토어 이름 `To Jump Programmer` 는 App Store Connect · Play Console 에서 따로 입력
 - [ ] `ios.bundleIdentifier`, `android.package` 를 본인 도메인 기반으로 변경 (예: `com.mycompany.tojump`) — **출시 후에는 바꿀 수 없음**
 - [ ] `version` (사용자에게 보이는 버전) — 빌드 번호는 `eas.json` 의 `autoIncrement` 가 관리
 - [ ] 아이콘/스플래시 교체 시 `scripts/generate-icons.py` 수정 후 재생성

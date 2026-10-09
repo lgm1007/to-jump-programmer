@@ -1,21 +1,23 @@
-The MIT License (MIT)
+Copyright (c) 2026 lgm1007. All rights reserved.
 
-Copyright (c) 2015-present 650 Industries, Inc. (aka Expo)
+This repository is made publicly viewable for portfolio and reference purposes
+only. No license is granted. Without prior written permission from the copyright
+holder, you may not use, copy, modify, merge, publish, distribute, sublicense,
+or sell any part of this repository — including its source code, learning
+content (quizzes, problems, explanations, interview cards), images, and icons —
+nor build and distribute applications based on it.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Third-party open-source software used by this project remains under its own
+license.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Copyright (c) 2026 lgm1007. 모든 권리 보유.
+
+이 저장소는 포트폴리오·참고 목적으로 열람만 가능하도록 공개되며, 어떤 이용
+허락도 부여하지 않습니다. 저작권자의 사전 서면 허락 없이 소스 코드, 학습
+콘텐츠(퀴즈·문제·해설·면접 카드), 이미지, 아이콘을 포함한 이 저장소의 전부
+또는 일부를 사용·복제·수정·배포·재라이선스·판매하거나, 이를 바탕으로 앱을
+만들어 배포할 수 없습니다.
+
+이 프로젝트가 사용하는 제3자 오픈소스 소프트웨어는 각자의 라이선스를 따릅니다.

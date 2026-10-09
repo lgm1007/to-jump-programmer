@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Piston 에 To Jump 가 사용하는 런타임(Java 15.0.2, GCC 10.2.0)을 설치한다.
+# Piston 에 To Jump Programmer 가 사용하는 런타임(Java 15.0.2, GCC 10.2.0)을 설치한다.
 # docker compose up -d 로 서버를 띄운 뒤 이 폴더에서 한 번 실행하세요.
 set -euo pipefail
 cd "$(dirname "$0")"
