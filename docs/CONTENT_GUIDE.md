@@ -1,10 +1,21 @@
 # 콘텐츠 작성 가이드
 
-앱의 모든 학습 콘텐츠는 `src/content/` 아래 TypeScript 파일로 번들에 포함됩니다.
-타입 정의는 [`src/content/types.ts`](../src/content/types.ts)에 있습니다.
-콘텐츠를 추가/수정한 뒤에는 반드시 검증 스크립트를 실행하세요.
+앱의 학습 콘텐츠는 TypeScript 파일로 번들에 포함됩니다.
+전체 콘텐츠는 **비공개 저장소 `to-jump-content`** 에서 작성하고, `npm run content:sync` 로 앱의 `src/content/data/` 에 가져옵니다.
+(공개 저장소에는 `src/content/sample/` 의 샘플만 있습니다.)
+타입 정의는 [`src/content/types.ts`](../src/content/types.ts)에 있습니다. 콘텐츠 파일은 `import type { … } from '@/content/types'` 로 타입을 가져옵니다.
+
+| 콘텐츠 | 비공개 저장소 경로 |
+| --- | --- |
+| 알고리즘 토픽 개념 + 퀴즈 | `algorithm/quiz/<토픽 id>.ts` |
+| 코딩 문제 | `algorithm/problems/<문제 id>.ts` (파일 1개 = 문제 1개) |
+| CS 퀴즈 + 면접 카드 | `cs/<카테고리 id>.ts` |
+| 코드 리뷰 패턴 + 리뷰 퀴즈 | `review/<spring\|nest\|django>.ts` |
+
+콘텐츠를 추가/수정한 뒤에는 반드시 동기화하고 검증 스크립트를 실행하세요.
 
 ```bash
+npm run content:sync        # 비공개 콘텐츠 → src/content/data
 npm run validate            # 구조 검증 + 알고리즘 모범 답안 실행 검증(Python/JS/Java/C++)
 npm run validate -- --quick # 구조 검증만
 ```

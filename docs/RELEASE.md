@@ -126,6 +126,7 @@ npx eas-cli@latest submit -p android --profile production   # 최초 1회는 Pla
 
 ## 5. 출시 전 점검
 
+- [ ] `npm run content:sync` 로 **전체 콘텐츠**를 맞춘 뒤 빌드 (`src/content/data/.source` 가 `full`). production 빌드는 샘플이면 실패합니다. `eas update` 도 같은 상태에서 실행하세요.
 - [ ] `npm run typecheck` · `npm run validate` 통과
 - [ ] 실기기(iOS·Android)에서 확인: 온보딩 → 퀴즈 → 코드 풀이(Python 첫 실행 다운로드, 무한 루프 시간 초과) → 코드 리뷰 퀴즈 → 면접 카드 → 다크 모드
 - [ ] 키보드가 열렸을 때 코드 에디터 · 기호 툴바 위치 (iPhone SE 같은 작은 화면 포함)

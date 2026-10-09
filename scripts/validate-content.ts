@@ -36,7 +36,8 @@ import { buildJavaProgram, mapJavaErrors } from '../src/features/runner/core/jav
 import { parseHarnessOutput } from '../src/features/runner/core/protocol';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const CONTENT = join(ROOT, 'src', 'content');
+// 학습 데이터 (npm run content:sync 로 채워진 전체 또는 샘플 콘텐츠)
+const CONTENT = join(ROOT, 'src', 'content', 'data');
 
 /* ------------------------------------------------------------------ */
 /* CLI                                                                  */

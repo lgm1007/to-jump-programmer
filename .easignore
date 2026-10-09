@@ -1,3 +1,7 @@
+# EAS Build 업로드 제외 목록 — 이 파일이 있으면 EAS 는 .gitignore 대신 이것을 쓴다.
+# .gitignore 와 같게 유지하되, 학습 데이터(src/content/data)는 git 에는 없지만 빌드에는 포함해야 하므로 제외하지 않는다.
+# .gitignore 를 바꾸면 이 파일도 함께 바꿔주세요.
+
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
 # dependencies
@@ -62,9 +66,9 @@ __pycache__/
 
 example
 
-# 학습 데이터 — 전체 콘텐츠는 비공개 저장소에서 `npm run content:sync` 로 가져온다 (EAS 업로드는 .easignore)
-/src/content/data/
-
 # generated native folders
 /ios
 /android
+
+# 학습 데이터는 반드시 업로드 (비공개 콘텐츠를 동기화한 상태로 빌드)
+!/src/content/data/

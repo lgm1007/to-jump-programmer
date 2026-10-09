@@ -59,10 +59,14 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit && tsc --noEmit -p scripts && tsc --noEmit -p editor",
     "content:index": "node scripts/gen-problem-index.mjs",
-    "validate": "node scripts/gen-problem-index.mjs && tsx scripts/validate-content.ts",
+    "validate": "node scripts/content-sync.mjs --if-missing && node scripts/gen-problem-index.mjs && tsx scripts/validate-content.ts",
     "build:editor": "node scripts/build-editor.mjs",
     "test": "tsx scripts/test-core.ts",
-    "test:harness": "tsx scripts/test-harness.ts"
+    "test:harness": "tsx scripts/test-harness.ts",
+    "postinstall": "node scripts/content-sync.mjs --if-missing",
+    "content:sync": "node scripts/content-sync.mjs",
+    "content:sample": "tsx scripts/make-sample.ts",
+    "eas-build-post-install": "node scripts/content-sync.mjs --eas"
   },
   "private": true
 }

@@ -11,6 +11,8 @@
 | **학습 관리** | 오늘의 추천 · 하루 목표 · 연속 학습일 · 학습 잔디 · 오답노트 · 북마크 · 다시 볼 카드 · 다크 모드 |
 
 > 모든 콘텐츠는 직접 작성했고, 코딩 문제의 테스트 케이스는 4개 언어 모범 답안을 실제로 실행해 검증했습니다 (`npm run validate`).
+>
+> **이 공개 저장소에는 샘플 콘텐츠만 들어 있습니다.** 전체 학습 콘텐츠는 비공개 저장소로 관리하며, 샘플만으로도 앱의 모든 기능을 실행해 볼 수 있습니다. ([콘텐츠 구성](#콘텐츠-구성-공개--비공개))
 
 ---
 
@@ -43,7 +45,7 @@
 ## 시작하기
 
 ```bash
-npm install
+npm install        # 설치 후 학습 콘텐츠를 자동으로 준비 (비공개 콘텐츠가 없으면 샘플)
 npm start          # Expo 개발 서버 (QR 코드를 Expo Go 앱으로 스캔)
 npm run web        # 브라우저에서 실행
 ```
@@ -63,6 +65,9 @@ npm run web        # 브라우저에서 실행
 | `npm run test:harness` | Java · C++ 채점 하네스 테스트 (JDK, g++/clang++ 필요) |
 | `npm run validate` | 콘텐츠 구조 검증 + 알고리즘 모범 답안 4개 언어 실행 검증 (python3, node, JDK 15+, g++/clang++ 필요) |
 | `npm run validate -- --quick` | 구조 검증만 |
+| `npm run content:sync` | 비공개 콘텐츠(`../to-jump-content`, `TJ_CONTENT_DIR` 로 변경)를 `src/content/data` 로 가져옴. 없으면 샘플 |
+| `npm run content:sync -- --sample` | 샘플 콘텐츠로 전환 |
+| `npm run content:sample` | 전체 콘텐츠에서 공개용 샘플(`src/content/sample`) 재생성 |
 | `npm run content:index` | 코딩 문제 인덱스 재생성 (문제 파일을 추가/삭제했을 때) |
 | `npm run build:editor` | `editor/src/main.ts`(CodeMirror) 수정 후 에디터 번들 재생성 |
 | `node scripts/dev-runner.mjs` | 로컬 JDK/컴파일러로 Java·C++ 를 실행하는 **개발용** Piston 호환 서버 (127.0.0.1:2000) |
@@ -81,7 +86,9 @@ src/
     quiz.tsx · cards.tsx    #   퀴즈 세션 · 면접 카드 세션
     notes · bookmarks · settings · privacy · onboarding
   components/               # UI 컴포넌트 (코드 블록 · diff · 마크다운 렌더러 · 실행 결과 등)
-  content/                  # 학습 콘텐츠 (types.ts 스키마 + 데이터)
+  content/                  # 학습 콘텐츠 (types.ts 스키마 · 토픽/카테고리 목록 · index.ts 진입점)
+    sample/                 #   공개용 샘플 콘텐츠
+    data/                   #   실제로 쓰는 콘텐츠 (git 제외, npm run content:sync 로 채움)
     algorithm/quiz/         #   토픽별 개념 정리 · 퀴즈
     algorithm/problems/     #   코딩 문제 (문제별 1파일)
     cs/                     #   CS 카테고리별 퀴즈 · 면접 카드
@@ -121,11 +128,24 @@ plugins/                    # 로컬 config plugin (iOS UIScene 생명주기)
 
 ---
 
+## 콘텐츠 구성 (공개 / 비공개)
+
+| 위치 | 내용 | 저장소 |
+| --- | --- | --- |
+| `src/content/types.ts`, `algorithm/topics.ts`, `cs/categories.ts`, `review/frameworks.ts` | 스키마와 토픽·카테고리 목록 | 공개 |
+| `src/content/sample/` | 토픽마다 일부만 담은 샘플 | 공개 |
+| `../to-jump-content/` | 전체 학습 콘텐츠 (퀴즈 · 코딩 문제 · 코드 리뷰 · 면접 카드) | **비공개** |
+| `src/content/data/` | 앱이 실제로 읽는 콘텐츠. `npm run content:sync` 가 비공개 콘텐츠(없으면 샘플)를 복사 | git 제외 |
+
+- EAS Build 는 `.easignore` 기준으로 업로드하므로 `src/content/data` 가 함께 올라갑니다. 빌드 전에 `npm run content:sync` 로 전체 콘텐츠를 맞춰 두세요.
+- `production` 프로필 빌드는 `src/content/data` 가 전체 콘텐츠가 아니면 실패합니다(샘플로 출시되는 것 방지).
+
 ## 콘텐츠 추가하기
 
 1. [`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md) 의 스키마와 markdown-lite 문법을 확인합니다.
-2. `src/content/` 의 해당 파일에 항목을 추가합니다. (코딩 문제는 `algorithm/problems/<id>.ts` 새 파일 + `npm run content:index`)
+2. 비공개 콘텐츠 저장소(`to-jump-content`)의 해당 파일에 항목을 추가하고 `npm run content:sync` 로 가져옵니다. (코딩 문제는 `algorithm/problems/<id>.ts` 새 파일)
 3. `npm run validate` 로 검증합니다. 코딩 문제는 4개 언어 모범 답안이 모든 테스트를 통과해야 합니다.
+4. 샘플에 반영할 내용이 있으면 `npm run content:sample` 로 샘플을 다시 만듭니다.
 
 ---
 

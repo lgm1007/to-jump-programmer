@@ -1,41 +1,43 @@
 /**
  * 콘텐츠 진입점. 화면에서는 이 모듈만 import 한다.
+ * 학습 데이터는 src/content/data/ (gitignore 대상) 에 있으며 `npm run content:sync` 로 채운다.
+ * 전체 콘텐츠는 비공개 저장소, 공개 저장소에는 src/content/sample/ 만 있다.
  */
 import { ALGO_TOPICS } from './algorithm/topics';
-import { PROBLEMS } from './algorithm/problems';
-import bfsDfs from './algorithm/quiz/bfs-dfs';
-import binarySearch from './algorithm/quiz/binary-search';
-import bruteForce from './algorithm/quiz/brute-force';
-import complexity from './algorithm/quiz/complexity';
-import dp from './algorithm/quiz/dp';
-import greedy from './algorithm/quiz/greedy';
-import hash from './algorithm/quiz/hash';
-import heap from './algorithm/quiz/heap';
-import shortestPath from './algorithm/quiz/shortest-path';
-import sorting from './algorithm/quiz/sorting';
-import stackQueue from './algorithm/quiz/stack-queue';
-import tree from './algorithm/quiz/tree';
-import twoPointer from './algorithm/quiz/two-pointer';
-import unionFind from './algorithm/quiz/union-find';
+import { PROBLEMS } from './data/algorithm/problems';
+import bfsDfs from './data/algorithm/quiz/bfs-dfs';
+import binarySearch from './data/algorithm/quiz/binary-search';
+import bruteForce from './data/algorithm/quiz/brute-force';
+import complexity from './data/algorithm/quiz/complexity';
+import dp from './data/algorithm/quiz/dp';
+import greedy from './data/algorithm/quiz/greedy';
+import hash from './data/algorithm/quiz/hash';
+import heap from './data/algorithm/quiz/heap';
+import shortestPath from './data/algorithm/quiz/shortest-path';
+import sorting from './data/algorithm/quiz/sorting';
+import stackQueue from './data/algorithm/quiz/stack-queue';
+import tree from './data/algorithm/quiz/tree';
+import twoPointer from './data/algorithm/quiz/two-pointer';
+import unionFind from './data/algorithm/quiz/union-find';
 import { CS_CATEGORIES } from './cs/categories';
-import architecture from './cs/architecture';
-import database from './cs/database';
-import datastructure from './cs/datastructure';
-import csDjango from './cs/django';
-import infra from './cs/infra';
-import java from './cs/java';
-import javascript from './cs/javascript';
-import nestjs from './cs/nestjs';
-import network from './cs/network';
-import oop from './cs/oop';
-import os from './cs/os';
-import practice from './cs/practice';
-import python from './cs/python';
-import security from './cs/security';
-import csSpring from './cs/spring';
-import reviewDjango from './review/django';
-import reviewNest from './review/nest';
-import reviewSpring from './review/spring';
+import architecture from './data/cs/architecture';
+import database from './data/cs/database';
+import datastructure from './data/cs/datastructure';
+import csDjango from './data/cs/django';
+import infra from './data/cs/infra';
+import java from './data/cs/java';
+import javascript from './data/cs/javascript';
+import nestjs from './data/cs/nestjs';
+import network from './data/cs/network';
+import oop from './data/cs/oop';
+import os from './data/cs/os';
+import practice from './data/cs/practice';
+import python from './data/cs/python';
+import security from './data/cs/security';
+import csSpring from './data/cs/spring';
+import reviewDjango from './data/review/django';
+import reviewNest from './data/review/nest';
+import reviewSpring from './data/review/spring';
 import type {
   AlgoProblem,
   AlgoTopicContent,
