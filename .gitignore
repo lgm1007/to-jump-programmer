@@ -12,11 +12,24 @@ expo-env.d.ts
 # Native
 .kotlin/
 *.orig.*
+
+# 서명 키 · 스토어 인증 정보 (EAS 가 관리하므로 저장소에 두지 않는다)
 *.jks
+*.keystore
 *.p8
 *.p12
 *.key
+*.cer
 *.mobileprovision
+credentials.json
+credentials/
+*service-account*.json
+
+# 로컬 빌드 산출물 (eas build --local 등)
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
 
 # Metro
 .metro-health-check*
@@ -30,11 +43,22 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# 환경 변수 (AdMob ID, 실행 서버 도메인 등) — 예시 파일만 커밋한다
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
+
+# python (scripts/)
+__pycache__/
+*.py[cod]
+
+# 개인 도구 설정
+.idea/
+.claude/settings.local.json
+*.log
 
 example
 
