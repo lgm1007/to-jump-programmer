@@ -49,16 +49,16 @@ GitHub Pages 와 같은 경로로 확인하려면 두 명령 모두 `TJ_WEB_BASE
 
 ## 4. 광고 (Google AdSense)
 
-블로그에서 쓰는 AdSense 계정(`ca-pub-9194914695506719`)에 웹 앱 사이트를 **새 사이트로 추가**합니다. 웹 앱 주소(`jump-programmer.github.io`)는 블로그(`lgm1007.github.io`)와 다른 사이트라 따로 심사를 받습니다.
+AdMob 과 같은 계정의 AdSense(`ca-pub-5529768839764642`)에 웹 앱 사이트(`jump-programmer.github.io`)를 등록해 심사를 받습니다. (블로그 `lgm1007.github.io` 의 AdSense 는 다른 계정입니다)
 
 1. **ads.txt 게시**: `ads.txt` 는 도메인 최상위(`https://jump-programmer.github.io/ads.txt`)에 있어야 하므로, 조직에 `jump-programmer.github.io` 저장소(GitHub Pages 조직 사이트)를 만들고 루트에 아래 한 줄로 `ads.txt` 를 둡니다.
    ```text
-   google.com, pub-9194914695506719, DIRECT, f08c47fec0942fa0
+   google.com, pub-5529768839764642, DIRECT, f08c47fec0942fa0
    ```
-2. AdSense › **사이트 › 새 사이트 추가**에 `jump-programmer.github.io` 를 등록하고 검토를 요청합니다. (웹 앱 빌드에는 소유 확인용 메타 태그와 AdSense 코드가 들어가 있어야 하므로, 먼저 아래 3번의 `ADSENSE_CLIENT` 를 등록해 배포해 둡니다)
+2. AdSense › **사이트 › 새 사이트 추가**에 `jump-programmer.github.io` 를 등록하고 검토를 요청합니다. 소유 확인은 **루트 페이지**(`https://jump-programmer.github.io/`)를 읽으므로, `jump-programmer.github.io` 저장소의 `index.html` 에도 메타 태그(`google-adsense-account`)와 AdSense 코드를 넣어 둡니다. 웹 앱 쪽은 아래 3번의 `ADSENSE_CLIENT` 로 들어갑니다.
 3. `to-jump-programmer` 저장소 **Settings › Secrets and variables › Actions › Variables** 에 등록합니다. 광고 단위 ID 는 AdSense › **광고 › 광고 단위 기준 › 디스플레이 광고**에서 반응형 광고 단위를 만들어 확인합니다.
    ```bash
-   gh variable set ADSENSE_CLIENT --repo jump-programmer/to-jump-programmer --body "ca-pub-9194914695506719"
+   gh variable set ADSENSE_CLIENT --repo jump-programmer/to-jump-programmer --body "ca-pub-5529768839764642"
    ```
    ```bash
    gh variable set ADSENSE_SLOT --repo jump-programmer/to-jump-programmer --body "광고단위ID"
@@ -75,7 +75,9 @@ GitHub Pages 와 같은 경로로 확인하려면 두 명령 모두 `TJ_WEB_BASE
 ## 5. 검색 노출 (선택)
 
 - 빌드가 `sitemap.xml`(콘텐츠 화면 111개)을 만듭니다: https://jump-programmer.github.io/to-jump-programmer/sitemap.xml
-- Google Search Console 에 `https://jump-programmer.github.io/` 속성을 추가해 **Sitemaps** 에서 위 주소를 제출하거나, `jump-programmer.github.io` 저장소 루트의 `robots.txt` 에 `Sitemap:` 줄을 넣습니다.
+- Google Search Console 에 **URL 접두어** 속성 `https://jump-programmer.github.io/` 로 등록되어 있습니다. (`github.io` 는 DNS 를 직접 관리할 수 없어 도메인 속성 · DNS 확인은 쓸 수 없습니다)
+  - 소유 확인 파일 `google6f2d767f4614ac15.html` 이 `jump-programmer.github.io` 저장소 루트에 있습니다. 지우면 확인이 풀립니다.
+  - **Sitemaps** 에 `to-jump-programmer/sitemap.xml` 을 제출합니다. 루트 `robots.txt` 에도 sitemap 주소가 있습니다.
 
 ## 6. 알아 둘 점
 
