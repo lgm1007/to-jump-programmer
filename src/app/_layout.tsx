@@ -8,10 +8,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useHydrated } from '@/features/progress/use-hydrated';
+import { initPwa } from '@/features/pwa/install';
 import { RunnerHost } from '@/features/runner/runner-host';
 import { AppThemeProvider, useTheme } from '@/theme/theme-provider';
 
 void SplashScreen.preventAutoHideAsync().catch(() => {});
+// 웹: 홈 화면 설치 이벤트는 첫 화면이 그려지기 전에 올 수 있어 앱 시작 시 바로 받는다
+initPwa();
 
 function NavigationTheme({ children }: { children: ReactNode }) {
   const { scheme, colors } = useTheme();

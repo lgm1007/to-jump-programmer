@@ -11,6 +11,7 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "assets" / "images"
+WEB_OUT = ROOT / "public" / "icons"  # 웹(PWA) 설치 아이콘 — public/ 은 웹 빌드에 그대로 복사된다
 SS = 4  # 안티에일리어싱용 슈퍼샘플링 배율
 
 TOP_LEFT = (49, 130, 246)  # #3182F6
@@ -81,7 +82,14 @@ def main() -> None:
     render(512, background=True, rounded=0.225, mark_scale=0.8).save(OUT / "splash-icon.png")
     # 파비콘
     render(64, background=True, rounded=0.225, mark_scale=0.84).save(OUT / "favicon.png")
-    print("아이콘 생성 완료:", ", ".join(sorted(p.name for p in OUT.glob("*.png"))))
+    # 웹(PWA): 일반 아이콘은 둥근 사각형, 마스커블은 꽉 찬 배경 + 안전 영역(가운데 80%) 안의 마크
+    WEB_OUT.mkdir(parents=True, exist_ok=True)
+    for size in (192, 512):
+        render(size, background=True, rounded=0.225, mark_scale=0.8).save(WEB_OUT / f"icon-{size}.png")
+        render(size, background=True, mark_scale=0.62).convert("RGB").save(WEB_OUT / f"maskable-{size}.png")
+    # iOS 홈 화면 아이콘: 투명 영역 없이 (iOS 가 모서리를 둥글게 처리)
+    render(180, background=True, mark_scale=0.82).convert("RGB").save(WEB_OUT / "apple-touch-icon.png")
+    print("아이콘 생성 완료:", ", ".join(sorted(p.name for p in [*OUT.glob("*.png"), *WEB_OUT.glob("*.png")])))
 
 
 if __name__ == "__main__":

@@ -27,7 +27,7 @@ import {
   type ReviewChallenge,
   type Severity,
 } from '@/content';
-import { showInterstitialAtBreak } from '@/features/ads';
+import { AdSlot, showInterstitialAtBreak } from '@/features/ads';
 import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
@@ -337,6 +337,7 @@ export default function ChallengeScreen() {
                   );
                 })}
               </Card>
+              <AdSlot />
 
               <SectionHeader title="베스트 개선안" />
               <SegmentedControl

@@ -4,6 +4,8 @@
  */
 import assert from 'node:assert/strict';
 
+import { backupFileName, createBackup, describeBackup, parseBackup } from '../src/features/progress/backup';
+import type { ProgressData } from '../src/features/progress/store';
 import { resultsMatch } from '../src/features/runner/core/compare';
 import { parseHarnessOutput } from '../src/features/runner/core/protocol';
 import { signatureText, starterCode } from '../src/features/runner/core/languages';
@@ -100,6 +102,42 @@ test('키워드 · 문자열 · 주석 · 여러 줄 토큰', () => {
   assert.equal(lines[0][0].kind, 'keyword');
   assert.ok(lines[2].some((t) => t.kind === 'string'));
   assert.ok(lines[3].some((t) => t.kind === 'comment'));
+});
+
+console.log('backup');
+test('학습 기록 백업 만들기 · 읽기', () => {
+  const progress: ProgressData = {
+    profile: { nickname: '점프', goal: 'new', language: 'kotlin', framework: 'spring', dailyGoal: 10, onboarded: true },
+    settings: { theme: 'dark', runnerUrl: '', editorFontSize: 15, haptics: true, reviewLanguage: { spring: 'kotlin' } },
+    quiz: { q1: { attempts: 2, correct: 1, last: true, lastAt: 1 } },
+    cards: {},
+    problems: { p1: { solved: true, language: 'kotlin', bestPassed: 3, total: 3, submissions: 1, lastAt: 1 } },
+    patterns: {},
+    challenges: {},
+    bookmarks: {},
+    activity: { '2026-10-09': 3, '2026-10-10': 1 },
+    daily: null,
+  } as ProgressData;
+  const now = new Date(2026, 9, 10, 9, 0);
+  const file = createBackup(progress, { drafts: { 'p1:kotlin': 'class Solution {}' }, lastLanguage: { p1: 'kotlin' } }, now);
+  const parsed = parseBackup(JSON.stringify(file));
+  assert.ok(parsed.ok);
+  assert.deepEqual(parsed.backup.progress, progress);
+  assert.equal(parsed.backup.drafts?.drafts['p1:kotlin'], 'class Solution {}');
+  assert.equal(backupFileName(now), 'to-jump-backup-2026-10-10.json');
+  assert.match(describeBackup(parsed.backup), /학습한 날 2일 · 퀴즈 1문항 · 코딩 문제 1개/);
+});
+test('잘못된 백업 파일은 거절', () => {
+  const ok = { app: 'to-jump-programmer', format: 1, exportedAt: '', progress: { profile: {}, settings: {} } };
+  const reject = (v: unknown) => assert.equal(parseBackup(typeof v === 'string' ? v : JSON.stringify(v)).ok, false);
+  assert.equal(parseBackup(JSON.stringify(ok)).ok, true);
+  reject('not json');
+  reject({ ...ok, app: 'other-app' });
+  reject({ ...ok, format: 99 });
+  reject({ ...ok, progress: { settings: {} } });
+  reject({ ...ok, progress: { ...ok.progress, quiz: [] } });
+  reject({ ...ok, progress: { ...ok.progress, daily: 'x' } });
+  reject({ ...ok, drafts: { drafts: { a: 1 }, lastLanguage: {} } });
 });
 
 console.log('date');

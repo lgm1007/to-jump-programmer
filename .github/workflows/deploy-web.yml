@@ -1,0 +1,75 @@
+# 웹 버전(PWA)을 GitHub Pages 에 배포한다 — https://jump-programmer.github.io/to-jump-programmer/
+# main 에 푸시하면 실행되고, Actions 탭에서 직접 실행할 수도 있다. 설정 방법은 docs/WEB.md 참고.
+#   - Secrets  CONTENT_DEPLOY_KEY : 비공개 콘텐츠 저장소(lgm1007/to-jump-content)의 읽기 전용 배포 키(SSH 개인 키)
+#   - Variables(선택) ADSENSE_CLIENT · ADSENSE_SLOT : Google AdSense 게시자 ID(ca-pub-…) · 광고 단위 ID
+#   - Variables(선택) RUNNER_URL : Java · Kotlin · C++ 실행 서버 기본 주소
+#   - Settings › Pages › Build and deployment › Source: GitHub Actions
+name: Deploy web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포가 겹치면 먼저 시작한 배포를 끝까지 진행한다
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TJ_CONTENT_DIR: ${{ github.workspace }}/.content
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: 비공개 콘텐츠 받기
+        uses: actions/checkout@v7
+        with:
+          repository: lgm1007/to-jump-content
+          ssh-key: ${{ secrets.CONTENT_DEPLOY_KEY }}
+          path: .content
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: 전체 콘텐츠로 맞추기
+        run: |
+          npm run content:sync
+          node scripts/content-sync.mjs --require-full
+
+      - run: npm test
+
+      - name: 웹 빌드
+        run: npm run build:web
+        env:
+          TJ_WEB_BASE_URL: /${{ github.event.repository.name }}
+          TJ_WEB_ORIGIN: https://${{ github.repository_owner }}.github.io
+          EXPO_PUBLIC_ADSENSE_CLIENT: ${{ vars.ADSENSE_CLIENT }}
+          EXPO_PUBLIC_ADSENSE_SLOT: ${{ vars.ADSENSE_SLOT }}
+          EXPO_PUBLIC_RUNNER_URL: ${{ vars.RUNNER_URL }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

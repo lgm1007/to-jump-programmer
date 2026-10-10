@@ -3,12 +3,20 @@
 코딩 테스트, 코드 리뷰 테스트, 기술 면접을 **한 앱에서** 준비하는 모바일 학습 앱입니다.
 하루 10분씩 퀴즈·문제·면접 카드로 꾸준히 학습하도록 설계했습니다.
 
+**[웹에서 바로 사용하기 →](https://jump-programmer.github.io/to-jump-programmer/)** 설치 · 로그인 없이 브라우저에서 바로 쓰고, 휴대폰에서는 홈 화면에 앱처럼 설치할 수 있습니다 (PWA).
+
+| 기기 | 설치 방법 |
+| --- | --- |
+| Android | Chrome 에서 열고 홈 화면의 [앱 설치] 버튼, 또는 메뉴 › 앱 설치 |
+| iPhone · iPad | Safari 에서 열고 공유 버튼 › 홈 화면에 추가 |
+| PC | Chrome · Edge 주소창의 설치 아이콘 |
+
 | 트랙 | 기능 |
 | --- | --- |
 | **알고리즘 · 코딩 테스트** | 14개 토픽 개념 정리 + 개념 퀴즈 112문항 · 프로그래머스 형식 코딩 문제 29개를 Python · Java · Kotlin · C++ · JavaScript 로 직접 풀고 채점 (힌트 · 해설 · 5개 언어 모범 답안) |
 | **코드 리뷰 테스트** | Spring Boot(Java · Kotlin 전환) / Node.js·NestJS / Django·Flask 별 **개선 패턴 학습** 10개(개선 전·후 코드, 변경점 diff, 리뷰 체크리스트)와 **리뷰 실전 퀴즈** 6개(문제 줄 찾기 → 문제점 고르기 → 채점 · 모범 리뷰 · 베스트 개선안) — 총 48개 |
 | **기술 면접 CS** | 15개 카테고리(OS · 네트워크 · 자료구조 · DB · 보안 · Java · JS/TS · Python · Spring · NestJS · Django · 아키텍처 · 인프라 · OOP · 실무) 퀴즈 225문항 + 면접 질문 카드 120장(모범 답안 · 핵심 키워드 자가 체크 · 꼬리 질문) |
-| **학습 관리** | 오늘의 추천 · 하루 목표 · 연속 학습일 · 학습 잔디 · 오답노트 · 북마크 · 다시 볼 카드 · 다크 모드 |
+| **학습 관리** | 오늘의 추천 · 하루 목표 · 연속 학습일 · 학습 잔디 · 오답노트 · 북마크 · 다시 볼 카드 · 다크 모드 · 학습 기록 백업/복원(웹) |
 
 > 코딩 문제의 테스트 케이스는 5개 언어 모범 답안을 실제로 실행해 검증합니다 (`npm run validate`).
 >
@@ -34,14 +42,15 @@
 
 | 영역 | 선택 | 이유 |
 | --- | --- | --- |
-| 앱 | **Expo SDK 57 (React Native 0.86) + TypeScript** | iOS · Android(· 웹)를 하나의 코드로. EAS 클라우드 빌드로 스토어 출시 |
+| 앱 | **Expo SDK 57 (React Native 0.86) + TypeScript** | iOS · Android · 웹을 하나의 코드로. EAS 클라우드 빌드로 스토어 출시 |
+| 웹 (PWA) | Expo 웹 내보내기 + Workbox 서비스 워커 + **GitHub Pages** | 브라우저 · 홈 화면 설치 · 오프라인 지원. `main` 에 푸시하면 GitHub Actions 가 배포 |
 | 라우팅 | Expo Router (파일 기반) | 탭 + 스택 네비게이션, 딥링크 기본 지원 |
 | 상태·저장 | Zustand + AsyncStorage | 학습 기록을 **기기에만 저장** → 서버·DB 없이 동작, 운영자가 수집하는 개인정보 없음 |
 | 콘텐츠 | 앱 번들에 포함된 TypeScript 데이터 | CMS·API 서버 불필요. 콘텐츠 수정은 EAS Update(OTA)로 배포 |
 | 코드 에디터 | CodeMirror 6 (WebView 내장, 오프라인) | 구문 강조 · 자동 들여쓰기 · 괄호 짝 · 모바일 입력 지원 + 기호 입력 툴바 |
 | 코드 실행 | **기기 내 샌드박스**: Python(Pyodide/WebAssembly) · JavaScript(Web Worker) | 서버 없이 채점. Worker 를 강제 종료해 무한 루프에도 앱이 멈추지 않음 |
 | 코드 실행 (선택) | Java · Kotlin · C++: **Piston**(오픈소스) 자가 호스팅 | 저사양 서버 1대로 운영. 서버가 없어도 앱의 나머지 기능은 모두 동작 |
-| 수익화 | **Google AdMob** (`react-native-google-mobile-ads`) | 무료 앱 + 광고. 동의(UMP) · iOS 추적 허용(ATT) 처리 포함 |
+| 수익화 | 앱: **Google AdMob** (`react-native-google-mobile-ads`) · 웹: **Google AdSense** | 무료 + 광고. 동의(UMP) · iOS 추적 허용(ATT) 처리 포함 |
 
 ---
 
@@ -72,12 +81,13 @@
 
 | 위치 | 형식 | 규칙 |
 | --- | --- | --- |
-| 탭 화면 하단(탭 바 위) | 배너 (320×50) | 항상. 불러오지 못하면 자리를 차지하지 않음 |
-| 퀴즈 · 면접 카드 · 코드 리뷰 퀴즈 · 코딩 문제를 마치고 나갈 때 | 전면 광고 | 세션 2번 마칠 때마다 1번, 앱 실행 직후·직전 광고 후 3분간 노출 안 함 |
+| 앱: 탭 화면 하단(탭 바 위) | 배너 (320×50) | 항상. 불러오지 못하면 자리를 차지하지 않음 |
+| 앱: 퀴즈 · 면접 카드 · 코드 리뷰 퀴즈 · 코딩 문제를 마치고 나갈 때 | 전면 광고 | 세션 2번 마칠 때마다 1번, 앱 실행 직후·직전 광고 후 3분간 노출 안 함 |
+| 웹: 탭 화면 · 개선 패턴 · 토픽 · 면접 카테고리 · 학습 결과 화면의 콘텐츠 사이 | AdSense 반응형 디스플레이 | 화면을 옮길 때만 요청, 채워지지 않으면 자리를 차지하지 않음 |
 
 - 문제를 푸는 중(퀴즈 진행 · 코드 에디터 · 카드 학습)에는 광고를 띄우지 않습니다.
-- AdMob ID 는 저장소에 넣지 않고 빌드 환경 변수로 주입하며, 값이 없으면 Google 테스트 광고로 동작합니다.
-- 광고 SDK 가 없는 Expo Go · 웹에서는 광고 없이 동작합니다.
+- 웹은 메뉴 · 버튼 가까이에 광고를 두지 않도록(실수 클릭 방지 정책) 탭 바 위 고정 배너 대신 콘텐츠 사이에 둡니다.
+- 광고 ID 는 저장소에 넣지 않고 빌드 환경 변수로 주입하며, 값이 없으면 앱은 Google 테스트 광고로, 웹은 광고 없이 동작합니다. 웹 배포 · AdSense 설정은 [`docs/WEB.md`](docs/WEB.md) 에 있습니다.
 
 ---
 
@@ -100,7 +110,7 @@
 ```bash
 npm install        # 설치 후 학습 콘텐츠를 자동으로 준비 (전체 콘텐츠가 없으면 샘플)
 npm start          # Expo 개발 서버 (QR 코드를 Expo Go 앱으로 스캔)
-npm run web        # 브라우저에서 실행
+npm run web        # 브라우저에서 실행 (개발 서버)
 ```
 
 광고까지 확인하려면 개발 빌드(`npx expo run:ios` / `npx expo run:android`)로 실행합니다.
@@ -109,7 +119,9 @@ npm run web        # 브라우저에서 실행
 | --- | --- |
 | `npm run typecheck` | 앱 · 스크립트 · 에디터 타입 검사 |
 | `npm run lint` | ESLint (React Compiler 규칙 포함) |
-| `npm test` | 핵심 로직 테스트 (마크다운 파서 · diff · 채점 비교 · 출력 파서 · 연속 학습일) |
+| `npm test` | 핵심 로직 테스트 (마크다운 파서 · diff · 채점 비교 · 출력 파서 · 연속 학습일 · 백업 파일) |
+| `npm run build:web` | 웹(PWA) 빌드 — `dist/` (서비스 워커 · manifest · sitemap 포함) |
+| `npm run preview:web` | 웹 빌드를 GitHub Pages 와 같은 방식으로 띄워 확인 |
 | `npm run test:harness` | Java · Kotlin · C++ 채점 하네스 테스트 (JDK, kotlinc, g++/clang++ 필요) |
 | `npm run validate` | 콘텐츠 구조 검증 + 코딩 문제 모범 답안 5개 언어 실행 검증 (python3, node, JDK 15+, kotlinc, g++/clang++ 필요) |
 
@@ -136,15 +148,18 @@ src/
       sandbox/              #   Web Worker 샌드박스 (Python/Pyodide, JavaScript)
       remote.ts             #   Piston 클라이언트 (Java/Kotlin/C++)
     editor/                 # CodeMirror WebView/iframe 래퍼 · 키보드 툴바
-    progress/               # 학습 기록 저장소 · 통계 · 오늘의 추천
-    ads/                    # AdMob 광고 (하단 배너 · 전면 광고 · 동의/ATT)
+    progress/               # 학습 기록 저장소 · 통계 · 오늘의 추천 · 백업/복원
+    ads/                    # 광고: AdMob(앱 · 하단 배너 · 전면 광고 · 동의/ATT), AdSense(웹)
+    pwa/                    # 웹 앱 설치(홈 화면 추가) 상태
   lib/                      # markdown-lite 파서 · 구문 강조 · diff · 날짜 유틸
   theme/                    # 디자인 토큰 (라이트/다크)
 editor/src/main.ts          # 내장 코드 에디터 소스 (esbuild 로 번들)
-scripts/                    # 콘텐츠 동기화·검증 · 에디터 번들 · 아이콘 생성
+scripts/                    # 콘텐츠 동기화·검증 · 에디터 번들 · 아이콘 생성 · 웹(PWA) 빌드
+public/icons/               # 웹 앱 설치 아이콘
+.github/workflows/          # 웹 버전 GitHub Pages 배포
 infra/runner/               # Java·Kotlin·C++ 실행 서버 (Piston + Caddy HTTPS) docker-compose
 plugins/                    # 로컬 Expo config plugin (iOS UIScene 생명주기)
-docs/                       # 콘텐츠 작성 가이드 · 개인정보 처리방침 · 스크린샷
+docs/                       # 콘텐츠 작성 가이드 · 웹 배포 가이드 · 개인정보 처리방침 · 스크린샷
 ```
 
 ---

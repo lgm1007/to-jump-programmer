@@ -13,7 +13,7 @@ import { ProgressBar } from '@/components/ui/progress';
 import { Footer, InsetView } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { CARD_MAP, CS_CATEGORY_MAP, CS_CONTENT } from '@/content';
-import { showInterstitialAtBreak } from '@/features/ads';
+import { AdSlot, showInterstitialAtBreak } from '@/features/ads';
 import { againCardIds } from '@/features/progress/selectors';
 import { useProgress, type CardRating } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
@@ -95,6 +95,7 @@ export default function CardsScreen() {
                 ))}
               </View>
             </Card>
+            <AdSlot />
           </View>
         </ScrollView>
         <Footer>
