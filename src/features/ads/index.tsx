@@ -28,6 +28,9 @@ function NoBanner() {
 
 export const AdBanner = google?.AdBanner ?? NoBanner;
 
+/** 화면 콘텐츠 끝의 광고 자리 — 웹(AdSense) 전용. 앱은 탭 바 위 배너(AdBanner)만 쓴다 */
+export const AdSlot = NoBanner;
+
 /** 광고를 준비한다 (동의 → 추적 권한 → SDK 초기화). 여러 번 불러도 한 번만 실행된다. */
 export function startAds() {
   void google?.startAds();

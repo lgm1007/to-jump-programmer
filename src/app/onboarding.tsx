@@ -102,6 +102,12 @@ export default function Onboarding() {
     }
   };
 
+  // 설정 없이 바로 둘러보기 — 기본값으로 시작하고, 프로필은 나중에 [마이 › 설정]에서 바꿀 수 있다
+  const skip = () => {
+    completeOnboarding({ nickname: '개발자', goal: 'new', language: 'python', framework: 'spring', dailyGoal: 10 });
+    router.replace('/');
+  };
+
   const tones = { algo: c.algo, review: c.review, cs: c.cs } as const;
 
   return (
@@ -261,6 +267,7 @@ export default function Onboarding() {
             fullWidth
             disabled={step === 1 && nickname.trim().length === 0}
           />
+          {step === 0 && <Button title="설정은 나중에, 바로 둘러보기" variant="ghost" size="md" onPress={skip} fullWidth />}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -278,5 +285,5 @@ const styles = StyleSheet.create({
   feature: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.lg },
   option: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.lg, borderRadius: radius.lg },
   input: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: 14, fontSize: 17 },
-  footer: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', paddingHorizontal: spacing.xxl, paddingBottom: spacing.md, paddingTop: spacing.sm },
+  footer: { width: '100%', maxWidth: MAX_CONTENT_WIDTH, alignSelf: 'center', gap: spacing.xs, paddingHorizontal: spacing.xxl, paddingBottom: spacing.md, paddingTop: spacing.sm },
 });

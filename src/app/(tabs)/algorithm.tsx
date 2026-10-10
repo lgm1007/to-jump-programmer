@@ -11,6 +11,7 @@ import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
 import { ALGO_TOPICS, ALL_PROBLEMS, topicLabel } from '@/content';
+import { AdSlot } from '@/features/ads';
 import { algoTopicQuestionIds, quizSetStats } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
 import { useColors } from '@/theme/theme-provider';
@@ -127,6 +128,7 @@ export default function AlgorithmTab() {
           </Card>
         </View>
       )}
+      <AdSlot />
     </Screen>
   );
 }

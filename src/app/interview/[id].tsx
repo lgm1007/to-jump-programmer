@@ -9,6 +9,7 @@ import { ProgressBar } from '@/components/ui/progress';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { CS_CATEGORY_MAP, CS_CONTENT } from '@/content';
+import { AdSlot } from '@/features/ads';
 import { quizSetStats, wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
 import { useColors } from '@/theme/theme-provider';
@@ -125,6 +126,7 @@ export default function CategoryScreen() {
           })}
         </Card>
       )}
+      <AdSlot />
     </Screen>
   );
 }

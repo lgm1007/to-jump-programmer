@@ -71,7 +71,7 @@ export interface DailyPlanRecord {
   review?: { kind: 'pattern' | 'challenge'; id: string };
 }
 
-interface ProgressData {
+export interface ProgressData {
   profile: Profile;
   settings: Settings;
   quiz: Record<string, QuizRecord>;
@@ -98,6 +98,8 @@ interface ProgressActions {
   toggleBookmark: (id: string, kind: BookmarkKind) => void;
   setDaily: (plan: DailyPlanRecord) => void;
   resetProgress: () => void;
+  /** 백업 파일의 학습 기록으로 모두 바꾼다 (빠진 항목은 기본값) */
+  restoreProgress: (data: Partial<ProgressData>) => void;
 }
 
 export type ProgressState = ProgressData & ProgressActions;
@@ -229,6 +231,14 @@ export const useProgress = create<ProgressState>()(
       setDaily: (plan) => set({ daily: plan }),
 
       resetProgress: () => set({ ...EMPTY_PROGRESS }),
+
+      restoreProgress: (data) =>
+        set({
+          ...EMPTY_PROGRESS,
+          ...data,
+          profile: { ...DEFAULT_PROFILE, ...data.profile },
+          settings: { ...DEFAULT_SETTINGS, ...data.settings },
+        }),
     }),
     {
       name: 'tj-progress',

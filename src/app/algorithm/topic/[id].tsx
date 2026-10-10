@@ -9,6 +9,7 @@ import { Divider, EmptyState, IconBadge, SectionHeader } from '@/components/ui/m
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { ALGO_QUIZ, ALGO_TOPIC_MAP, ALL_PROBLEMS } from '@/content';
+import { AdSlot } from '@/features/ads';
 import { algoTopicQuestionIds, quizSetStats, wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
 import { useColors } from '@/theme/theme-provider';
@@ -112,6 +113,7 @@ export default function TopicScreen() {
           </Card>
         </>
       )}
+      <AdSlot />
     </Screen>
   );
 }

@@ -2,17 +2,20 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import Constants from 'expo-constants';
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 
+import { InstallAppCard } from '@/components/install-app-card';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Chip, Divider, SectionHeader } from '@/components/ui/misc';
 import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import { CONTENT_STATS, REVIEW_FRAMEWORKS } from '@/content';
+import { CONTENT_STATS, REVIEW_FRAMEWORKS, type SolveLanguage } from '@/content';
 import { openAdPrivacyOptions, useAds } from '@/features/ads';
-import { useProgress, type ThemePreference } from '@/features/progress/store';
+import { backupFileName, createBackup, describeBackup, parseBackup } from '@/features/progress/backup';
+import { BACKUP_SUPPORTED, pickBackupFile, saveBackupFile } from '@/features/progress/backup-file';
+import { useDrafts, useProgress, type ThemePreference } from '@/features/progress/store';
 import { SOLVE_LANGUAGES } from '@/features/runner/core/languages';
 import { pingRemote } from '@/features/runner/remote';
 import { confirmAsync, notify } from '@/lib/confirm';
@@ -27,6 +30,7 @@ export default function SettingsScreen() {
   const updateProfile = useProgress((s) => s.updateProfile);
   const updateSettings = useProgress((s) => s.updateSettings);
   const resetProgress = useProgress((s) => s.resetProgress);
+  const restoreProgress = useProgress((s) => s.restoreProgress);
   const adPrivacyRequired = useAds((s) => s.privacyOptionsRequired);
   const [nickname, setNickname] = useState(profile.nickname);
   const [runnerUrl, setRunnerUrl] = useState(settings.runnerUrl);
@@ -55,6 +59,42 @@ export default function SettingsScreen() {
     if (!ok) return;
     resetProgress();
     notify('초기화 완료', '학습 기록을 초기화했어요.');
+  };
+
+  const exportBackup = async () => {
+    const fileName = backupFileName();
+    const text = JSON.stringify(createBackup(useProgress.getState(), useDrafts.getState()));
+    const result = await saveBackupFile(text, fileName);
+    if (result === 'downloaded') notify('백업 완료', `${fileName} 파일을 내려받았어요. Google Drive 같은 안전한 곳에 보관하세요.`);
+  };
+
+  const importBackup = async () => {
+    const text = await pickBackupFile();
+    if (text == null) return;
+    const parsed = parseBackup(text);
+    if (!parsed.ok) {
+      notify('복원할 수 없어요', parsed.error);
+      return;
+    }
+    const { backup } = parsed;
+    const ok = await confirmAsync(
+      '학습 기록 복원',
+      `${describeBackup(backup)}\n\n지금 이 기기의 학습 기록과 설정을 백업 내용으로 바꿔요.`,
+      '복원',
+      true,
+    );
+    if (!ok) return;
+    restoreProgress(backup.progress);
+    if (backup.drafts) {
+      useDrafts.setState({
+        drafts: backup.drafts.drafts,
+        lastLanguage: backup.drafts.lastLanguage as Record<string, SolveLanguage>,
+      });
+    }
+    const next = useProgress.getState();
+    setNickname(next.profile.nickname);
+    setRunnerUrl(next.settings.runnerUrl);
+    notify('복원 완료', '학습 기록을 복원했어요.');
   };
 
   return (
@@ -176,11 +216,26 @@ export default function SettingsScreen() {
         )}
       </Card>
 
+      {Platform.OS === 'web' && (
+        <>
+          <SectionHeader title="앱 설치" />
+          <InstallAppCard />
+        </>
+      )}
+
       <SectionHeader title="데이터" />
       <Card style={{ gap: spacing.md }}>
         <Text variant="caption" color="textSecondary">
-          모든 학습 기록은 이 기기에만 저장되고 외부로 전송되지 않아요.
+          {Platform.OS === 'web'
+            ? '모든 학습 기록은 이 브라우저에만 저장되고 외부로 전송되지 않아요. 브라우저 데이터를 지우면 함께 지워지니 가끔 백업해 두세요.'
+            : '모든 학습 기록은 이 기기에만 저장되고 외부로 전송되지 않아요.'}
         </Text>
+        {BACKUP_SUPPORTED && (
+          <View style={styles.backupRow}>
+            <Button title="백업 내보내기" icon="cloud-upload-outline" variant="secondary" size="md" style={{ flex: 1 }} onPress={() => void exportBackup()} />
+            <Button title="백업 복원" icon="cloud-download-outline" variant="secondary" size="md" style={{ flex: 1 }} onPress={() => void importBackup()} />
+          </View>
+        )}
         <Button title="학습 기록 초기화" variant="danger" size="md" onPress={reset} />
       </Card>
 
@@ -240,5 +295,6 @@ const styles = StyleSheet.create({
   stepBtn: { width: 40, height: 40, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   switchRow: { flexDirection: 'row', alignItems: 'center' },
   pingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  backupRow: { flexDirection: 'row', gap: spacing.sm },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.lg, paddingVertical: spacing.lg },
 });

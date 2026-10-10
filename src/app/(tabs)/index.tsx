@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { InstallAppCard } from '@/components/install-app-card';
 import { Inline } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import {
   REVIEW_FRAMEWORK_MAP,
   topicLabel,
 } from '@/content';
+import { AdSlot } from '@/features/ads';
 import { useReviewLanguageMap } from '@/features/progress/review-language';
 import { pickReview, trackProgress, trackSummary, useDailyPlan, wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress, useTodayCount } from '@/features/progress/store';
@@ -131,6 +133,9 @@ export default function Home() {
         </Card>
       )}
 
+      {/* 웹: 홈 화면 설치 안내 (닫으면 다시 보이지 않음) */}
+      <InstallAppCard dismissible />
+
       <SectionHeader title="오늘의 추천" subtitle="매일 새로운 조합으로 추천해드려요" />
       <View style={{ gap: spacing.md }}>
         {problem && (
@@ -218,6 +223,7 @@ export default function Home() {
           onPress={() => router.push('/interview')}
         />
       </View>
+      <AdSlot />
     </Screen>
   );
 }

@@ -15,6 +15,7 @@ import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
 import { PATTERN_MAP, resolvePattern, REVIEW_CATEGORY_LABEL, REVIEW_CONTENT, REVIEW_FRAMEWORK_MAP } from '@/content';
+import { AdSlot } from '@/features/ads';
 import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
@@ -137,6 +138,8 @@ export default function PatternScreen() {
       <Card>
         <RichText text={pattern.explanation} variant="callout" />
       </Card>
+
+      <AdSlot />
 
       <SectionHeader title="리뷰 체크리스트" subtitle="비슷한 코드를 리뷰할 때 확인해보세요" />
       <Card style={{ gap: spacing.md }}>

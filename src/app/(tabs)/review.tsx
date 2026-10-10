@@ -21,6 +21,7 @@ import {
   type FrameworkId,
   type ReviewCategory,
 } from '@/content';
+import { AdSlot } from '@/features/ads';
 import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
@@ -208,6 +209,7 @@ export default function ReviewTab() {
           )}
         </View>
       )}
+      <AdSlot />
     </Screen>
   );
 }

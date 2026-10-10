@@ -1,7 +1,7 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
- * 동적 앱 설정 — 고정 값은 app.json 에 두고, AdMob 설정만 환경 변수로 덧붙인다.
+ * 동적 앱 설정 — 고정 값은 app.json 에 두고, AdMob 설정과 웹 배포 경로만 환경 변수로 덧붙인다.
  * 실제 AdMob ID 는 저장소에 올리지 않는다.
  *   - 로컬 개발: .env.local (.gitignore 대상, .env.example 참고)
  *   - EAS Build: EAS 환경 변수 (docs/RELEASE.md 참고)
@@ -70,10 +70,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     }
   }
 
+  // 웹 배포 경로 — GitHub Pages 프로젝트 사이트는 /<저장소 이름> 아래에서 서비스된다 (scripts/build-web.mjs 가 설정)
+  const webBaseUrl = process.env.TJ_WEB_BASE_URL?.trim().replace(/\/+$/, '') || undefined;
+
   return {
     ...config,
     name: config.name ?? 'To Jump',
     slug: config.slug ?? 'to-jump-programmer',
+    experiments: { ...config.experiments, ...(webBaseUrl ? { baseUrl: webBaseUrl } : null) },
     plugins: [
       ...(config.plugins ?? []),
       [
