@@ -9,18 +9,34 @@ const content: CsCategoryContent = {
       type: 'mcq',
       difficulty: 1,
       prompt: '다음 중 평가 결과가 `true`인 것은?',
-      choices: [
-        '`NaN === NaN`',
-        '`null === undefined`',
-        '`[1] === [1]`',
-        '`null == undefined`',
+      correct: '`null == undefined`',
+      distractors: [
+        {
+          text: '`NaN === NaN`',
+          why: '`NaN`은 자기 자신과도 같지 않아 `false`입니다. `NaN`인지는 `Number.isNaN()`이나 `Object.is()`로 판별합니다.',
+        },
+        {
+          text: '`null === undefined`',
+          why: '`===`(엄격한 동등)는 타입을 변환하지 않으므로, 타입이 다른 `null`과 `undefined`를 비교하면 바로 `false`입니다.',
+        },
+        {
+          text: '`[1] === [1]`',
+          why: '객체는 내용이 아니라 **참조**를 비교합니다. 리터럴 두 개는 서로 다른 배열이라 `false`입니다.',
+        },
+        {
+          text: '`null == 0`',
+          why: '`==`에서 `null`은 숫자 0으로 변환되지 않고 `undefined`하고만 같으므로 `false`입니다.',
+        },
+        {
+          text: '`null == false`',
+          why: '`null`이 falsy 값이라도 `==`로 `false`와 같지는 않습니다. `null`은 `undefined`하고만 느슨하게 같아 결과는 `false`입니다.',
+        },
+        {
+          text: '`\'1\' === 1`',
+          why: '`\'1\' == 1`은 타입 변환으로 `true`가 되지만, `===`는 문자열과 숫자를 변환 없이 비교하므로 `false`입니다.',
+        },
       ],
-      answer: 3,
-      explanation: `\`==\`(느슨한 동등)는 비교 전에 타입을 변환하는데, \`null\`과 \`undefined\`는 **서로끼리만** 느슨하게 같도록 정해져 있습니다. 그래서 \`null == undefined\`는 \`true\`이고, \`null == 0\`은 \`false\`입니다.
-
-- \`NaN === NaN\`: \`NaN\`은 자기 자신과도 같지 않습니다. 판별은 \`Number.isNaN()\`이나 \`Object.is()\`로 합니다.
-- \`null === undefined\`: \`===\`(엄격한 동등)는 타입이 다르면 바로 \`false\`입니다.
-- \`[1] === [1]\`: 객체는 내용이 아니라 **참조**를 비교하므로 서로 다른 배열입니다.
+      explanation: `\`==\`(느슨한 동등)는 비교 전에 타입을 변환하는데, \`null\`과 \`undefined\`는 **서로끼리만** 느슨하게 같도록 정해져 있습니다. 그래서 \`null == undefined\`는 \`true\`이고, \`null\`이나 \`undefined\`를 그 밖의 값과 느슨하게 비교하면 \`false\`입니다.
 
 > 실무에서는 \`===\`를 기본으로 쓰고, null과 undefined를 한 번에 거르는 \`x == null\` 정도만 예외로 허용하는 팀이 많습니다.`,
       tags: [

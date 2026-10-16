@@ -18,18 +18,32 @@ println(len)
 val name: String? = "kotlin"
 println(name?.uppercase() ?: "none")`,
       },
-      choices: [
-        '`null` / `KOTLIN`',
-        '`-1` / `KOTLIN`',
-        '`0` / `KOTLIN`',
-        '첫 번째 `println` 전에 `NullPointerException` 이 발생한다',
+      correct: '`-1` / `KOTLIN`',
+      distractors: [
+        {
+          text: '`null` / `KOTLIN`',
+          why: '안전 호출의 결과(null)에서 끝난다고 본 결과입니다. 엘비스 연산자가 왼쪽의 null 을 오른쪽 값 `-1` 로 바꿉니다.',
+        },
+        {
+          text: '`0` / `KOTLIN`',
+          why: 'null 의 길이를 0으로 바꿔 주는 규칙은 없습니다. 왼쪽이 null 일 때 쓰이는 값은 `?:` 오른쪽에 쓴 `-1` 입니다.',
+        },
+        {
+          text: '첫 번째 `println` 전에 `NullPointerException` 이 발생한다',
+          why: '안전 호출 `?.` 은 수신 객체가 null 이면 호출하지 않고 null 을 돌려줄 뿐 NPE 를 던지지 않습니다. NPE 가 나는 것은 `nick!!.length` 처럼 `!!` 를 썼을 때입니다.',
+        },
+        {
+          text: '`-1` / `none`',
+          why: '`name` 은 null 이 아니므로 `uppercase()` 가 호출되어 `KOTLIN` 이 됩니다. 엘비스의 오른쪽 `"none"` 은 왼쪽이 null 일 때만 평가됩니다.',
+        },
+        {
+          text: '컴파일 에러 — `String?` 타입에는 `length` 를 호출할 수 없다',
+          why: 'nullable 타입에 검사 없이 `.` 으로 호출하면 컴파일 에러지만, 안전 호출 `?.` 은 허용됩니다. 결과 타입이 `Int?` 가 되고 엘비스가 이를 `Int` 로 바꿉니다.',
+        },
       ],
-      answer: 1,
       explanation: `\`nick?.length\` 는 \`nick\` 이 null 이라 \`length\` 를 호출하지 않고 **null** 을 돌려줍니다. 엘비스 연산자 \`?:\` 는 왼쪽이 null 일 때 오른쪽 값을 쓰므로 \`len\` 은 \`-1\` 입니다. \`name\` 은 null 이 아니어서 \`uppercase()\` 가 호출되어 \`KOTLIN\` 이 출력되고, 오른쪽의 \`"none"\` 은 평가되지 않습니다.
 
-- \`null\` / \`KOTLIN\`: 안전 호출의 결과(null)에서 끝난다고 본 오답입니다. 엘비스가 null 을 \`-1\` 로 바꿉니다.
-- \`0\` / \`KOTLIN\`: null 의 길이를 0으로 바꿔 주는 규칙은 없습니다. 기본값은 \`?:\` 오른쪽에 쓴 값입니다.
-- '\`NullPointerException\` 발생': 안전 호출은 NPE 를 던지지 않습니다. 수신 객체가 null 일 때 NPE 가 나는 것은 \`nick!!.length\` 처럼 \`!!\` 를 썼을 때입니다.`,
+이처럼 \`?.\` 와 \`?:\` 를 함께 쓰면 null 일 때의 기본값을 한 줄로 지정할 수 있습니다.`,
       tags: [
         'null-safety',
         'elvis',
@@ -53,18 +67,36 @@ fun printLength(p: Profile, s: String?) {
     println(p.nickname?.length ?: 0)                    // (4)
 }`,
       },
-      choices: [
-        '`(1)`',
-        '`(2)`',
-        '`(3)`',
-        '`(4)`',
+      correct: '`(3)`',
+      distractors: [
+        {
+          text: '`(1)`',
+          why: '매개변수 `s` 는 다시 대입할 수 없으므로, null 검사를 통과하면 그 범위 안에서 `String` 으로 스마트 캐스트됩니다.',
+        },
+        {
+          text: '`(2)`',
+          why: '프로퍼티 값을 지역 `val` 에 복사하면 그 값은 더 이상 바뀌지 않으므로 스마트 캐스트가 됩니다. (3)을 고치는 대표적인 방법입니다.',
+        },
+        {
+          text: '`(4)`',
+          why: '안전 호출 `?.` 과 엘비스 `?:` 로 null 을 처리했으므로 스마트 캐스트가 필요 없고 문제없이 컴파일됩니다.',
+        },
+        {
+          text: '`(1)`과 `(3)`',
+          why: '매개변수는 함수 안에서 다시 대입할 수 없어 검사 후 값이 바뀔 일이 없으므로, (1)은 스마트 캐스트가 됩니다.',
+        },
+        {
+          text: '`(2)`와 `(3)`',
+          why: '(2)는 프로퍼티를 지역 `val` 로 복사한 뒤 검사하므로 스마트 캐스트가 됩니다. 문제는 프로퍼티를 직접 검사하고 쓰는 (3)뿐입니다.',
+        },
+        {
+          text: '없음 — `(3)`도 null 검사 뒤라 스마트 캐스트되어 모두 컴파일된다',
+          why: '`p.nickname` 은 클래스의 `var` 프로퍼티라 검사 직후 다른 코드가 null 로 바꿀 수 있어, 컴파일러가 스마트 캐스트를 허용하지 않습니다.',
+        },
       ],
-      answer: 2,
       explanation: `스마트 캐스트는 **null 검사와 사용 사이에 값이 바뀔 수 없다고 컴파일러가 확신할 때만** 동작합니다. \`p.nickname\` 은 클래스의 \`var\` 프로퍼티라, 검사 직후 다른 코드(다른 스레드)가 null 로 바꿀 수 있습니다. 그래서 (3)의 \`p.nickname.length\` 는 여전히 \`String?\` 에 대한 호출로 보고 "smart cast to 'String' is impossible" 컴파일 에러를 냅니다.
 
-- **(1)**: 매개변수 \`s\` 는 다시 대입할 수 없으므로 검사 후 \`String\` 으로 스마트 캐스트됩니다.
-- **(2)**: 프로퍼티 값을 지역 \`val\` 에 복사하면 그 값은 바뀌지 않으므로 스마트 캐스트가 됩니다. (3)을 고치는 대표적인 방법입니다.
-- **(4)**: 안전 호출과 엘비스로 null 을 처리했으므로 문제없습니다. \`p.nickname?.let { println(it.length) }\` 도 같은 방식입니다.`,
+고치려면 프로퍼티 값을 지역 \`val\` 에 복사한 뒤 검사하거나, \`p.nickname?.let { println(it.length) }\` 처럼 안전 호출을 씁니다.`,
       tags: [
         'smart-cast',
         'null-safety',

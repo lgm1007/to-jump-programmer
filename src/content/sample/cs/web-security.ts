@@ -9,14 +9,34 @@ const content: CsCategoryContent = {
       type: 'mcq',
       difficulty: 1,
       prompt: 'React 컴포넌트에서 사용자가 입력한 `comment` 문자열을 출력하는 코드입니다. **XSS 위험이 있는** 것은?',
-      choices: [
-        '`<p>{comment}</p>`',
-        '`<input defaultValue={comment} />`',
-        '`<p title={comment}>댓글</p>`',
-        '`<div dangerouslySetInnerHTML={{ __html: comment }} />`',
+      correct: '`<div dangerouslySetInnerHTML={{ __html: comment }} />`',
+      distractors: [
+        {
+          text: '`<p>{comment}</p>`',
+          why: 'JSX의 `{}`에 넣은 문자열은 **텍스트 노드**로 들어가므로, `<script>`나 `<img onerror>`가 들어 있어도 글자로 보일 뿐 실행되지 않습니다.',
+        },
+        {
+          text: '`<input defaultValue={comment} />`',
+          why: '`defaultValue`는 입력창의 값으로 설정될 뿐 HTML로 해석되지 않으므로, 태그가 들어 있어도 글자 그대로 보입니다.',
+        },
+        {
+          text: '`<p title={comment}>댓글</p>`',
+          why: 'React는 속성 값을 DOM 속성의 **값**으로 설정하므로, 따옴표를 닫고 `onmouseover` 같은 새 속성을 끼워 넣는 공격이 통하지 않습니다.',
+        },
+        {
+          text: '`<textarea value={comment} readOnly />`',
+          why: '`value`는 입력 요소의 값으로만 설정되므로, 태그가 들어 있어도 HTML로 해석되지 않고 글자로 표시됩니다.',
+        },
+        {
+          text: '`<img src="/avatar.png" alt={comment} />`',
+          why: '`alt`도 속성 값으로만 설정되어, 사용자 입력이 새 속성이나 태그로 해석되지 않습니다.',
+        },
+        {
+          text: '`<p>{\'작성자 메모: \' + comment}</p>`',
+          why: '문자열을 이어 붙여도 결과는 여전히 문자열이라, JSX가 텍스트 노드로 넣어 그대로 글자로 보입니다.',
+        },
       ],
-      answer: 3,
-      explanation: `React는 JSX의 \`{}\`에 넣은 문자열을 **텍스트**로 다룹니다. DOM에 넣을 때 텍스트 노드나 속성 값으로 설정하므로, \`<script>\`나 \`<img onerror>\` 같은 문자열도 글자로 보일 뿐 실행되지 않습니다. \`title\`, \`defaultValue\` 같은 속성 값도 마찬가지입니다.
+      explanation: `React는 JSX의 \`{}\`에 넣은 문자열을 **텍스트**로 다룹니다. DOM에 넣을 때 텍스트 노드나 속성 값으로 설정하므로, \`<script>\`나 \`<img onerror>\` 같은 문자열도 글자로 보일 뿐 실행되지 않습니다.
 
 \`dangerouslySetInnerHTML\`은 이름 그대로 이 보호를 **우회**해 문자열을 HTML로 해석합니다. 사용자 입력이 들어가면 \`<img src=x onerror="...">\` 같은 코드가 실행됩니다.
 

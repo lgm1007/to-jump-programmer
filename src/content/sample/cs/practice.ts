@@ -14,13 +14,33 @@ const content: CsCategoryContent = {
         source: `git switch feature
 git rebase main`,
       },
-      choices: [
-        'main 브랜치에 feature의 커밋들이 합쳐진다',
-        '두 브랜치를 합치는 merge commit이 feature에 하나 생긴다',
-        'feature의 커밋들이 main의 최신 커밋 뒤에 새 해시로 다시 적용된다',
-        'feature 커밋들의 해시는 그대로 두고 순서만 바뀐다',
+      correct: 'feature의 커밋들이 main의 최신 커밋 뒤에 새 해시로 다시 적용된다',
+      distractors: [
+        {
+          text: 'main 브랜치에 feature의 커밋들이 합쳐진다',
+          why: 'rebase는 현재 브랜치인 feature만 바꾸고 main은 그대로 둡니다. main에 반영하려면 이후 main에서 따로 병합해야 합니다.',
+        },
+        {
+          text: '두 브랜치를 합치는 merge commit이 feature에 하나 생긴다',
+          why: 'merge commit을 만드는 것은 `git merge`입니다. rebase는 커밋을 하나씩 다시 적용해 merge commit 없는 일직선 이력을 만듭니다.',
+        },
+        {
+          text: 'feature 커밋들의 해시는 그대로 두고 순서만 바뀐다',
+          why: '커밋 해시는 부모 커밋 정보까지 포함해 계산되므로, 부모가 바뀐 커밋은 변경 내용이 같아도 새 해시를 갖습니다.',
+        },
+        {
+          text: 'feature의 커밋들이 하나로 합쳐진(squash) 뒤 main의 최신 커밋 뒤에 붙는다',
+          why: '`git rebase main`은 커밋을 하나씩 다시 적용할 뿐 합치지 않습니다. 커밋을 합치려면 `git rebase -i`에서 `squash`를 지정합니다.',
+        },
+        {
+          text: 'main의 커밋들이 feature의 최신 커밋 뒤에 새 해시로 다시 적용된다',
+          why: '다시 적용되는 쪽은 현재 브랜치(feature)에만 있는 커밋이고, main의 커밋은 그대로 새 기준이 됩니다.',
+        },
+        {
+          text: 'feature에만 있던 커밋들은 버려지고 feature가 main과 같은 커밋을 가리킨다',
+          why: 'feature의 커밋은 사라지지 않고 main의 끝에 다시 적용됩니다. 브랜치를 main 위치로 옮기기만 하는 것은 `git reset --hard main`입니다.',
+        },
       ],
-      answer: 2,
       explanation: `rebase는 feature에만 있는 커밋들을 main의 끝에 **하나씩 다시 적용(replay)**합니다. 커밋 해시는 부모 커밋 정보까지 포함해 계산되므로, 다시 적용된 커밋은 **새 해시**를 갖습니다.
 
 \`\`\`text
@@ -32,9 +52,7 @@ rebase 후
 feature: A - B - C - D' - E'
 \`\`\`
 
-- main 브랜치는 바뀌지 않습니다. main에 반영하려면 이후 main에서 병합해야 합니다.
-- merge commit을 만드는 것은 \`git merge\`입니다.
-- 이력을 다시 쓰므로, 이미 push해서 다른 사람과 공유한 커밋은 rebase하지 않는 것이 원칙입니다.`,
+이력을 다시 쓰므로, 이미 push해서 다른 사람과 공유한 커밋은 rebase하지 않는 것이 원칙입니다.`,
       tags: [
         'Git',
         'rebase',
@@ -47,18 +65,30 @@ feature: A - B - C - D' - E'
       type: 'mcq',
       difficulty: 1,
       prompt: '이미 원격 main에 push되어 팀원들도 받아 간 커밋 `a1b2c3d`의 변경을 취소하려 합니다. 가장 안전한 방법은?',
-      choices: [
-        '`git reset --hard a1b2c3d~1` 후 `git push --force`',
-        '`git revert a1b2c3d` 후 push',
-        '`git commit --amend`로 커밋을 수정한 후 push',
-        '`git cherry-pick a1b2c3d` 후 push',
+      correct: '`git revert a1b2c3d` 후 push',
+      distractors: [
+        {
+          text: '`git reset --hard a1b2c3d~1` 후 `git push --force`',
+          why: '원격 이력을 다시 써서 이미 받아 간 팀원의 이력과 어긋나고, `a1b2c3d` 뒤에 쌓인 다른 커밋까지 사라집니다. 보통 main은 브랜치 보호 규칙으로 강제 push가 막혀 있습니다.',
+        },
+        {
+          text: '`git commit --amend`로 커밋을 수정한 후 push',
+          why: '`--amend`는 마지막 커밋을 새 커밋으로 바꾸는 이력 재작성이라 일반 push는 거부되고, 대상 커밋이 마지막 커밋이 아닐 수도 있습니다.',
+        },
+        {
+          text: '`git cherry-pick a1b2c3d` 후 push',
+          why: '`cherry-pick`은 커밋의 변경을 한 번 더 적용하는 명령이라 취소와 반대입니다. 이미 main에 있는 커밋이면 바뀌는 내용이 없어 빈 커밋으로 멈춥니다.',
+        },
+        {
+          text: '로컬에서 `git reset --hard a1b2c3d~1`만 하고 push는 하지 않는다',
+          why: '내 로컬 브랜치만 되돌아갈 뿐, 원격 main과 팀원들의 저장소에는 그 커밋이 그대로 남습니다.',
+        },
+        {
+          text: '`git rebase -i`로 `a1b2c3d`를 `drop`한 뒤 강제 push',
+          why: '커밋을 빼고 그 뒤 커밋들을 새 해시로 다시 쓰는 이력 재작성이라, 이미 받아 간 팀원의 이력과 어긋나고 강제 push가 필요합니다.',
+        },
       ],
-      answer: 1,
       explanation: `\`git revert\`는 대상 커밋의 변경을 **되돌리는 새 커밋**을 만듭니다. 기존 이력을 지우지 않으므로 강제 push가 필요 없고, 팀원의 로컬 이력과도 충돌하지 않습니다.
-
-- \`reset --hard\` 후 강제 push는 원격 이력을 다시 써서, 이미 받아 간 팀원의 이력과 어긋나게 만듭니다. 보통 main은 브랜치 보호 규칙으로 강제 push가 막혀 있습니다.
-- \`--amend\`는 마지막 커밋을 새 커밋으로 바꾸는 것이라 역시 이력 재작성이고, 대상 커밋이 마지막 커밋이 아닐 수도 있습니다.
-- \`cherry-pick\`은 커밋을 취소하는 것이 아니라 같은 변경을 한 번 더 적용합니다.
 
 merge commit을 되돌릴 때는 \`git revert -m 1 <merge-commit>\`처럼 기준이 될 부모를 지정합니다.`,
       tags: [
