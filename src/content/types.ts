@@ -59,13 +59,46 @@ interface QuestionBase {
   lessonId?: string;
 }
 
-/** 4지선다(2~5지) 객관식 */
-export interface McqQuestion extends QuestionBase {
+/**
+ * 객관식. 보기는 볼 때마다 순서를 섞어 보여주므로(`progress/choices.ts`) 해설에서 보기를 위치(A번 · 첫 번째)로 가리키지 않는다.
+ * 형식은 두 가지 — 고정 보기(`choices` + `answer`) 또는 오답 풀(`correct` + `distractors`).
+ */
+export type McqQuestion = McqChoicesQuestion | McqPoolQuestion;
+
+/** 고정 보기 객관식 (2~5지) — 보기 순서만 섞는다 */
+export interface McqChoicesQuestion extends QuestionBase {
   type: 'mcq';
   /** 선택지 (짧은 RichText 인라인 문법만 사용: **굵게**, `코드`) */
   choices: string[];
-  /** 정답 선택지 인덱스 (0부터) */
+  /** 정답 선택지 인덱스 (0부터, 원래 순서 기준) */
   answer: number;
+  /** 보기끼리 서로를 가리키는 문제("위 보기 모두" 등)라 순서를 섞지 않는다 */
+  fixedOrder?: boolean;
+  /** 마지막 보기("모두 맞다" 등)를 맨 뒤에 고정하고 나머지만 섞는다 */
+  pinLast?: boolean;
+  correct?: never;
+  distractors?: never;
+}
+
+/** 오답 풀 객관식 — 볼 때마다 오답 풀에서 `pick` 개를 골라 정답과 함께 섞는다 */
+export interface McqPoolQuestion extends QuestionBase {
+  type: 'mcq';
+  /** 정답 보기 (인라인 RichText). `explanation` 은 정답 이유만 적는다 */
+  correct: string;
+  /** 오답 풀 (5~7개 권장, 최소 3개) — 서로 겹치지 않는 그럴듯한 오해 */
+  distractors: Distractor[];
+  /** 한 번에 보여줄 오답 수 (기본 3) */
+  pick?: number;
+  choices?: never;
+  answer?: never;
+}
+
+/** 오답 보기와 그 보기가 틀린 이유 — 이번에 보인 오답의 이유만 해설에 함께 보여준다 */
+export interface Distractor {
+  /** 보기 (인라인 RichText) */
+  text: string;
+  /** 틀린 이유 (인라인 RichText, 한두 문장) */
+  why: string;
 }
 
 /** O/X 퀴즈 */

@@ -24,6 +24,7 @@ import {
   type QuizQuestion,
 } from '@/content';
 import { AdSlot, showInterstitialAtBreak } from '@/features/ads';
+import { correctChoiceText, presentMcq, type PresentedChoice } from '@/features/progress/choices';
 import { pickLessonCheck } from '@/features/progress/lessons';
 import { wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
@@ -92,6 +93,10 @@ export default function QuizScreen() {
   const [index, setIndex] = useState(0);
   const [answer, setAnswer] = useState<number | boolean | null>(null);
   const [results, setResults] = useState<Record<string, boolean>>({});
+  /** 객관식에서 고른 보기 (결과 화면의 틀린 문제에 오답 이유를 보여주려고) */
+  const [picks, setPicks] = useState<Record<string, PresentedChoice>>({});
+  /** 답을 고른 시점의 풀이 횟수 — 답하면 기록이 늘어나도 보던 보기 구성이 바뀌지 않게 */
+  const [answerAttempt, setAnswerAttempt] = useState(0);
   const [finished, setFinished] = useState(false);
   const [round, setRound] = useState(1);
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -111,13 +116,22 @@ export default function QuizScreen() {
 
   const q = QUESTION_MAP[ids[index]];
   const answered = answer !== null;
-  const isCorrect = answered && q ? answer === q.answer : false;
+  // 보기 구성은 (문제, 지금까지 푼 횟수)로 정해진다 — 보는 동안은 그대로, 다시 풀면 순서 · 오답이 바뀐다
+  const liveAttempt = useProgress((s) => s.quiz[ids[index]]?.attempts ?? 0);
+  const attempt = answered ? answerAttempt : liveAttempt;
+  const presented = useMemo(() => (q?.type === 'mcq' ? presentMcq(q, attempt) : null), [q, attempt]);
+  const isRight = (value: number | boolean) =>
+    presented && typeof value === 'number' ? !!presented.choices[value]?.correct : value === q?.answer;
+  const isCorrect = answered && q ? isRight(answer) : false;
 
   const choose = (value: number | boolean) => {
     if (answered || !q) return;
-    const correct = value === q.answer;
+    const correct = isRight(value);
+    setAnswerAttempt(liveAttempt);
     setAnswer(value);
     setResults((r) => ({ ...r, [q.id]: correct }));
+    const choice = presented && typeof value === 'number' ? presented.choices[value] : undefined;
+    if (choice) setPicks((p) => ({ ...p, [q.id]: choice }));
     recordQuiz(q.id, correct);
     haptic(correct ? 'success' : 'error');
     setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, explanationY.current - 120), animated: true }), 150);
@@ -183,7 +197,7 @@ export default function QuizScreen() {
                   오답노트에 자동으로 저장했어요. 다시 맞히면 오답노트에서 빠져요.
                 </Text>
                 {wrongIds.map((id) => (
-                  <WrongItem key={id} question={QUESTION_MAP[id]} showLesson={!lessonCheckId} />
+                  <WrongItem key={id} question={QUESTION_MAP[id]} picked={picks[id]} showLesson={!lessonCheckId} />
                 ))}
               </View>
             )}
@@ -203,6 +217,7 @@ export default function QuizScreen() {
                 setIndex(0);
                 setAnswer(null);
                 setResults({});
+                setPicks({});
                 setFinished(false);
                 setRound((r) => r + 1);
                 startedAt.current = Date.now();
@@ -241,17 +256,11 @@ export default function QuizScreen() {
           <RichText text={q.prompt} variant="title3" />
           {q.code && <CodeBlock code={q.code.source} language={q.code.language} filename={q.code.filename} />}
 
-          {q.type === 'mcq' ? (
+          {presented ? (
             <View style={{ gap: spacing.sm }}>
-              {q.choices.map((choice, i) => {
-                const state = !answered
-                  ? 'idle'
-                  : i === q.answer
-                    ? 'correct'
-                    : i === answer
-                      ? 'wrong'
-                      : 'dim';
-                return <ChoiceRow key={i} letter={LETTERS[i]} text={choice} state={state} onPress={() => choose(i)} />;
+              {presented.choices.map((choice, i) => {
+                const state = !answered ? 'idle' : choice.correct ? 'correct' : i === answer ? 'wrong' : 'dim';
+                return <ChoiceRow key={`${choice.source}:${choice.text}`} letter={LETTERS[i]} text={choice.text} state={state} onPress={() => choose(i)} />;
               })}
             </View>
           ) : (
@@ -270,7 +279,7 @@ export default function QuizScreen() {
                 <Text variant="bodyStrong" tint={isCorrect ? c.success : c.danger}>
                   {isCorrect
                     ? '정답이에요!'
-                    : `아쉬워요. 정답은 ${q.type === 'mcq' ? `${LETTERS[q.answer]}번` : q.answer ? 'O' : 'X'}이에요`}
+                    : `아쉬워요. 정답은 ${presented ? `${LETTERS[presented.answer]}번` : q.answer ? 'O' : 'X'}이에요`}
                 </Text>
               </View>
               <Card style={{ gap: spacing.sm }}>
@@ -278,6 +287,16 @@ export default function QuizScreen() {
                   해설
                 </Text>
                 <RichText text={q.explanation} variant="callout" />
+                {presented?.choices.some((ch) => ch.why) && (
+                  <View style={{ gap: spacing.sm }}>
+                    <Text variant="captionStrong" color="textTertiary">
+                      오답 풀이
+                    </Text>
+                    {presented.choices.map((ch, i) =>
+                      ch.why ? <WhyRow key={i} letter={LETTERS[i]} choice={ch} picked={i === answer} /> : null,
+                    )}
+                  </View>
+                )}
                 {q.lessonId && LESSON_MAP[q.lessonId] && q.lessonId !== lessonCheckId && (
                   <LessonLink lessonId={q.lessonId} />
                 )}
@@ -393,11 +412,22 @@ function LessonLink({ lessonId }: { lessonId: string }) {
   );
 }
 
-function WrongItem({ question, showLesson }: { question: QuizQuestion; showLesson: boolean }) {
+/** 오답 풀 문제에서 이번에 보인 오답과 그 보기가 틀린 이유 */
+function WhyRow({ letter, choice, picked }: { letter?: string; choice: PresentedChoice; picked?: boolean }) {
+  const c = useColors();
+  return (
+    <View style={[styles.why, { borderLeftColor: picked ? c.danger : c.border }]}>
+      <Inline text={letter ? `**${letter}.** ${choice.text}` : choice.text} variant="caption" color={picked ? c.danger : c.textSecondary} />
+      {!!choice.why && <Inline text={choice.why} variant="caption" />}
+    </View>
+  );
+}
+
+function WrongItem({ question, picked, showLesson }: { question: QuizQuestion; picked?: PresentedChoice; showLesson: boolean }) {
   const c = useColors();
   const [open, setOpen] = useState(false);
   if (!question) return null;
-  const answerLabel = question.type === 'mcq' ? `${LETTERS[question.answer]}. ${question.choices[question.answer]}` : question.answer ? 'O' : 'X';
+  const answerLabel = question.type === 'mcq' ? correctChoiceText(question) : question.answer ? 'O' : 'X';
   return (
     <Card onPress={() => setOpen((o) => !o)} style={{ gap: spacing.sm }}>
       <View style={{ flexDirection: 'row', gap: spacing.sm, alignItems: 'flex-start' }}>
@@ -411,6 +441,7 @@ function WrongItem({ question, showLesson }: { question: QuizQuestion; showLesso
         <View style={{ gap: spacing.sm, paddingLeft: 26 }}>
           <Inline text={`정답: ${answerLabel}`} variant="captionStrong" color={c.success} />
           <RichText text={question.explanation} variant="caption" />
+          {picked?.why && <WhyRow choice={picked} picked />}
           {showLesson && question.lessonId && LESSON_MAP[question.lessonId] && <LessonLink lessonId={question.lessonId} />}
         </View>
       )}
@@ -432,4 +463,5 @@ const styles = StyleSheet.create({
   footerHint: { flex: 1, height: 54, alignItems: 'center', justifyContent: 'center' },
   resultCard: { alignItems: 'center', gap: spacing.md, paddingVertical: spacing.xxl },
   lessonLink: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md },
+  why: { gap: 2, paddingLeft: spacing.sm, borderLeftWidth: 2 },
 });
