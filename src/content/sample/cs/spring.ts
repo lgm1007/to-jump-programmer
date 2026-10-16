@@ -40,8 +40,8 @@ public int apply(int price, int rate) {
 }
 \`\`\`
 
-- **A**, **D**: 기본 스코프는 \`prototype\`이 아니라 \`singleton\`이므로 객체는 하나만 생성됩니다.
-- **B**: \`int\` 같은 기본형 필드는 0으로 초기화되며 null이 될 수 없습니다.
+- '요청마다 새로 생성', '기본 스코프는 \`prototype\`': 기본 스코프는 \`prototype\`이 아니라 \`singleton\`이므로 객체는 하나만 생성됩니다.
+- \`NullPointerException\`: \`int\` 같은 기본형 필드는 0으로 초기화되며 null이 될 수 없습니다.
 
 > 싱글톤 빈은 무상태(stateless)로 설계하는 것이 원칙입니다. 생성 후 바뀌지 않는 \`final\` 의존성 필드는 괜찮습니다.`,
       tags: [

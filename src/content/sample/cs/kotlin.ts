@@ -27,9 +27,9 @@ println(name?.uppercase() ?: "none")`,
       answer: 1,
       explanation: `\`nick?.length\` 는 \`nick\` 이 null 이라 \`length\` 를 호출하지 않고 **null** 을 돌려줍니다. 엘비스 연산자 \`?:\` 는 왼쪽이 null 일 때 오른쪽 값을 쓰므로 \`len\` 은 \`-1\` 입니다. \`name\` 은 null 이 아니어서 \`uppercase()\` 가 호출되어 \`KOTLIN\` 이 출력되고, 오른쪽의 \`"none"\` 은 평가되지 않습니다.
 
-- **A**: 안전 호출의 결과(null)에서 끝난다고 본 오답입니다. 엘비스가 null 을 \`-1\` 로 바꿉니다.
-- **C**: null 의 길이를 0으로 바꿔 주는 규칙은 없습니다. 기본값은 \`?:\` 오른쪽에 쓴 값입니다.
-- **D**: 안전 호출은 NPE 를 던지지 않습니다. 수신 객체가 null 일 때 NPE 가 나는 것은 \`nick!!.length\` 처럼 \`!!\` 를 썼을 때입니다.`,
+- \`null\` / \`KOTLIN\`: 안전 호출의 결과(null)에서 끝난다고 본 오답입니다. 엘비스가 null 을 \`-1\` 로 바꿉니다.
+- \`0\` / \`KOTLIN\`: null 의 길이를 0으로 바꿔 주는 규칙은 없습니다. 기본값은 \`?:\` 오른쪽에 쓴 값입니다.
+- '\`NullPointerException\` 발생': 안전 호출은 NPE 를 던지지 않습니다. 수신 객체가 null 일 때 NPE 가 나는 것은 \`nick!!.length\` 처럼 \`!!\` 를 썼을 때입니다.`,
       tags: [
         'null-safety',
         'elvis',
