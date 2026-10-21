@@ -198,6 +198,10 @@ export default function SettingsScreen() {
           value={`CS 이론 ${CONTENT_STATS.lessons} · 퀴즈 ${CONTENT_STATS.algoQuestions + CONTENT_STATS.csQuestions} · 알고리즘 유형 ${CONTENT_STATS.algoPatterns} · 카드 ${CONTENT_STATS.cards} · 리뷰 ${CONTENT_STATS.patterns + CONTENT_STATS.challenges}`}
         />
         <Divider />
+        <Pressable onPress={() => router.push('/about')} accessibilityRole="link">
+          <InfoRow label="서비스 소개" value="보기 ›" />
+        </Pressable>
+        <Divider />
         <Pressable onPress={() => router.push('/privacy')} accessibilityRole="link">
           <InfoRow label="개인정보 처리방침" value="보기 ›" />
         </Pressable>

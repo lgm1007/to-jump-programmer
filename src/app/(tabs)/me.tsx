@@ -37,12 +37,12 @@ export default function MeTab() {
       <View style={styles.profile}>
         <View style={[styles.avatar, { backgroundColor: c.primary }]}>
           <Text variant="title2" tint="#FFFFFF">
-            {profile.nickname.slice(0, 1) || '?'}
+            {profile.nickname.slice(0, 1) || 'G'}
           </Text>
         </View>
         <View style={{ flex: 1, gap: 6 }}>
           <Text variant="title2" numberOfLines={1}>
-            {profile.nickname}
+            {profile.nickname || '게스트'}
           </Text>
           <View style={styles.badges}>
             <Badge label={profile.goal === 'new' ? '신입 취업 준비' : '경력 이직 준비'} tone="primary" />
@@ -151,10 +151,27 @@ export default function MeTab() {
       </Card>
 
       <Card padded={false} style={{ paddingHorizontal: spacing.lg }}>
+        {!profile.onboarded && (
+          <>
+            <ListRow
+              title="내 코스 설정하기"
+              subtitle="코스 · 언어 · 하루 목표를 정하면 맞춤 추천을 받아요"
+              left={<IconBadge name="sparkles" color={c.primary} background={c.primarySoft} size={36} />}
+              onPress={() => router.push('/onboarding')}
+            />
+            <Divider />
+          </>
+        )}
         <ListRow
           title="설정"
           left={<IconBadge name="settings-outline" color={c.textSecondary} background={c.surfaceAlt} size={36} />}
           onPress={() => router.push('/settings')}
+        />
+        <Divider />
+        <ListRow
+          title="서비스 소개"
+          left={<IconBadge name="information-circle-outline" color={c.textSecondary} background={c.surfaceAlt} size={36} />}
+          onPress={() => router.push('/about')}
         />
       </Card>
     </Screen>

@@ -38,7 +38,9 @@ export default function TabLayout() {
     if (onboarded) startAds();
   }, [onboarded]);
 
-  if (!onboarded) return <Redirect href="/onboarding" />;
+  // 앱은 처음 실행할 때 온보딩부터 보여준다. 웹은 처음 방문한 사람(검색 · 광고 심사 크롤러 포함)도 바로 콘텐츠를 보도록
+  // 온보딩으로 보내지 않고, 기본 코스로 둘러보다가 홈의 안내 카드에서 코스를 설정하게 한다
+  if (!onboarded && Platform.OS !== 'web') return <Redirect href="/onboarding" />;
 
   return (
     <Tabs

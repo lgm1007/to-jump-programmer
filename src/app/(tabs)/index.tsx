@@ -83,7 +83,7 @@ export default function Home() {
       <View style={styles.header}>
         <View style={{ flex: 1, gap: 2 }}>
           <Text variant="subhead" color="textTertiary" numberOfLines={1}>
-            {state.profile.nickname}님, {greeting()}
+            {state.profile.nickname ? `${state.profile.nickname}님, ${greeting()}` : greeting()}
           </Text>
           <Text variant="title2" numberOfLines={2}>
             오늘도 한 단계 점프해볼까요?
@@ -96,6 +96,9 @@ export default function Home() {
           </Text>
         </View>
       </View>
+
+      {/* 웹으로 처음 방문해 아직 코스를 설정하지 않은 사람 — 서비스 소개와 코스 설정 */}
+      {!state.profile.onboarded && <WelcomeCard />}
 
       {/* 오늘의 목표 */}
       <Card style={styles.goalCard}>
@@ -259,6 +262,25 @@ export default function Home() {
   );
 }
 
+function WelcomeCard() {
+  const c = useColors();
+  return (
+    <Card style={{ gap: spacing.md }} tint={c.primarySoft}>
+      <View style={{ gap: 6 }}>
+        <Text variant="headline">개발자 취업 · 이직, 하루 10분씩 준비해요</Text>
+        <Text variant="callout" color="textSecondary">
+          알고리즘 이론과 자주 나오는 유형의 5개 언어 구현 예제, 실무 코드 리뷰 테스트, 기술 면접 CS 이론 레슨과 퀴즈 ·
+          질문 카드를 무료로 공부할 수 있어요. 지금은 기본 코스(백엔드 · Spring · Python)로 보여드리고 있어요.
+        </Text>
+      </View>
+      <View style={styles.welcomeActions}>
+        <Button title="내 코스로 시작하기" icon="sparkles" style={{ flex: 1 }} onPress={() => router.push('/onboarding')} />
+        <Button title="서비스 소개" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/about')} />
+      </View>
+    </Card>
+  );
+}
+
 function TrackCard({
   title,
   icon,
@@ -299,6 +321,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingTop: spacing.sm },
   streak: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999 },
   goalCard: { gap: spacing.lg },
+  welcomeActions: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
   goalRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
   noteBanner: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   recCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },

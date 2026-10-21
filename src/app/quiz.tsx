@@ -23,7 +23,7 @@ import {
   QUESTION_SOURCE,
   type QuizQuestion,
 } from '@/content';
-import { AdSlot, showInterstitialAtBreak } from '@/features/ads';
+import { showInterstitialAtBreak } from '@/features/ads';
 import { correctChoiceText, presentMcq, type PresentedChoice } from '@/features/progress/choices';
 import { pickLessonCheck } from '@/features/progress/lessons';
 import { wrongQuestionIds } from '@/features/progress/selectors';
@@ -188,7 +188,6 @@ export default function QuizScreen() {
                 {initial.title} · {round > 1 ? `${round}회차 · ` : ''}소요 시간 {formatDuration(elapsedMs)}
               </Text>
             </Card>
-            <AdSlot />
 
             {wrongIds.length > 0 && (
               <View style={{ gap: spacing.md }}>
