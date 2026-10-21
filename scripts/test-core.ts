@@ -47,6 +47,7 @@ import { highlightLines } from '../src/lib/highlight';
 import { resultsMatch } from './lib/harness/compare';
 import { parseHarnessOutput } from './lib/harness/protocol';
 import { parseInline, parseMarkdown } from '../src/lib/markdown';
+import { staticPages } from './lib/prerender';
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -618,6 +619,38 @@ test('코드 리뷰 챌린지 보기 섞기: 순열이고, 원래 인덱스로 �
   }
   assert.deepEqual(shuffledOrder(6, 'spring-c01', 1), shuffledOrder(6, 'spring-c01', 1));
   assert.notDeepEqual(shuffledOrder(6, 'spring-c01', 0), [0, 1, 2, 3, 4, 5]);
+});
+
+console.log('web pages');
+test('웹 정적 페이지: 콘텐츠 화면마다 제목 · 설명 · 본문 HTML, 앱 기능 화면은 noindex', () => {
+  const pages = staticPages('/');
+  const paths = pages.map((p) => p.path);
+  assert.equal(new Set(paths).size, paths.length);
+  const expected = [
+    '',
+    'algorithm',
+    'review',
+    'interview',
+    'about',
+    'privacy',
+    ...ALL_LESSONS.map((l) => `interview/lesson/${l.id}`),
+    ...CS_CATEGORIES.map((c) => `interview/${c.id}`),
+  ];
+  for (const p of expected) assert.ok(paths.includes(p), p);
+  for (const page of pages.filter((p) => !p.noindex)) {
+    const text = page.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    assert.ok(page.title.length >= 2 && page.description.length >= 20, page.path);
+    assert.ok(/<h1>/.test(page.html) && text.length >= 200, `${page.path}: 본문이 짧음 (${text.length}자)`);
+    assert.ok(!/<script/i.test(page.html), `${page.path}: 본문에 script 태그`);
+    assert.ok(!/href="\/[^"]*[^/"]"/.test(page.html.replace(/href="\/"/g, '')), `${page.path}: 사이트 안 링크는 / 로 끝나야 함`);
+  }
+  // 앱 기능 화면은 본문 없이 noindex
+  for (const p of ['onboarding', 'quiz', 'cards', 'settings']) {
+    const page = pages.find((x) => x.path === p)!;
+    assert.ok(page.noindex && page.html === '', p);
+  }
+  // 하위 경로 배포에서도 링크가 그 경로 아래를 가리킨다
+  assert.ok(staticPages('/sub/').every((p) => !/href="\/(?!sub\/)/.test(p.html)));
 });
 
 console.log('date');

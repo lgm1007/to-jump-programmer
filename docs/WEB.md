@@ -12,11 +12,14 @@
 | 항목 | 내용 |
 | --- | --- |
 | 빌드 | `npm run build:web` → `scripts/build-web.mjs` (expo export → PWA 태그 · manifest · 서비스 워커 · 페이지별 index.html · sitemap · robots.txt · ads.txt) |
-| 주소 처리 | `not_found_handling: single-page-application` — 없는 경로로 들어와도 앱(index.html)을 200 으로 내려 주고, 화면 이동은 Expo Router 가 처리 |
+| 페이지별 HTML | 콘텐츠 화면(홈 · 탭 · 토픽 · 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침)마다 `<경로>/index.html` 에 **제목 · 설명 · canonical 과 실제 본문 HTML** 을 넣는다(`scripts/lib/prerender.ts`). JS 를 실행하지 않는 크롤러(검색 · AdSense 심사)도 콘텐츠를 읽고, 사용자에게는 앱을 불러오는 동안의 첫 화면이 된다. 앱 JS 가 뜨면 React 가 `#root` 를 비우고 앱 화면을 그린다. 앱 기능 화면(온보딩 · 퀴즈 · 카드 · 설정 · 북마크 · 오답노트 · 마이)은 본문 없이 `noindex` |
+| 주소 처리 | `not_found_handling: 404-page` — 화면마다 index.html 이 있으므로 없는 경로만 404 상태 코드와 앱 셸(`404.html`)을 내려 준다. 앱은 그대로 열린다 |
+| 앱 셸 | `app-shell.html` — 본문 없는 index.html. 서비스 워커가 화면 이동에 이것을 내려 줘, 설치 · 재방문 사용자는 본문 HTML 없이 바로 앱 화면을 본다 |
+| 첫 방문 | 웹은 온보딩으로 보내지 않는다. 처음 방문한 사람도 기본 코스(백엔드 · Spring · Python)로 바로 콘텐츠를 보고, 홈의 안내 카드나 [마이 › 내 코스 설정하기]에서 코스를 정한다 (앱은 처음 실행할 때 온보딩) |
 | 오프라인 | Workbox 서비스 워커가 앱 파일(콘텐츠 포함)을 미리 저장해 오프라인에서도 모든 화면이 열림 |
 | 설치 | Android Chrome · PC Chrome/Edge: [앱 설치] 버튼, iPhone: Safari 공유 → 홈 화면에 추가 (홈 화면 · 설정에서 안내) |
 | 학습 기록 | 브라우저 저장소(localStorage). [마이 › 설정 › 백업 내보내기/복원]으로 JSON 백업 |
-| 광고 | 화면 콘텐츠 사이의 AdSense 디스플레이 광고(`AdSlot`) — 탭 화면, 개선 패턴 · 알고리즘 토픽 · 유형 · 면접 카테고리, 학습 결과 화면 |
+| 광고 | 콘텐츠 사이의 AdSense 디스플레이 광고(`AdSlot`) — 탭 화면, 알고리즘 토픽 · 유형, 개선 패턴 · 리뷰 퀴즈, 면접 카테고리 · CS 레슨. AdSense 스크립트는 페이지 `<head>` 에 넣지 않고 광고 자리가 처음 그려질 때 불러온다 |
 | 루트 파일 | `robots.txt`(sitemap 주소), `ads.txt` · `app-ads.txt`(AdSense · AdMob 판매자 인증)를 빌드가 만든다 |
 
 ## 2. 로컬에서 확인
@@ -65,8 +68,14 @@ npm run preview:web
    ```bash
    gh variable set ADSENSE_SLOT --repo lgm1007/to-jump-programmer --body "광고단위ID"
    ```
-3. **자동 광고는 켜지 않습니다.** 앵커 광고가 탭 바를 가리거나 화면 이동 때 전면 광고가 끼어들 수 있습니다.
+3. **자동 광고는 켜지 않습니다** (AdSense › 광고 › 사이트별 › `jumpprogrammer.app` › 자동 광고 끔). 앵커 광고가 탭 바를 가리거나, 화면 이동 때 전면 광고가 끼어들거나, 온보딩 · 퀴즈 풀이처럼 콘텐츠가 없는 화면에 광고가 붙을 수 있습니다.
 4. 다시 배포하고 사이트가 "준비됨" 상태가 되면 광고가 나옵니다. 광고가 채워지지 않은 자리는 공간을 차지하지 않습니다.
+
+**'게시자 콘텐츠가 없는 화면에 Google 게재 광고' 로 승인이 거절되었을 때 (2026-10 대응)**
+- 원인: ① 처음 방문하면 홈 · 탭이 온보딩 화면으로 넘어가 심사 크롤러가 콘텐츠 대신 온보딩만 봤고, ② AdSense 스크립트가 모든 페이지 `<head>` 에 있어 온보딩 같은 화면에서도 광고 요청이 나갔고, ③ 모든 주소의 HTML 이 본문 없는 같은 껍데기였다.
+- 수정: 웹 첫 방문은 온보딩 없이 콘텐츠로, AdSense 스크립트는 콘텐츠 화면의 광고 자리에서만 불러오기, 페이지별 본문 HTML · 제목 · 설명, 서비스 소개(`/about`) 추가, 결과 화면(퀴즈 · 카드 학습 완료)에서 광고 자리 제거, 개인정보 처리방침에 광고 쿠키 고지 · 문의처 추가.
+- 배포 후 AdSense › 사이트 › `jumpprogrammer.app` › 정책 위반 항목에서 **[문제를 수정했음을 확인합니다]** 를 체크하고 **검토 요청**을 누릅니다. 심사에는 며칠~몇 주가 걸립니다.
+- 다시 요청하기 전에 확인: 자동 광고가 꺼져 있는지, 시크릿 창에서 `https://jumpprogrammer.app/` 를 열었을 때 온보딩이 아니라 홈 콘텐츠가 보이는지, `https://jumpprogrammer.app/interview/lesson/cs-os-l01/` 의 페이지 소스에 레슨 본문이 있는지.
 
 광고 배치 원칙 (AdSense 정책):
 - 메뉴 · 버튼 같은 누를 수 있는 요소 바로 옆에 두지 않습니다(실수 클릭 유도 금지). 그래서 앱의 탭 바 위 고정 배너는 웹에서 쓰지 않습니다.
@@ -78,7 +87,8 @@ npm run preview:web
 
 - **도메인 속성** `jumpprogrammer.app` 으로 등록하고, 안내되는 TXT 레코드(`google-site-verification=…`)를 Cloudflare › DNS › Records 에 추가해 확인합니다.
 - **URL 접두어 속성** `https://jumpprogrammer.app/` 으로 등록할 때는 HTML 파일 방법을 쓸 수 있습니다. 내려받은 `google….html` 을 `public/` 에 두면 빌드가 도메인 루트로 복사합니다(이미 `public/google6f2d767f4614ac15.html` 이 있음 — 확인된 상태를 유지하려면 지우지 않습니다).
-- **Sitemaps** 에 `https://jumpprogrammer.app/sitemap.xml` 을 제출합니다. (토픽 · 알고리즘 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 화면, `robots.txt` 에도 들어 있음)
+- **Sitemaps** 에 `https://jumpprogrammer.app/sitemap.xml` 을 제출합니다. (홈 · 탭 · 토픽 · 알고리즘 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침, `robots.txt` 에도 들어 있음)
+- 페이지마다 제목 · 설명 · canonical 이 다르고 본문이 HTML 에 들어 있어, [URL 검사]의 '크롤링된 페이지 보기'에서 본문이 보여야 합니다.
 
 ## 6. 알아 둘 점
 
