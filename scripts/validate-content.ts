@@ -194,7 +194,19 @@ function checkSnippet(s: CodeSnippet | undefined, where: string, field: string) 
 /* 퀴즈 · 카드                                                           */
 /* ------------------------------------------------------------------ */
 
-const answerPositions: Record<string, number[]> = {};
+/** 보기를 위치로 가리키는 해설 — 화면에서 보기 순서를 섞으므로 'A번' · '**B**' 대신 보기 내용으로 가리킨다 */
+const CHOICE_POSITION_REF = /\*\*[A-E][.,:]?\*\*|(?<![A-Za-z0-9_`])[A-E]번(?![가-힣])|(선택지|보기) ?[A-E①-⑤](?![A-Za-z0-9])|[①-⑤]번 ?보기|(첫|두|세|네|마지막) ?번째 (보기|선택지)/;
+/** 다른 보기를 가리키는 보기 — 섞으면 뜻이 바뀌므로 fixedOrder · pinLast 가 필요하다 */
+const ORDER_DEPENDENT_CHOICE = /위(의)? 보기|위 (내용|설명) (모두|전부)|(보기|위의 것) (모두|전부)|모두 (정답|맞다|옳다)$|정답 없음|보기 중 없음/;
+const MCQ_POOL_RECOMMENDED = 5;
+
+function checkMcqText(text: unknown, w: string, field: string, used: Set<string>) {
+  if (!nonEmpty(text, w, field)) return;
+  checkInline(text as string, w, field);
+  const key = (text as string).trim();
+  if (used.has(key)) err(w, `${field}: 다른 보기와 같은 내용입니다`);
+  used.add(key);
+}
 
 function checkQuestion(q: QuizQuestion, categoryId: string, where: string) {
   const w = `${where}/${q?.id}`;
@@ -205,20 +217,42 @@ function checkQuestion(q: QuizQuestion, categoryId: string, where: string) {
   checkRich(q.explanation, w, 'explanation', 20);
   if (q.code) checkSnippet(q.code, w, 'code');
   if (q.type === 'mcq') {
+    const shuffled = q.correct !== undefined || !q.fixedOrder;
+    if (shuffled && typeof q.explanation === 'string' && CHOICE_POSITION_REF.test(q.explanation)) {
+      err(w, `해설이 보기를 위치로 가리킵니다("${q.explanation.match(CHOICE_POSITION_REF)?.[0]}") — 보기 순서는 섞이므로 보기 내용으로 가리키세요`);
+    }
+    const used = new Set<string>();
+    if (q.correct !== undefined || q.distractors !== undefined) {
+      // 오답 풀 형식
+      if ((q as { choices?: unknown }).choices !== undefined || (q as { answer?: unknown }).answer !== undefined) {
+        err(w, `오답 풀 형식(correct · distractors)과 choices · answer 를 함께 쓸 수 없습니다`);
+      }
+      checkMcqText(q.correct, w, 'correct', used);
+      const pool = Array.isArray(q.distractors) ? q.distractors : [];
+      if (!Array.isArray(q.distractors)) err(w, `distractors 는 배열이어야 합니다`);
+      const pick = q.pick ?? 3;
+      if (!Number.isInteger(pick) || pick < 1 || pick > 4) err(w, `pick 은 1~4 (보기는 정답 포함 2~5개)`);
+      if (pool.length < Math.max(3, pick)) err(w, `오답 풀이 ${pool.length}개 — 최소 ${Math.max(3, pick)}개 필요`);
+      else if (pool.length < MCQ_POOL_RECOMMENDED) warn(w, `오답 풀이 ${pool.length}개 — ${MCQ_POOL_RECOMMENDED}~7개 권장 (다시 풀 때 보기 조합이 바뀌도록)`);
+      pool.forEach((d, i) => {
+        checkMcqText(d?.text, w, `distractors[${i}].text`, used);
+        if (nonEmpty(d?.why, w, `distractors[${i}].why`, 5)) checkInline(d.why, w, `distractors[${i}].why`);
+      });
+      return;
+    }
     if (!Array.isArray(q.choices) || q.choices.length < 2 || q.choices.length > 5) {
       err(w, `choices 는 2~5개`);
       return;
     }
-    q.choices.forEach((c, i) => {
-      if (nonEmpty(c, w, `choices[${i}]`)) checkInline(c, w, `choices[${i}]`);
-    });
-    if (new Set(q.choices.map((c) => c.trim())).size !== q.choices.length) err(w, `중복 선택지가 있습니다`);
+    q.choices.forEach((c, i) => checkMcqText(c, w, `choices[${i}]`, used));
     if (!Number.isInteger(q.answer) || q.answer < 0 || q.answer >= q.choices.length) {
       err(w, `answer 인덱스 범위 오류: ${q.answer}`);
     }
-    (answerPositions[where] ??= []).push(q.answer);
-    const joined = q.choices.join(' ');
-    if (/모두 (정답|맞|옳)|정답 없음|보기 중 없음/.test(joined)) warn(w, `'모두 정답/정답 없음' 형태 선택지는 피하세요`);
+    if (q.fixedOrder && q.pinLast) warn(w, `fixedOrder 면 pinLast 는 필요 없습니다`);
+    const dependent = q.choices.filter((c, i) => ORDER_DEPENDENT_CHOICE.test(c) && !(q.pinLast && i === q.choices.length - 1));
+    if (dependent.length && !q.fixedOrder) {
+      warn(w, `다른 보기를 가리키는 보기가 있습니다(${dependent.map((c) => `"${c}"`).join(', ')}) — 순서를 섞지 않으려면 fixedOrder, 마지막에 두려면 pinLast`);
+    }
   } else if (q.type === 'ox') {
     if (typeof q.answer !== 'boolean') err(w, `ox 문제의 answer 는 boolean`);
   } else {
@@ -238,17 +272,6 @@ function checkCard(c: InterviewCard, categoryId: string, where: string) {
   if (c.followUps && (!Array.isArray(c.followUps) || c.followUps.length > 4)) err(w, `followUps 는 0~4개`);
 }
 
-function reportAnswerSkew() {
-  for (const [where, list] of Object.entries(answerPositions)) {
-    if (list.length < 6) continue;
-    const counts = new Map<number, number>();
-    list.forEach((a) => counts.set(a, (counts.get(a) ?? 0) + 1));
-    const max = Math.max(...counts.values());
-    if (max / list.length > 0.45) {
-      warn(where, `객관식 정답 위치가 한쪽으로 쏠려 있습니다: ${JSON.stringify(Object.fromEntries(counts))}`);
-    }
-  }
-}
 
 async function importDefault<T>(file: string): Promise<T | null> {
   if (!existsSync(file)) return null;
@@ -967,7 +990,6 @@ async function main() {
   if (SECTIONS.has('algo-quiz')) await validateAlgoQuiz();
   if (SECTIONS.has('review')) await validateReview();
   if (SECTIONS.has('patterns')) await validateAlgoPatterns();
-  reportAnswerSkew();
 
   console.log('');
   if (warnings.length) {

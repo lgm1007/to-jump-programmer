@@ -11,13 +11,13 @@ import { Chip, EmptyState } from '@/components/ui/misc';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { ALGO_TOPIC_MAP, CS_CATEGORY_MAP, LESSON_MAP, QUESTION_MAP, QUESTION_SOURCE } from '@/content';
+import { correctChoiceText } from '@/features/progress/choices';
 import { wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
 import { useColors } from '@/theme/theme-provider';
 import { spacing } from '@/theme/tokens';
 
 type Filter = 'all' | 'algo' | 'cs';
-const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
 export default function NotesScreen() {
   const c = useColors();
@@ -65,7 +65,7 @@ export default function NotesScreen() {
           const expanded = open === id;
           const label =
             QUESTION_SOURCE[id] === 'algo' ? ALGO_TOPIC_MAP[q.categoryId]?.title : CS_CATEGORY_MAP[q.categoryId]?.title;
-          const answer = q.type === 'mcq' ? `${LETTERS[q.answer]}. ${q.choices[q.answer]}` : q.answer ? 'O' : 'X';
+          const answer = q.type === 'mcq' ? correctChoiceText(q) : q.answer ? 'O' : 'X';
           return (
             <Card key={id} onPress={() => setOpen(expanded ? null : id)} style={{ gap: spacing.sm }}>
               <View style={styles.meta}>

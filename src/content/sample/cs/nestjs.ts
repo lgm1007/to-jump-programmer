@@ -9,19 +9,37 @@ const content: CsCategoryContent = {
       type: 'mcq',
       difficulty: 1,
       prompt: 'Node.js의 실행 모델에 대한 설명으로 옳은 것은?',
-      choices: [
-        '요청마다 새 스레드를 만들어 JavaScript 코드를 병렬로 실행한다',
-        'JS는 메인 스레드에서 실행되고, 파일 I/O·`dns.lookup`·일부 `crypto` 작업은 libuv 스레드 풀에서 처리된다',
-        '네트워크 소켓 I/O도 libuv 스레드 풀(기본 4개)에서 처리하므로 동시 연결이 4개로 제한된다',
-        '`async` 함수로 작성하면 내부의 동기 연산도 별도 스레드에서 실행된다',
+      correct: 'JS는 메인 스레드에서 실행되고, 파일 I/O·`dns.lookup`·일부 `crypto` 작업은 libuv 스레드 풀에서 처리된다',
+      distractors: [
+        {
+          text: '요청마다 새 스레드를 만들어 JavaScript 코드를 병렬로 실행한다',
+          why: '요청마다 스레드를 배정하는 것은 Tomcat 같은 스레드 기반 서버의 모델입니다. Node.js는 모든 요청의 JS 코드를 메인 스레드 하나에서 번갈아 실행합니다.',
+        },
+        {
+          text: '네트워크 소켓 I/O도 libuv 스레드 풀(기본 4개)에서 처리하므로 동시 연결이 4개로 제한된다',
+          why: '네트워크 I/O는 스레드 풀이 아니라 OS의 비동기 I/O 기능(epoll, kqueue 등)으로 처리하므로, 동시 연결 수가 스레드 수에 묶이지 않습니다.',
+        },
+        {
+          text: '`async` 함수로 작성하면 내부의 동기 연산도 별도 스레드에서 실행된다',
+          why: '`async`는 함수가 Promise를 반환하게 할 뿐입니다. 안의 동기 연산은 여전히 메인 스레드에서 실행되어 이벤트 루프를 막습니다.',
+        },
+        {
+          text: '`setTimeout` 콜백은 타이머 전용 스레드에서 실행되어 메인 스레드를 막지 않는다',
+          why: '타이머가 만료되면 콜백은 이벤트 루프의 timers 페이즈에서 메인 스레드가 실행합니다. 콜백이 오래 걸리면 똑같이 다른 요청을 막습니다.',
+        },
+        {
+          text: '`UV_THREADPOOL_SIZE`를 늘리면 직접 작성한 JS 연산도 여러 스레드에 나뉘어 실행된다',
+          why: '이 값은 libuv가 맡는 파일 I/O · 일부 crypto 같은 작업의 스레드 수만 바꿉니다. 개발자가 작성한 JS 코드는 스레드 풀에서 실행되지 않습니다.',
+        },
+        {
+          text: '런타임 전체가 스레드 하나로 동작하므로, 비동기 파일 읽기도 메인 스레드가 끝날 때까지 기다린다',
+          why: 'JS 실행만 메인 스레드 하나일 뿐 런타임 전체가 단일 스레드는 아닙니다. 비동기 파일 읽기는 libuv 스레드 풀이 처리하고, 메인 스레드는 그동안 다른 콜백을 실행합니다.',
+        },
       ],
-      answer: 1,
       explanation: `Node.js는 **JavaScript를 메인 스레드 하나(이벤트 루프)에서 실행**하지만, 런타임 전체가 단일 스레드인 것은 아닙니다.
 
 - 네트워크 I/O: OS의 비동기 I/O 기능(epoll, kqueue 등)으로 처리합니다. 스레드 풀을 쓰지 않으므로 수많은 연결을 동시에 다룰 수 있습니다.
-- 파일 I/O, \`dns.lookup\`, \`crypto.pbkdf2\` 같은 일부 crypto, \`zlib\` 비동기 API: **libuv 스레드 풀**(기본 4개, \`UV_THREADPOOL_SIZE\`로 조정)에서 처리합니다.
-
-\`async\`는 함수가 Promise를 반환하게 할 뿐, 내부의 동기 연산을 다른 스레드로 옮기지 않습니다. 요청마다 스레드를 배정하는 것은 Tomcat 같은 스레드 기반 서버의 모델입니다.`,
+- 파일 I/O, \`dns.lookup\`, \`crypto.pbkdf2\` 같은 일부 crypto, \`zlib\` 비동기 API: **libuv 스레드 풀**(기본 4개, \`UV_THREADPOOL_SIZE\`로 조정)에서 처리합니다.`,
       tags: [
         'nodejs',
         'libuv',

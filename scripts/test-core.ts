@@ -14,7 +14,9 @@ import {
   QUESTION_MAP,
   QUESTION_SOURCE,
 } from '../src/content';
+import type { McqChoicesQuestion, McqPoolQuestion } from '../src/content/types';
 import { backupFileName, createBackup, describeBackup, parseBackup } from '../src/features/progress/backup';
+import { arrangeMcq, correctChoiceText, presentMcq, shuffledOrder } from '../src/features/progress/choices';
 import {
   courseCodeLanguages,
   courseKey,
@@ -507,6 +509,115 @@ test('오늘 읽을 레슨: 카테고리마다 다음 레슨, 읽다 만 레슨�
     const reading = { ...records, [second.id]: { startedAt: 3, lastAt: 3 } };
     assert.deepEqual(nextLessonCandidates([cat, other], reading).map((l) => l.id), [second.id]);
   }
+});
+
+console.log('choices (#28)');
+const fixedQ: McqChoicesQuestion = {
+  id: 't-fixed',
+  categoryId: 'os',
+  type: 'mcq',
+  difficulty: 1,
+  prompt: '문제',
+  explanation: '해설',
+  choices: ['정답', '오답1', '오답2', '오답3'],
+  answer: 0,
+};
+const poolQ: McqPoolQuestion = {
+  id: 't-pool',
+  categoryId: 'os',
+  type: 'mcq',
+  difficulty: 1,
+  prompt: '문제',
+  explanation: '해설',
+  correct: '정답',
+  distractors: ['가', '나', '다', '라', '마', '바'].map((t) => ({ text: t, why: `${t} 이유` })),
+};
+const order = (p: ReturnType<typeof presentMcq>) => p.choices.map((ch) => ch.text).join('|');
+test('같은 문제 · 같은 회차면 같은 구성, 다른 시드면 순서가 달라짐', () => {
+  assert.equal(order(presentMcq(fixedQ, 3)), order(presentMcq(fixedQ, 3)));
+  assert.equal(order(arrangeMcq(poolQ, seededRandom(1))), order(arrangeMcq(poolQ, seededRandom(1))));
+  const orders = new Set(Array.from({ length: 20 }, (_, n) => order(arrangeMcq(fixedQ, seededRandom(n)))));
+  assert.ok(orders.size > 5);
+  // 원본 문제는 바뀌지 않는다
+  assert.deepEqual(fixedQ.choices, ['정답', '오답1', '오답2', '오답3']);
+});
+test('섞은 뒤에도 정답 판정이 맞음 (모든 정답 위치 · 여러 시드)', () => {
+  const positions = new Set<number>();
+  for (let answer = 0; answer < 4; answer++) {
+    const q = { ...fixedQ, answer };
+    for (let seed = 0; seed < 50; seed++) {
+      const p = arrangeMcq(q, seededRandom(seed));
+      assert.equal(p.choices.length, 4);
+      assert.equal(p.choices.filter((ch) => ch.correct).length, 1);
+      assert.equal(p.choices[p.answer].text, q.choices[answer]);
+      assert.equal(p.choices[p.answer].source, answer);
+      assert.deepEqual([...p.choices.map((ch) => ch.text)].sort(), [...q.choices].sort());
+      positions.add(p.answer);
+    }
+  }
+  assert.equal(positions.size, 4);
+  assert.equal(correctChoiceText({ ...fixedQ, answer: 2 }), '오답2');
+});
+test('오답 풀에서 정확히 pick 개를 중복 없이 고르고 정답은 항상 포함, 오답 이유를 함께', () => {
+  for (let seed = 0; seed < 50; seed++) {
+    for (const pick of [undefined, 2, 4]) {
+      const p = arrangeMcq({ ...poolQ, pick }, seededRandom(seed));
+      const wrong = p.choices.filter((ch) => !ch.correct);
+      assert.equal(wrong.length, pick ?? 3);
+      assert.equal(new Set(wrong.map((ch) => ch.text)).size, wrong.length);
+      assert.ok(wrong.every((ch) => ch.why === `${ch.text} 이유` && poolQ.distractors[ch.source].text === ch.text));
+      assert.equal(p.choices[p.answer].text, '정답');
+      assert.equal(p.choices[p.answer].why, undefined);
+    }
+  }
+  assert.equal(correctChoiceText(poolQ), '정답');
+  // 풀이 pick 보다 적으면 있는 만큼만
+  const short = arrangeMcq({ ...poolQ, distractors: poolQ.distractors.slice(0, 2) }, seededRandom(3));
+  assert.equal(short.choices.length, 3);
+});
+test('다시 풀면 직전 회차와 정답 위치 · 오답 조합이 다름', () => {
+  const wrongSet = (p: ReturnType<typeof presentMcq>) => p.choices.filter((ch) => !ch.correct).map((ch) => ch.source).sort().join(',');
+  for (const q of [fixedQ, poolQ]) {
+    for (let n = 1; n < 30; n++) {
+      const prev = presentMcq(q, n - 1);
+      const cur = presentMcq(q, n);
+      assert.notEqual(cur.answer, prev.answer, `${q.id} ${n}회차 정답 위치`);
+      if (q === poolQ) assert.notEqual(wrongSet(cur), wrongSet(prev), `${n}회차 오답 조합`);
+    }
+  }
+});
+test('고정 순서 옵션: fixedOrder 는 그대로, pinLast 는 마지막 보기만 고정', () => {
+  for (let seed = 0; seed < 30; seed++) {
+    const fixed = arrangeMcq({ ...fixedQ, fixedOrder: true }, seededRandom(seed));
+    assert.deepEqual(fixed.choices.map((ch) => ch.text), fixedQ.choices);
+    assert.equal(fixed.answer, 0);
+    const pinned = arrangeMcq({ ...fixedQ, choices: ['가', '나', '다', '위 보기 모두'], answer: 3, pinLast: true }, seededRandom(seed));
+    assert.equal(pinned.choices[3].text, '위 보기 모두');
+    assert.equal(pinned.answer, 3);
+  }
+  // 섞을 수 없는 문제는 다시 풀어도 같은 구성 (무한 반복 없이)
+  assert.equal(presentMcq({ ...fixedQ, fixedOrder: true }, 5).answer, 0);
+});
+test('실제 콘텐츠의 모든 객관식: 보기 구성 후 정답 텍스트가 그대로', () => {
+  for (const q of Object.values(QUESTION_MAP)) {
+    if (q.type !== 'mcq') continue;
+    for (const attempt of [0, 1, 2]) {
+      const p = presentMcq(q, attempt);
+      assert.equal(p.choices[p.answer]?.text, correctChoiceText(q), q.id);
+      assert.ok(p.choices.length >= 2 && p.choices.length <= 5, q.id);
+    }
+  }
+});
+test('코드 리뷰 챌린지 보기 섞기: 순열이고, 원래 인덱스로 채점하면 정답 집합이 같음', () => {
+  const options = [true, false, true, false, false, true].map((correct, i) => ({ text: `o${i}`, correct }));
+  const correctSet = (idx: number[]) => idx.filter((i) => options[i].correct).sort().join(',');
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const o = shuffledOrder(options.length, 'spring-c01', attempt);
+    assert.deepEqual([...o].sort(), [0, 1, 2, 3, 4, 5]);
+    assert.equal(correctSet(o), '0,2,5');
+  }
+  assert.deepEqual(shuffledOrder(6, 'spring-c01', 1), shuffledOrder(6, 'spring-c01', 1));
+  assert.notDeepEqual(shuffledOrder(6, 'spring-c01', 0), [0, 1, 2, 3, 4, 5]);
 });
 
 console.log('date');

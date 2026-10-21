@@ -428,17 +428,33 @@ SSR과 혼동하지 않아야 합니다. SSR은 미리 만든 HTML에 이벤트�
   return <button onClick={handleClick}>{count}</button>;
 }`,
       },
-      choices: [
-        '`3`',
-        '`1`',
-        '`0`',
-        '렌더링이 세 번 일어나 `1`, `2`, `3`이 차례로 표시된다',
+      correct: '`1`',
+      distractors: [
+        {
+          text: '`3`',
+          why: '세 줄 모두 이번 렌더링의 스냅샷 `count`(0)를 읽으므로 `setCount(1)`을 세 번 예약할 뿐입니다. 3이 되려면 함수형 업데이트 `setCount((c) => c + 1)`을 써야 합니다.',
+        },
+        {
+          text: '`0`',
+          why: '`setCount`는 값을 즉시 바꾸지 않을 뿐, 다음 렌더링을 예약합니다. 클릭 직후 다시 렌더링되므로 화면이 0에 머무르지 않습니다.',
+        },
+        {
+          text: '렌더링이 세 번 일어나 `1`, `2`, `3`이 차례로 표시된다',
+          why: '이벤트 핸들러 안의 여러 업데이트는 배칭되어 렌더링은 한 번만 일어납니다. 또 세 호출 모두 같은 값 1을 예약하므로 2나 3이 될 수도 없습니다.',
+        },
+        {
+          text: 'React 17까지는 `3`, React 18부터는 `1`',
+          why: 'state가 렌더링마다의 스냅샷이라는 점은 버전과 상관없습니다. React 17에서도 이벤트 핸들러 안의 업데이트는 배칭되었고, 세 호출 모두 `setCount(0 + 1)`이라 결과는 1입니다.',
+        },
+        {
+          text: '렌더링 중에 setter를 여러 번 불러 무한 렌더링 에러가 난다',
+          why: '`setCount`는 렌더링 중이 아니라 클릭 이벤트 핸들러 안에서 호출됩니다. "Too many re-renders" 에러는 컴포넌트 본문에서 렌더링하는 도중에 setter를 호출할 때 납니다.',
+        },
       ],
-      answer: 1,
       explanation: `state는 렌더링마다 고정된 **스냅샷**입니다. 이번 렌더링에서 \`count\`는 0이므로 세 줄 모두 \`setCount(0 + 1)\`을 예약하고, 결과는 \`1\`입니다.
 
-- \`setCount\`는 값을 즉시 바꾸지 않고 **다음 렌더링을 예약**합니다. 그래서 호출 직후 \`console.log(count)\`를 찍으면 이전 값이 나오지만, 클릭 직후 다시 렌더링되므로 화면이 \`0\`에 머무르지는 않습니다.
-- 이벤트 핸들러 안의 여러 업데이트는 **배칭**되어 렌더링은 한 번만 일어납니다. 중간 값이 화면에 차례로 나타나지 않습니다.
+- \`setCount\`는 값을 즉시 바꾸지 않고 **다음 렌더링을 예약**합니다. 그래서 호출 직후 \`console.log(count)\`를 찍으면 이전 값이 나옵니다.
+- 이벤트 핸들러 안의 여러 업데이트는 **배칭**되어 렌더링은 한 번만 일어납니다.
 - 이전 값을 기준으로 여러 번 바꾸려면 **함수형 업데이트**를 씁니다. React가 대기열의 업데이트를 순서대로 적용하므로 \`3\`이 됩니다.
 
 \`\`\`tsx
@@ -481,21 +497,37 @@ setCount((c) => c + 1); // 3
   );
 }`,
       },
-      choices: [
-        '`장보기`와 입력값 `우유`가 함께 사라지고, `운동` 옆 입력창은 비어 있다',
-        '`장보기`는 남고 `운동` 항목이 사라진다',
-        '`운동` 옆 입력창에 `우유`가 그대로 남아 있다',
-        'key가 바뀌어 React가 에러를 내고 렌더링을 중단한다',
+      correct: '`운동` 옆 입력창에 `우유`가 그대로 남아 있다',
+      distractors: [
+        {
+          text: '`장보기`와 입력값 `우유`가 함께 사라지고, `운동` 옆 입력창은 비어 있다',
+          why: '`key={todo.id}`처럼 고유 id를 key로 썼을 때의 결과입니다. 인덱스 key에서는 삭제 후 `운동`이 key 0을 물려받아, `우유`가 들어 있는 첫 번째 `li`의 DOM을 재사용합니다.',
+        },
+        {
+          text: '`장보기`와 입력값 `우유`는 남고 `운동` 줄이 사라진다',
+          why: 'React가 마지막 key의 `li`를 제거하는 것은 맞지만, 텍스트는 새 데이터로 다시 그립니다. 남은 첫 번째 `li`의 텍스트는 `운동`으로 바뀝니다.',
+        },
+        {
+          text: 'key가 바뀌어 React가 에러를 내고 렌더링을 중단한다',
+          why: '인덱스 key도 형제 사이에서 겹치지 않으므로 React는 에러나 경고 없이 렌더링합니다. 문제는 조용히 엉뚱한 DOM이 재사용된다는 점입니다.',
+        },
+        {
+          text: '`운동` 옆 입력창에 `우유`가 남고, 그 아래에 텍스트 없는 빈 입력창이 하나 더 남는다',
+          why: '삭제 후 목록에 없는 key 1의 `li`는 React가 DOM에서 제거합니다. 화면에는 `운동` 줄 하나만 남습니다.',
+        },
+        {
+          text: '두 `li`가 모두 제거되어 목록이 빈다',
+          why: '삭제 후에도 key 0이 남아 있어 React는 첫 번째 `li`를 재사용하고, 새 배열에는 `운동`이 남아 있으므로 목록이 비지 않습니다.',
+        },
       ],
-      answer: 2,
       explanation: `React는 재조정할 때 **key가 같은 엘리먼트를 같은 항목**으로 보고 DOM과 상태를 재사용합니다.
 
 - 삭제 전: key 0 = 장보기, key 1 = 운동
 - 삭제 후: key 0 = 운동
 
-React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동\`으로 바꾸고, 사라진 key 1의 \`li\`를 제거합니다. \`input\`은 첫 번째 \`li\`의 DOM을 그대로 재사용하므로 입력값 \`우유\`가 \`운동\` 옆에 남습니다. 텍스트는 데이터로 다시 그리므로 \`장보기\`가 남아 보이지도 않고, key 문제로 에러가 나지도 않습니다.
+React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동\`으로 바꾸고, 사라진 key 1의 \`li\`를 제거합니다. \`input\`은 첫 번째 \`li\`의 DOM을 그대로 재사용하므로 입력값 \`우유\`가 \`운동\` 옆에 남습니다.
 
-\`key={todo.id}\`처럼 항목마다 **변하지 않는 고유 값**을 써야 첫 번째 선택지처럼 기대대로 동작합니다. 인덱스 key는 순서가 바뀌거나 삽입 · 삭제되지 않는 고정 목록에서만 안전하고, \`Math.random()\`은 렌더링마다 모든 항목을 새로 만들어 상태를 잃게 합니다.`,
+\`key={todo.id}\`처럼 항목마다 **변하지 않는 고유 값**을 써야 삭제한 항목의 입력창이 함께 사라집니다. 인덱스 key는 순서가 바뀌거나 삽입 · 삭제되지 않는 고정 목록에서만 안전하고, \`Math.random()\`은 렌더링마다 모든 항목을 새로 만들어 상태를 잃게 합니다.`,
       tags: [
         'key',
         'reconciliation',
@@ -508,7 +540,7 @@ React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동
       lessonId: 'cs-react-l01',
       type: 'mcq',
       difficulty: 2,
-      prompt: '`CouponInput`은 입력값을 자기 state로 갖고 있습니다. 쿠폰 코드를 입력하던 중 `isMember`가 바뀌면 입력하던 값은 어떻게 될까요?',
+      prompt: '`CouponInput`은 입력값을 자기 state로 갖고 있습니다. 쿠폰 코드를 입력하던 중 `isMember`가 바뀌면 입력하던 값은 어떻게 될까요? 결과와 그 이유로 옳은 것을 고르세요.',
       code: {
         language: 'tsx',
         source: `function Checkout({ isMember }: { isMember: boolean }) {
@@ -523,18 +555,30 @@ React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동
   );
 }`,
       },
-      choices: [
-        '같은 `CouponInput` 컴포넌트가 같은 자리에 있으므로 입력값이 유지된다',
-        'key를 지정하지 않았으므로 React가 경고를 내고 입력값을 유지한다',
-        '감싸는 요소의 타입이 `div`에서 `section`으로 바뀌어 하위 트리가 새로 만들어지므로 입력값이 초기화된다',
-        '`className`만 달라졌으므로 React가 속성만 갱신하고 입력값은 유지된다',
+      correct: '감싸는 요소의 타입이 `div`에서 `section`으로 바뀌어 하위 트리가 새로 만들어지므로 입력값이 초기화된다',
+      distractors: [
+        {
+          text: '같은 `CouponInput` 컴포넌트가 같은 자리에 있으므로 입력값이 유지된다',
+          why: '`CouponInput` 자체의 타입은 같아도, 그 위의 부모 엘리먼트 타입이 바뀌면 아래 하위 트리 전체가 새로 만들어집니다. state는 트리 안의 위치에 붙어 있기 때문입니다.',
+        },
+        {
+          text: 'key를 지정하지 않았으므로 React가 경고를 내고 입력값을 유지한다',
+          why: 'key 경고는 배열로 렌더링하는 목록에서 나는 것이라 이 코드와 관계가 없습니다.',
+        },
+        {
+          text: '`className`만 달라졌으므로 React가 속성만 갱신하고 입력값은 유지된다',
+          why: '속성만 갱신하는 것은 타입이 같을 때의 동작입니다. 여기서는 `className`보다 먼저 태그 자체가 `div`와 `section`으로 다릅니다.',
+        },
+        {
+          text: '삼항 연산자로 조건부 렌더링한 컴포넌트는 조건이 바뀔 때마다 항상 새로 마운트되므로 입력값이 초기화된다',
+          why: '삼항 연산자 자체는 초기화와 관계가 없습니다. 조건이 바뀌어도 같은 자리에 같은 타입이 오면 state는 유지되고, 이 코드는 감싸는 요소의 타입이 달라서 초기화됩니다.',
+        },
+        {
+          text: '`isMember` prop이 바뀌어 `Checkout`이 새로 마운트되므로 입력값이 초기화된다',
+          why: 'props가 바뀌어도 `Checkout`은 언마운트되지 않고 다시 렌더링될 뿐입니다. 새로 만들어지는 것은 타입이 바뀐 `div` ↔ `section`과 그 아래 트리입니다.',
+        },
       ],
-      answer: 2,
-      explanation: `React는 같은 자리의 엘리먼트 **타입**부터 비교합니다. \`isMember\`가 바뀌면 그 자리의 타입이 \`div\` ↔ \`section\`으로 달라지므로, React는 기존 하위 트리를 통째로 언마운트하고 새로 만듭니다. 그 안의 \`CouponInput\`도 새로 마운트되어 state가 초깃값으로 돌아갑니다.
-
-- \`CouponInput\` 자체의 타입은 같아도, **부모 엘리먼트의 타입이 바뀌면** 그 아래 state는 유지되지 않습니다. state는 트리 안의 위치에 붙어 있기 때문입니다.
-- 이 코드는 목록이 아니므로 key 경고와 관계가 없습니다.
-- 속성만 갱신하는 것은 타입이 같을 때의 동작입니다. 여기서는 \`className\`보다 먼저 태그 자체가 다릅니다.
+      explanation: `React는 같은 자리의 엘리먼트 **타입**부터 비교합니다. \`isMember\`가 바뀌면 그 자리의 타입이 \`div\` ↔ \`section\`으로 달라지므로, React는 기존 하위 트리를 통째로 언마운트하고 새로 만듭니다. 그 안의 \`CouponInput\`도 새로 마운트되어 state가 초깃값으로 돌아갑니다. state는 컴포넌트가 아니라 **트리 안의 위치**에 붙어 있기 때문입니다.
 
 입력값을 유지하려면 감싸는 요소를 같은 타입으로 두고 속성만 바꿉니다.
 
@@ -566,17 +610,36 @@ React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동
   return <ProfileTabs user={user} tab={tab} onChange={setTab} />;
 }`,
       },
-      choices: [
-        'Hook은 호출 비용이 커서 렌더링마다 호출 여부가 달라지면 성능이 떨어지기 때문에',
-        '조건문 뒤에 있는 Hook은 빌드 과정에서 제거되어 동작하지 않기 때문에',
-        '`useState`는 문법상 컴포넌트 함수의 첫 줄에서만 호출할 수 있기 때문에',
-        'React는 Hook을 **호출 순서**로 구분하므로, 렌더링마다 순서가 달라지면 state가 엉뚱한 Hook에 연결되기 때문에',
+      correct: 'React는 Hook을 호출 순서로 구분하므로, 렌더링마다 순서가 달라지면 state가 엉뚱한 Hook에 연결되기 때문에',
+      distractors: [
+        {
+          text: 'Hook은 호출 비용이 커서 렌더링마다 호출 여부가 달라지면 성능이 떨어지기 때문에',
+          why: '성능 때문이 아닙니다. 규칙의 이유는 React가 Hook의 state를 호출 순서로 찾는다는 데 있습니다.',
+        },
+        {
+          text: '조건문 뒤에 있는 Hook은 빌드 과정에서 제거되어 동작하지 않기 때문에',
+          why: '빌드 도구는 Hook을 제거하지 않습니다. 조건에 따라 호출되면 렌더링마다 Hook의 개수와 순서가 달라지는 것이 문제입니다.',
+        },
+        {
+          text: '`useState`는 문법상 컴포넌트 함수의 첫 줄에서만 호출할 수 있기 때문에',
+          why: '첫 줄일 필요는 없습니다. 렌더링마다 같은 순서로 호출되기만 하면 다른 코드 뒤에 있어도 됩니다.',
+        },
+        {
+          text: 'React가 Hook을 변수 이름(`tab`)으로 구분하는데, 조건문 뒤에서는 이름을 알 수 없기 때문에',
+          why: 'React는 Hook이나 변수의 이름을 전혀 알지 못합니다. 이름이 없으니 호출된 순서로만 각 Hook의 state를 구분합니다.',
+        },
+        {
+          text: '이른 `return`을 만나면 컴포넌트가 언마운트되어 state가 모두 사라지기 때문에',
+          why: '이른 `return`은 다른 JSX를 반환할 뿐 컴포넌트를 언마운트하지 않습니다. 컴포넌트는 그대로 있고, 렌더링마다 호출되는 Hook의 개수가 달라지는 것이 문제입니다.',
+        },
+        {
+          text: 'TypeScript가 조건부 Hook 호출을 타입 에러로 막기 때문에',
+          why: 'TypeScript는 Hook 규칙을 검사하지 않습니다. 이 규칙은 런타임의 호출 순서 때문에 필요하고, 위반은 `eslint-plugin-react-hooks`가 잡아 줍니다.',
+        },
       ],
-      answer: 3,
-      explanation: `React는 Hook에 이름을 붙이지 않고, 컴포넌트마다 Hook의 state를 **호출된 순서대로** 저장해 두었다가 다음 렌더링에서 같은 순서로 꺼내 씁니다. 위 코드는 \`user\`가 \`null\`일 때 \`useState\`를 건너뛰므로 렌더링마다 Hook 개수가 달라지고, React는 "Rendered more hooks than during the previous render" 같은 에러를 냅니다.
+      explanation: `React는 Hook에 이름을 붙이지 않고, 컴포넌트마다 Hook의 state를 **호출된 순서대로** 저장해 두었다가 다음 렌더링에서 같은 순서로 꺼내 씁니다. 위 코드는 \`user\`가 \`null\`인 렌더링에서 \`useState\`를 건너뛰므로 렌더링마다 Hook의 개수와 순서가 달라집니다. 그러면 state가 엉뚱한 Hook에 연결되거나 버려지고, React가 "Rendered more hooks than during the previous render" 같은 에러를 내기도 합니다.
 
 - Hook은 **컴포넌트 최상위**에서, 조건문 · 반복문 · 이른 \`return\`보다 **앞에서** 호출합니다. 위 코드는 \`useState\`를 \`if\` 위로 올리거나, 로그인 후 화면을 별도 컴포넌트로 분리해 고칩니다.
-- 성능이나 문법 제약 때문이 아닙니다. 첫 줄일 필요도 없고 빌드에서 제거되지도 않으며, 렌더링마다 **같은 순서로** 호출되기만 하면 됩니다.
 
 > \`eslint-plugin-react-hooks\`의 \`rules-of-hooks\` 규칙이 이런 실수를 잡아 줍니다. React 19의 \`use\`는 예외적으로 조건문 안에서도 호출할 수 있습니다.`,
       tags: [
@@ -623,22 +686,39 @@ ref는 화면과 관계없지만 렌더링 사이에 유지해야 하는 값에 
   return <h1>{roomId}</h1>;
 }`,
       },
-      choices: [
-        '`connect a` → `connect b` → `disconnect b`',
-        '`connect a` → `disconnect a` → `connect b` → `disconnect b`',
-        '`connect a` → `connect b` → `disconnect a` → `disconnect b`',
-        '`connect a` → `disconnect a` → `connect b`',
+      correct: '`connect a` → `disconnect a` → `connect b` → `disconnect b`',
+      distractors: [
+        {
+          text: '`connect a` → `connect b` → `disconnect b`',
+          why: '의존성이 바뀌면 새 effect를 실행하기 직전에 이전 effect의 정리 함수가 먼저 실행되므로 `disconnect a`가 빠지지 않습니다.',
+        },
+        {
+          text: '`connect a` → `connect b` → `disconnect a` → `disconnect b`',
+          why: '정리 함수는 새 effect보다 먼저 실행됩니다. 이 순서라면 잠시 두 방에 동시에 연결된 상태가 됩니다.',
+        },
+        {
+          text: '`connect a` → `disconnect a` → `connect b`',
+          why: '정리 함수는 언마운트 때도 실행되므로 마지막 연결을 끊는 `disconnect b`가 빠지지 않습니다.',
+        },
+        {
+          text: '`connect a` → `disconnect b` → `connect b` → `disconnect b`',
+          why: '정리 함수도 클로저라서 자신을 만든 렌더링의 `roomId`를 기억합니다. 첫 effect의 정리 함수는 최신 값 `b`가 아니라 `a`로 실행됩니다.',
+        },
+        {
+          text: '`connect a` → `connect b` → `disconnect b` → `disconnect a`',
+          why: '`a`의 연결은 `roomId`가 `b`로 바뀔 때 이미 정리됩니다. 언마운트 때는 마지막으로 실행된 effect의 정리 함수 하나만 실행됩니다.',
+        },
+        {
+          text: '`connect a` → `disconnect a` → `connect a` → `disconnect a` → `connect b` → `disconnect b`',
+          why: '마운트 직후 설정 → 정리 → 설정을 한 번 더 하는 것은 개발 모드의 `StrictMode`에서만 일어납니다. 프로덕션 빌드에서는 effect가 마운트 때 한 번만 실행됩니다.',
+        },
       ],
-      answer: 1,
       explanation: `정리(cleanup) 함수는 두 시점에 실행됩니다.
 
 1. 의존성이 바뀌어 effect가 **다시 실행되기 직전**
 2. 컴포넌트가 **언마운트될 때**
 
 그래서 \`roomId\`가 바뀌면 이전 방의 연결을 먼저 끊고(\`disconnect a\`) 새 방에 연결(\`connect b\`)하며, 언마운트 때 마지막 연결을 끊습니다(\`disconnect b\`). 정리 함수는 자신을 만든 렌더링의 \`roomId\`를 클로저로 기억하므로 이전 값 \`a\`로 정리합니다.
-
-- 정리가 새 effect보다 늦게 실행된다고 생각하면, 잠시 두 방에 동시에 연결되는 순서를 고르게 됩니다.
-- 정리 함수는 언마운트 때도 실행되므로 마지막 \`disconnect b\`가 빠지지 않습니다.
 
 > 개발 모드의 \`StrictMode\`에서는 마운트 직후 \`connect a\` → \`disconnect a\` → \`connect a\`가 한 번 더 일어납니다.`,
       tags: [
@@ -684,22 +764,40 @@ ref는 화면과 관계없지만 렌더링 사이에 유지해야 하는 값에 
   return <p>합계: {total.toLocaleString()}원</p>;
 }`,
       },
-      choices: [
-        '의존성 배열을 `[]`로 바꿔 effect가 한 번만 실행되게 한다',
-        '`useEffect`를 `useLayoutEffect`로 바꿔 합계가 늦게 바뀌는 깜빡임을 없앤다',
-        '`setTotal`을 함수형 업데이트 `setTotal((prev) => ...)`로 바꾼다',
-        '`total` state와 effect를 없애고 렌더링 중에 `items`로 바로 계산한다',
+      correct: '`total` state와 effect를 없애고 렌더링 중에 `items`로 바로 계산한다',
+      distractors: [
+        {
+          text: '의존성 배열을 `[]`로 바꿔 effect가 한 번만 실행되게 한다',
+          why: '마운트 때 한 번만 계산하므로 `items`가 바뀌어도 합계가 갱신되지 않는 버그가 됩니다.',
+        },
+        {
+          text: '`useEffect`를 `useLayoutEffect`로 바꿔 합계가 늦게 바뀌는 깜빡임을 없앤다',
+          why: '화면에 그리기 전에 다시 렌더링해 깜빡임은 가려지지만, `items`가 바뀔 때마다 두 번 렌더링하는 낭비는 그대로입니다.',
+        },
+        {
+          text: '`setTotal`을 함수형 업데이트 `setTotal((prev) => ...)`로 바꾼다',
+          why: '함수형 업데이트는 이전 state를 기준으로 계산할 때 쓰는 것입니다. 합계는 이전 합계가 아니라 `items`로 계산하므로 이 문제와 관계가 없습니다.',
+        },
+        {
+          text: '의존성 배열을 지워 렌더링마다 합계를 다시 계산하게 한다',
+          why: '렌더링이 끝날 때마다 effect가 실행될 뿐, 오래된 합계로 먼저 렌더링한 뒤 `setTotal`로 한 번 더 렌더링하는 구조는 그대로입니다.',
+        },
+        {
+          text: '`total`을 state 대신 `useRef`에 두고 effect에서 갱신해 추가 렌더링을 없앤다',
+          why: '`ref.current`를 바꿔도 다시 렌더링되지 않으므로, 커밋 뒤 effect에서 계산한 합계가 다음 렌더링 전까지 화면에 반영되지 않습니다.',
+        },
+        {
+          text: '합계 계산 함수를 `useCallback`으로 감싸 effect 의존성에 넣는다',
+          why: '함수의 참조만 고정할 뿐, 계산 결과를 state에 복사해 한 번 더 렌더링하는 구조는 그대로입니다.',
+        },
       ],
-      answer: 3,
       explanation: `\`total\`은 \`items\`만 있으면 계산할 수 있는 **파생 값**이라 state로 둘 필요가 없습니다. 지금 코드는 \`items\`가 바뀌면 오래된 합계로 한 번 렌더링 · 커밋한 뒤, effect에서 \`setTotal\`을 호출해 **한 번 더 렌더링**합니다.
 
 \`\`\`tsx
 const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
 \`\`\`
 
-- 계산이 정말 무겁다면 그때 \`useMemo\`로 감쌉니다.
-- \`[]\`로 바꾸면 \`items\`가 바뀌어도 합계가 갱신되지 않는 버그가 됩니다.
-- \`useLayoutEffect\`는 깜빡임은 가려도 불필요한 이중 렌더링은 그대로이고, 함수형 업데이트는 이 문제와 관계가 없습니다.
+계산이 정말 무겁다면 그때 \`useMemo\`로 감쌉니다.
 
 > effect는 네트워크 · 브라우저 API · 서드파티 위젯 같은 **외부 시스템과 동기화**할 때 씁니다. props로 값 계산하기, 사용자 이벤트에 따른 처리(이벤트 핸들러에 작성), prop이 바뀔 때 state 초기화(\`key\` 사용)에는 effect가 필요 없습니다.`,
       tags: [
@@ -738,22 +836,39 @@ function ProductList({ products }: { products: Product[] }) {
   );
 }`,
       },
-      choices: [
-        '`memo`는 부모의 state 변경에는 동작하지 않으므로 `ProductCard`를 `useMemo`로 감싸야 한다',
-        '`key`에 `p.id`를 썼기 때문이며, 인덱스로 바꾸면 해결된다',
-        '`style` 객체와 `handleSelect` 함수가 렌더링마다 새로 만들어져 비교에 실패하므로, 상수로 빼거나 `useCallback`으로 참조를 고정한다',
-        '`memo`는 props를 깊은 비교하므로 `product` 객체가 크면 비교를 포기하고 다시 렌더링한다',
+      correct: '`style` 객체와 `handleSelect` 함수가 렌더링마다 새로 만들어져 비교에 실패하므로, 상수로 빼거나 `useCallback`으로 참조를 고정한다',
+      distractors: [
+        {
+          text: '`memo`는 부모의 state 변경에는 동작하지 않으므로 `ProductCard`를 `useMemo`로 감싸야 한다',
+          why: '`memo`는 바로 부모 리렌더링으로 생기는 자식 렌더링을 건너뛰게 하는 도구입니다. 다만 props가 실제로 같아야 효과가 있습니다.',
+        },
+        {
+          text: '`key`에 `p.id`를 썼기 때문이며, 인덱스로 바꾸면 해결된다',
+          why: 'key는 목록 항목을 식별하는 값이라 `memo`의 props 비교와 관계가 없습니다. 인덱스로 바꾸면 오히려 삽입 · 삭제 때 다른 버그가 생깁니다.',
+        },
+        {
+          text: '`memo`는 props를 깊은 비교하므로 `product` 객체가 크면 비교를 포기하고 다시 렌더링한다',
+          why: '`memo`는 prop마다 `Object.is`로 참조만 보는 얕은 비교를 하며, 객체 크기에 따라 비교 방식이 달라지지 않습니다.',
+        },
+        {
+          text: '`product` 객체가 렌더링마다 새로 만들어지므로 `products`를 `useMemo`로 감싼다',
+          why: '`product`는 props로 받은 `products` 배열의 원소라, 검색어만 바뀌는 렌더링에서는 이전과 같은 참조입니다. 매번 새로 만들어지는 것은 `style`과 `handleSelect`입니다.',
+        },
+        {
+          text: '`ProductCard` 안의 `onClick` 화살표 함수를 `useCallback`으로 감싸면 해결된다',
+          why: '그 함수는 `ProductCard`가 렌더링될 때 안에서 만들어지므로, `ProductCard` 렌더링을 건너뛸지 정하는 props 비교와 관계가 없습니다.',
+        },
+        {
+          text: '`handleSelect`만 `useCallback`으로 감싸면 해결된다',
+          why: '`style={{ margin: 8 }}`도 렌더링마다 새 객체라 props 하나가 여전히 달라집니다. 비교가 성공하려면 모든 prop의 참조가 같아야 합니다.',
+        },
       ],
-      answer: 2,
       explanation: `\`memo\`는 이전 props와 새 props를 **얕게(\`Object.is\`) 비교**해 모두 같을 때만 렌더링을 건너뜁니다. 객체 리터럴 \`{ margin: 8 }\`과 컴포넌트 안에서 선언한 \`handleSelect\`는 렌더링마다 **새 참조**라 비교가 항상 실패하고, \`memo\`는 비교 비용만 더하는 셈이 됩니다.
 
 \`\`\`tsx
 const CARD_STYLE = { margin: 8 }; // 컴포넌트 밖 상수
 const handleSelect = useCallback((id: string) => console.log(id), []);
 \`\`\`
-
-- \`memo\`는 부모 리렌더링으로 생기는 자식 렌더링을 막는 도구가 맞습니다. 다만 props가 실제로 같아야 하고, 비교는 깊은 비교가 아닌 얕은 비교입니다.
-- key는 목록 항목을 식별하는 값이라 이 문제와 관계없고, 인덱스로 바꾸면 오히려 다른 버그가 생깁니다.
 
 > 메모이제이션은 비교 비용 · 메모리 · 의존성 관리 부담이 있어 공짜가 아닙니다. Profiler로 느린 곳을 확인한 뒤 적용하고, 그 전에 입력 state를 별도 컴포넌트로 내려 렌더링 범위를 줄이는 방법도 검토합니다.`,
       tags: [
@@ -789,18 +904,34 @@ function UserBadge() {
   return <span>{user?.name}</span>;
 }`,
       },
-      choices: [
-        'Context 값이 바뀌면 그 Context를 읽는 컴포넌트가 모두 다시 렌더링되므로, 자주 바뀌는 값은 별도 Context로 나누고 `value`는 `useMemo`로 고정한다',
-        '`UserBadge`를 `memo`로 감싸면 Context 값 변경으로 인한 리렌더링도 막을 수 있다',
-        'Provider가 렌더링되면 `children`으로 받은 컴포넌트는 Context를 읽지 않아도 무조건 함께 다시 렌더링된다',
-        'React는 Context 값을 깊은 비교하므로 `user`가 그대로라면 리렌더링되지 않아야 하며, 이 현상은 React의 버그다',
+      correct: 'Context 값이 바뀌면 그 Context를 읽는 컴포넌트가 모두 다시 렌더링되므로, 자주 바뀌는 값은 별도 Context로 나누고 `value`는 `useMemo`로 고정한다',
+      distractors: [
+        {
+          text: '`UserBadge`를 `memo`로 감싸면 Context 값 변경으로 인한 리렌더링도 막을 수 있다',
+          why: '`memo`는 부모에게 받은 props만 비교합니다. 컴포넌트 안에서 `useContext`로 읽는 값이 바뀌면 `memo`로 감싸도 다시 렌더링됩니다.',
+        },
+        {
+          text: 'Provider가 렌더링되면 `children`으로 받은 컴포넌트는 Context를 읽지 않아도 무조건 함께 다시 렌더링된다',
+          why: '`children`은 `AppProvider`의 부모가 만든 엘리먼트라 Provider의 state가 바뀌어도 참조가 같습니다. 그래서 Context를 읽지 않는 자식은 다시 렌더링되지 않습니다.',
+        },
+        {
+          text: 'React는 Context 값을 깊은 비교하므로 `user`가 그대로라면 리렌더링되지 않아야 하며, 이 현상은 React의 버그다',
+          why: 'Context 값은 깊은 비교가 아니라 `Object.is` 참조 비교입니다. 렌더링마다 새 객체를 `value`로 넘기므로 정상 동작입니다.',
+        },
+        {
+          text: '`value`를 `useMemo`로 고정하기만 하면 `theme`이 바뀌어도 `UserBadge`는 다시 렌더링되지 않는다',
+          why: '`theme`이 `value`에 들어 있으므로 `theme`이 바뀌면 `useMemo`도 새 객체를 만듭니다. `user`만 읽는 컴포넌트까지 렌더링되는 것을 막으려면 Context를 나눠야 합니다.',
+        },
+        {
+          text: '`UserBadge`에서 `const { user }`처럼 필요한 필드만 꺼내면 `user`가 바뀔 때만 렌더링된다',
+          why: '구조 분해는 받은 값에서 필드를 꺼낼 뿐입니다. Context는 값 전체를 한 덩어리로 다뤄 일부 필드만 구독하는 방법이 없습니다.',
+        },
+        {
+          text: '`useContext` 대신 `AppContext.Consumer`로 읽으면 `user`가 바뀔 때만 렌더링된다',
+          why: '`Consumer`도 `useContext`와 똑같이 `value` 전체를 구독하므로, `value` 객체가 바뀌면 다시 렌더링됩니다.',
+        },
       ],
-      answer: 0,
       explanation: `Context에는 일부 값만 골라 구독하는 기능(셀렉터)이 없습니다. Provider의 \`value\`가 \`Object.is\` 비교로 달라지면 그 Context를 읽는 **모든 컴포넌트**가 다시 렌더링되는데, 위 코드는 렌더링마다 객체 리터럴로 새 \`value\`를 만듭니다.
-
-- \`memo\`는 props만 비교하므로, 컴포넌트 안에서 \`useContext\`로 읽는 값이 바뀌면 \`memo\`로 감싸도 다시 렌더링됩니다.
-- \`children\`은 \`AppProvider\`의 부모가 만든 엘리먼트라 Provider의 state가 바뀌어도 참조가 같습니다. 그래서 Context를 읽지 않는 자식은 다시 렌더링되지 않습니다.
-- Context 값은 깊은 비교가 아니라 참조 비교이므로 이 동작은 버그가 아닙니다.
 
 개선 방법은 다음과 같습니다.
 
@@ -866,18 +997,34 @@ function UserBadge() {
   );
 }`,
       },
-      choices: [
-        '`startTransition` 안의 업데이트는 웹 워커에서 실행되어 메인 스레드를 차단하지 않는다',
-        '`startTransition`은 업데이트를 정해진 시간만큼 늦춰서 실행하는 디바운스다',
-        '입력값 `query`도 `startTransition` 안에서 업데이트해야 입력이 더 부드러워진다',
-        '`filter` 업데이트를 긴급하지 않은 전환으로 표시해, 그 렌더링 도중 새 입력이 오면 React가 중단하고 입력을 먼저 처리할 수 있다',
+      correct: '`filter` 업데이트를 긴급하지 않은 전환으로 표시해, 그 렌더링 도중 새 입력이 오면 React가 중단하고 입력을 먼저 처리할 수 있다',
+      distractors: [
+        {
+          text: '`startTransition` 안의 업데이트는 웹 워커에서 실행되어 메인 스레드를 차단하지 않는다',
+          why: '전환 렌더링도 메인 스레드에서 실행됩니다. React가 작업을 잘게 나눠 중간중간 브라우저에 차례를 양보할 뿐입니다.',
+        },
+        {
+          text: '`startTransition`은 업데이트를 정해진 시간만큼 늦춰서 실행하는 디바운스다',
+          why: '정해진 시간을 기다리지 않고, 브라우저에 여유가 있으면 곧바로 렌더링합니다. 네트워크 요청 횟수를 줄이려면 디바운스를 따로 걸어야 합니다.',
+        },
+        {
+          text: '입력값 `query`도 `startTransition` 안에서 업데이트해야 입력이 더 부드러워진다',
+          why: '제어 컴포넌트의 입력값을 전환으로 업데이트하면 입력이 오히려 늦게 반영됩니다. 입력값은 긴급 업데이트로 전환 밖에서 바꿔야 합니다.',
+        },
+        {
+          text: '`startTransition`으로 감싸면 `HeavyResultList`의 렌더링 계산 자체가 빨라진다',
+          why: '렌더링 작업의 양은 그대로이고 우선순위만 낮아집니다. 계산에 드는 시간은 같지만 그사이 입력 같은 긴급한 업데이트를 먼저 처리할 수 있게 됩니다.',
+        },
+        {
+          text: '전환 렌더링 중에 새 입력이 오면, 진행 중인 렌더링을 끝까지 마친 뒤에 입력을 처리한다',
+          why: '전환 렌더링은 중단할 수 있습니다. 새 입력이 오면 진행 중이던 렌더링을 버리고 입력을 먼저 반영한 뒤 최신 값으로 다시 시작합니다.',
+        },
+        {
+          text: '전환이 긴급 렌더링에서 목록을 자동으로 건너뛰게 하므로 `HeavyResultList`의 `memo`는 필요 없다',
+          why: '`query`가 바뀌는 긴급 렌더링에서도 `SearchPage`가 다시 렌더링되므로, `memo`가 없으면 `filter`가 그대로인 목록까지 함께 렌더링됩니다.',
+        },
       ],
-      answer: 3,
       explanation: `\`startTransition\` 안의 업데이트는 **긴급하지 않은 전환(transition)**으로 표시됩니다. React는 입력값 \`query\` 같은 긴급한 업데이트를 먼저 화면에 반영하고, \`filter\`로 인한 무거운 렌더링은 중간중간 브라우저에 제어권을 돌려주며 진행합니다. 그 사이 새 입력이 들어오면 진행 중이던 렌더링을 **버리고** 최신 값으로 다시 시작하므로 타이핑이 끊기지 않습니다. 전환이 끝나기 전까지 \`isPending\`은 \`true\`입니다.
-
-- 웹 워커가 아니라 **메인 스레드**에서 실행됩니다. 작업을 쪼개 양보할 뿐 계산 자체가 빨라지지는 않습니다.
-- 정해진 시간만큼 기다리는 디바운스가 아닙니다. 여유가 있으면 바로 렌더링하며, 네트워크 요청 횟수를 줄이려면 여전히 디바운스가 필요합니다.
-- 제어 컴포넌트의 입력값을 전환으로 업데이트하면 입력이 오히려 늦게 반영되므로 \`query\`는 전환 밖에서 바꿔야 합니다.
 
 > \`HeavyResultList\`를 \`memo\`로 감싼 이유는, \`query\`가 바뀌는 긴급 렌더링에서 \`filter\`가 그대로인 목록을 건너뛰기 위해서입니다. 값을 props로 받는 쪽에서는 \`useDeferredValue\`로 같은 효과를 낼 수 있습니다.`,
       tags: [
@@ -920,18 +1067,36 @@ export default function AddToCartButton({ productId }: { productId: string }) {
   return <button onClick={() => setAdded(true)}>{added ? '담김' : '담기'}</button>;
 }`,
       },
-      choices: [
-        '`ProductsPage`에서도 `useState`와 `onClick`을 그대로 쓸 수 있고, 이벤트는 서버에서 처리된다',
-        '`AddToCartButton`은 `use client` 파일이므로 서버에서는 전혀 렌더링되지 않고 브라우저에서만 렌더링된다',
-        '`ProductsPage`의 코드와 `db` 모듈은 클라이언트 번들에 포함되지 않고, 클라이언트 컴포넌트인 `AddToCartButton`만 번들에 포함되어 하이드레이션된다',
-        '`use client` 파일에서 서버 컴포넌트를 `import`해 렌더링해도 그 컴포넌트는 계속 서버에서만 실행된다',
+      correct: '`ProductsPage`의 코드와 `db` 모듈은 클라이언트 번들에 포함되지 않고, 클라이언트 컴포넌트인 `AddToCartButton`만 번들에 포함되어 하이드레이션된다',
+      distractors: [
+        {
+          text: '`ProductsPage`에서도 `useState`와 `onClick`을 그대로 쓸 수 있고, 이벤트는 서버에서 처리된다',
+          why: '서버 컴포넌트는 브라우저에서 실행되지 않으므로 state, effect, 이벤트 핸들러를 쓸 수 없습니다. 상호작용이 필요한 부분만 `\'use client\'` 파일로 분리합니다.',
+        },
+        {
+          text: '`AddToCartButton`은 `use client` 파일이므로 서버에서는 전혀 렌더링되지 않고 브라우저에서만 렌더링된다',
+          why: '클라이언트 컴포넌트도 첫 요청 때는 서버에서 HTML로 미리 렌더링(SSR)되고, 브라우저에서 하이드레이션되어 상호작용이 붙습니다.',
+        },
+        {
+          text: '`use client` 파일에서 서버 컴포넌트를 `import`해 렌더링해도 그 컴포넌트는 계속 서버에서만 실행된다',
+          why: '`\'use client\'`는 모듈 경계라서 그 파일이 import하는 모듈도 클라이언트 번들에 들어갑니다. 서버 컴포넌트를 안에 두려면 import하지 말고 `children` 같은 props로 받아야 합니다.',
+        },
+        {
+          text: '`ProductsPage`는 `async` 함수라서 브라우저에서 데이터를 받아온 뒤 렌더링된다',
+          why: '`async` 서버 컴포넌트는 서버에서 DB를 직접 조회해 렌더링합니다. 브라우저에는 그 결과만 전달되고 `db.product.findMany()`는 브라우저에서 실행되지 않습니다.',
+        },
+        {
+          text: '`AddToCartButton`에 `onAdd={() => addToCart(p.id)}` 같은 일반 함수 prop도 넘길 수 있다',
+          why: '서버 컴포넌트에서 클라이언트 컴포넌트로 넘기는 props는 네트워크로 전달되므로 직렬화할 수 있어야 합니다. 일반 함수는 넘길 수 없고 `\'use server\'`로 표시한 Server Function만 예외입니다.',
+        },
+        {
+          text: '서버 컴포넌트도 하이드레이션 대상이라 `ProductsPage`의 코드가 브라우저에서 한 번 더 실행된다',
+          why: '서버 컴포넌트의 코드는 브라우저에 아예 내려가지 않고 하이드레이션 대상에서도 빠집니다. 모든 컴포넌트의 JS를 내려보내 하이드레이션하는 것은 서버 컴포넌트 없는 SSR의 방식입니다.',
+        },
       ],
-      answer: 2,
       explanation: `App Router에서 컴포넌트는 기본적으로 **서버 컴포넌트**입니다. 서버에서만 실행되어 \`async\`로 DB를 직접 조회할 수 있고, 그 코드는 JS 번들에 들어가지 않습니다. 브라우저에는 렌더링 결과(RSC 페이로드와 HTML)만 전달됩니다.
 
-- 서버 컴포넌트는 브라우저에서 실행되지 않으므로 state, effect, 이벤트 핸들러를 쓸 수 없습니다. 상호작용이 필요한 부분만 \`'use client'\` 파일로 분리합니다.
-- 클라이언트 컴포넌트도 첫 요청 때는 **서버에서 HTML로 미리 렌더링(SSR)**되고, 브라우저에서 하이드레이션되어 상호작용이 붙습니다. "클라이언트 컴포넌트는 브라우저에서만 렌더링된다"는 흔한 오해입니다.
-- \`'use client'\`는 **모듈 경계**를 표시합니다. 그 파일이 import하는 모듈도 클라이언트 번들에 들어가므로, 클라이언트 컴포넌트 안에 서버 컴포넌트를 두려면 import하지 말고 \`children\` 같은 props로 받아야 합니다.
+반면 \`'use client'\`로 표시한 \`AddToCartButton\`은 클라이언트 번들에 포함됩니다. 첫 요청 때는 서버에서 HTML로 미리 렌더링되고, 브라우저에서 하이드레이션되어 클릭 같은 상호작용이 붙습니다. 그래서 데이터를 읽어 그리는 부분은 서버 컴포넌트로 두고, 상호작용이 필요한 작은 조각에만 \`'use client'\`를 붙이는 구성이 기본입니다.
 
 > 서버 컴포넌트에서 클라이언트 컴포넌트로 넘기는 props는 **직렬화할 수 있는 값**이어야 합니다. 일반 함수는 넘길 수 없고, Server Function(\`'use server'\`)만 예외입니다.`,
       tags: [

@@ -9,23 +9,36 @@ const content: CsCategoryContent = {
       type: 'mcq',
       difficulty: 1,
       prompt: 'Django의 MTV 패턴에서 요청을 받아 모델로 필요한 데이터를 다루고, 어떤 응답을 돌려줄지 결정하는 계층은?',
-      choices: [
-        'Model',
-        'Template',
-        'View',
-        'URLconf',
+      correct: 'View',
+      distractors: [
+        {
+          text: 'Model',
+          why: 'Model은 데이터 구조와 도메인 규칙, ORM을 맡습니다. 요청을 받거나 어떤 응답을 돌려줄지 정하지 않고, View가 Model을 불러 데이터를 다룹니다.',
+        },
+        {
+          text: 'Template',
+          why: 'Template은 View가 넘긴 데이터를 HTML로 그리기만 합니다. 이름 때문에 MVC의 View와 헷갈리기 쉽지만 화면 표현만 맡습니다.',
+        },
+        {
+          text: 'URLconf',
+          why: 'URLconf(`urls.py`)는 URL을 알맞은 View에 연결(라우팅)할 뿐 응답 내용을 정하지 않습니다. Django 문서는 이런 라우팅을 포함한 프레임워크 자체를 Controller로 볼 수 있다고 설명합니다.',
+        },
+        {
+          text: 'Middleware',
+          why: '미들웨어는 MTV의 구성 요소가 아니라 모든 요청 · 응답을 감싸는 공통 처리 계층입니다. 세션 · 인증 · CSRF 같은 공통 처리를 할 뿐, 경로별로 데이터를 다뤄 응답을 정하는 것은 View입니다.',
+        },
+        {
+          text: 'Form',
+          why: '폼은 입력값을 검증하고 정리(`cleaned_data`)하는 도구입니다. 검증 결과에 따라 무엇을 저장하고 어떤 응답을 줄지는 폼을 사용하는 View가 정합니다.',
+        },
       ],
-      answer: 2,
-      explanation: `Django의 **View**는 요청을 받아 비즈니스 로직을 수행하고 \`HttpResponse\`를 반환합니다. MVC로 보면 Controller에 해당합니다.
+      explanation: `Django의 **View**는 요청을 받아 비즈니스 로직을 수행하고 \`HttpResponse\`를 반환합니다. 이름은 View지만 MVC로 보면 Controller에 해당합니다.
 
 | MTV | 역할 | MVC 대응 |
 | --- | --- | --- |
 | Model | 데이터 구조, ORM, 도메인 규칙 | Model |
 | Template | 화면 표현(HTML 렌더링) | View |
-| View | 요청 처리, 응답 결정 | Controller |
-
-- Template은 View가 넘긴 데이터를 그리기만 합니다. 이름 때문에 MVC의 View와 헷갈리기 쉽습니다.
-- URLconf는 URL을 알맞은 View에 연결(라우팅)할 뿐 응답 내용을 정하지 않습니다. Django 문서는 이런 라우팅을 포함한 프레임워크 자체를 Controller로 볼 수 있다고 설명합니다.`,
+| View | 요청 처리, 응답 결정 | Controller |`,
       tags: [
         'MTV',
         'MVC',
@@ -49,16 +62,32 @@ for post in qs:
 for post in qs:
     print(post.title)`,
       },
-      choices: [
-        '1번',
-        '2번',
-        '3번',
-        '5번',
+      correct: '1번',
+      distractors: [
+        {
+          text: '2번',
+          why: '`for`문마다 쿼리가 나간다고 본 값입니다. 평가된 QuerySet은 결과를 내부에 캐시하므로, 같은 `qs` 객체를 다시 순회하면 추가 쿼리가 없습니다.',
+        },
+        {
+          text: '3번',
+          why: '`filter()` · `exclude()` · `order_by()`를 호출할 때마다 쿼리가 나간다고 본 값입니다. 이 메서드들은 조건만 쌓은 새 QuerySet을 돌려줄 뿐 DB에 접근하지 않습니다.',
+        },
+        {
+          text: '4번',
+          why: '체이닝 메서드 세 번과 첫 순회에서 각각 쿼리가 나간다고 본 값입니다. 체이닝하는 동안에는 DB에 가지 않고, 결과가 처음 필요한 첫 순회에서 한 번만 실행됩니다.',
+        },
+        {
+          text: '5번',
+          why: '체이닝 메서드 세 번과 두 번의 순회를 모두 센 값입니다. QuerySet은 지연 평가되고, 한 번 평가된 결과는 캐시되어 재사용됩니다.',
+        },
+        {
+          text: '게시글 수 + 1번',
+          why: '`title`은 `Post` 테이블의 일반 컬럼이라 목록을 조회할 때 함께 가져옵니다. 객체마다 추가 쿼리가 나가는 것은 FK 같은 관계 필드에 처음 접근할 때입니다.',
+        },
       ],
-      answer: 0,
       explanation: `QuerySet은 **지연 평가(lazy evaluation)**됩니다. \`filter()\`, \`exclude()\`, \`order_by()\`는 조건만 쌓은 새 QuerySet을 반환할 뿐 DB에 접근하지 않습니다.
 
-- 첫 번째 \`for\`문에서 처음 평가되며 쿼리가 1번 실행되고, 결과는 QuerySet 내부의 결과 캐시에 저장됩니다.
+- 첫 \`for\`문에서 처음 평가되며 쿼리가 1번 실행되고, 결과는 QuerySet 내부의 결과 캐시에 저장됩니다.
 - 같은 \`qs\` 객체를 다시 순회하면 캐시를 재사용하므로 추가 쿼리가 없습니다.
 
 반대로 \`qs.filter(...)\`처럼 새 QuerySet을 만들거나, 평가되지 않은 QuerySet에 \`qs[0]\`처럼 인덱싱하면 그때마다 새 쿼리가 실행됩니다. 결과를 여러 번 쓸 때는 같은 QuerySet 객체를 평가해서 재사용합니다.`,

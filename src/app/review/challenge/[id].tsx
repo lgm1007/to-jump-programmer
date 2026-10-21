@@ -28,6 +28,7 @@ import {
   type Severity,
 } from '@/content';
 import { AdSlot, showInterstitialAtBreak } from '@/features/ads';
+import { shuffledOrder } from '@/features/progress/choices';
 import { useReviewLanguage } from '@/features/progress/review-language';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
@@ -76,6 +77,10 @@ export default function ChallengeScreen() {
   const scrollRef = useRef<ScrollView>(null);
 
   const result = useMemo(() => (ch ? grade(ch, lines, picked) : null), [ch, lines, picked]);
+  // 문제점 보기는 풀 때마다 순서를 섞는다 (채점은 원래 인덱스 기준). 제출해 기록이 늘어도 보던 순서는 그대로
+  const [attempt, setAttempt] = useState(record?.attempts ?? 0);
+  const optionCount = ch?.question.options.length ?? 0;
+  const order = useMemo(() => shuffledOrder(optionCount, id, attempt), [optionCount, id, attempt]);
 
   if (!ch || !result) {
     return (
@@ -126,6 +131,7 @@ export default function ChallengeScreen() {
   };
 
   const retry = () => {
+    setAttempt(record?.attempts ?? attempt + 1);
     setLines(new Set());
     setPicked(new Set());
     setFixView('improved');
@@ -219,7 +225,8 @@ export default function ChallengeScreen() {
                 정답은 여러 개일 수 있어요. 코드에 실제로 있는 문제만 고르세요.
               </Text>
               <View style={{ gap: spacing.sm }}>
-                {ch.question.options.map((o, i) => {
+                {order.map((i) => {
+                  const o = ch.question.options[i];
                   const on = picked.has(i);
                   return (
                     <PressableScale
@@ -317,7 +324,8 @@ export default function ChallengeScreen() {
 
               <SectionHeader title="문제점 선택 결과" />
               <Card style={{ gap: spacing.md }}>
-                {ch.question.options.map((o, i) => {
+                {order.map((i) => {
+                  const o = ch.question.options[i];
                   const on = picked.has(i);
                   const icon = o.correct ? (on ? 'checkmark-circle' : 'alert-circle') : on ? 'close-circle' : 'ellipse-outline';
                   const color = o.correct ? (on ? c.success : c.warning) : on ? c.danger : c.textTertiary;
