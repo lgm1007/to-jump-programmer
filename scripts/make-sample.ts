@@ -3,7 +3,7 @@
  *   npm run content:sync && npm run content:sample
  *
  * 샘플 범위: 알고리즘 토픽마다 개념 첫 단락 + 퀴즈 2문항, 대표 토픽(SAMPLE_PATTERN_TOPICS)의 문제 유형 전체,
- * CS 카테고리마다 퀴즈 2문항 + 카드 1장(대표 카테고리 SAMPLE_LESSON_CATEGORIES 는 이론 레슨 전체 + 확인 퀴즈),
+ * CS 카테고리마다 퀴즈 2문항 + 카드 1장(대표 카테고리 SAMPLE_LESSONS 는 이론 레슨 + 확인 퀴즈 — 실전 사례는 대표 사례 1개),
  * 프레임워크마다 개선 패턴 2개 + 리뷰 퀴즈 1개(다른 언어 버전 포함).
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -25,8 +25,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA = join(ROOT, 'src', 'content', 'data');
 const SAMPLE = join(ROOT, 'src', 'content', 'sample');
 
-/** CS 이론 레슨을 샘플에 싣는 대표 카테고리 (백엔드 · 프론트엔드 하나씩) */
-const SAMPLE_LESSON_CATEGORIES = ['os', 'react'];
+/** CS 이론 레슨을 샘플에 싣는 대표 카테고리와 레슨 수 (백엔드 · 프론트엔드 하나씩 전체, 실전 사례는 대표 사례 1개) */
+const SAMPLE_LESSONS: Record<string, number> = { os: Infinity, react: Infinity, 'case-traffic': 1 };
 
 /** 문제 유형 · 구현 예제를 샘플에 싣는 대표 토픽 */
 const SAMPLE_PATTERN_TOPICS = ['binary-search', 'bfs-dfs'];
@@ -111,7 +111,7 @@ async function main() {
   for (const cat of CS_CATEGORIES) {
     const c = await load<CsCategoryContent>(join(DATA, 'cs', `${cat.id}.ts`));
     // 대표 카테고리는 이론 레슨 전체 + 레슨마다 확인 퀴즈 3문제, 나머지는 레슨 없이 퀴즈 연결을 뗀다
-    const lessons = SAMPLE_LESSON_CATEGORIES.includes(cat.id) ? (c.lessons ?? []) : [];
+    const lessons = (c.lessons ?? []).slice(0, SAMPLE_LESSONS[cat.id] ?? 0);
     const lessonIds = new Set(lessons.map((l) => l.id));
     const linked = lessons.flatMap((l) => c.quiz.filter((q) => q.lessonId === l.id).slice(0, 3));
     const quiz = [...new Map([...c.quiz.slice(0, 2), ...linked].map((q) => [q.id, q])).values()].map((q) =>

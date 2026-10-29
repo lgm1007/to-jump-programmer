@@ -308,6 +308,33 @@ function checkLessons(lessons: CsLesson[], quiz: QuizQuestion[], categoryId: str
   }
 }
 
+/** 실전 사례 레슨의 본문 섹션 — 이 순서대로 있어야 한다 (docs/CONTENT_GUIDE.md 3-2) */
+const CASE_SECTIONS = ['상황', '원인 분석', '선택지와 트레이드오프', '적용한 해결 방안', '결과와 검증', '면접에서 말하는 법'];
+
+/** 실전 사례 카테고리(group 'case') — 레슨 섹션 템플릿, 판단형 퀴즈는 오답 풀 형식, 질문 카드는 경험이 없을 때의 답변 포함 */
+function checkCaseContent(content: CsCategoryContent, where: string) {
+  for (const l of content.lessons ?? []) {
+    const headings = typeof l.body === 'string' ? [...l.body.matchAll(/^###\s+(.+?)\s*$/gm)].map((m) => m[1]) : [];
+    let at = -1;
+    for (const name of CASE_SECTIONS) {
+      const i = headings.findIndex((h, k) => k > at && h.startsWith(name));
+      if (i < 0) {
+        err(`${where}/${l.id}`, `사례 레슨 본문에 '### ${name}' 섹션이 없거나 순서가 다릅니다 (순서: ${CASE_SECTIONS.join(' → ')})`);
+        break;
+      }
+      at = i;
+    }
+  }
+  for (const q of content.quiz) {
+    if (q.type === 'mcq' && q.correct === undefined) err(`${where}/${q.id}`, '사례 퀴즈의 객관식은 오답 풀 형식(correct · distractors)으로 씁니다');
+  }
+  for (const c of content.cards) {
+    if (typeof c.answer === 'string' && !c.answer.includes('경험이 없다면')) {
+      err(`${where}/${c.id}`, "사례 질문 카드 답변에 '경험이 없다면' 으로 시작하는 대안 답변이 없습니다");
+    }
+  }
+}
+
 async function validateCs() {
   for (const cat of CS_CATEGORIES.filter((c) => !ONLY || ONLY.includes(c.id))) {
     const file = join(CONTENT, 'cs', `${cat.id}.ts`);
@@ -326,6 +353,7 @@ async function validateCs() {
     const lessons = content.lessons ?? [];
     if (!Array.isArray(lessons)) err(where, 'lessons 는 배열이어야 합니다');
     else checkLessons(lessons, content.quiz, cat.id, where);
+    if (cat.group === 'case') checkCaseContent(content, where);
     console.log(`  cs/${cat.id}: 이론 ${lessons.length} · 퀴즈 ${content.quiz.length} · 카드 ${content.cards.length}`);
   }
 }

@@ -20,6 +20,7 @@ import {
   CS_CATEGORY_MAP,
   CS_CONTENT,
   CS_GROUPS,
+  isCaseCategory,
   PATTERN_MAP,
   REVIEW_CATEGORY_LABEL,
   REVIEW_CONTENT,
@@ -366,7 +367,7 @@ function lessonPage(href: Href, l: CsLesson): StaticPage {
   ].filter(Boolean);
   const body = `
 <h1>${esc(l.title)}</h1>
-<p class="lead">${inline(l.summary)} <span class="tag">${esc(c.title)} · 레슨 ${i + 1}/${siblings.length} · ${DIFFICULTY[l.difficulty]} · ${l.minutes}분</span></p>
+<p class="lead">${inline(l.summary)} <span class="tag">${isCaseCategory(l.categoryId) ? '실전 사례 · ' : ''}${esc(c.title)} · 레슨 ${i + 1}/${siblings.length} · ${DIFFICULTY[l.difficulty]} · ${l.minutes}분</span></p>
 ${rich(l.body, 2)}
 <h2>핵심 정리</h2>
 ${list(l.keyPoints.map(inline))}

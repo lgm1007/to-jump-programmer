@@ -24,6 +24,17 @@ import { CS_CATEGORIES } from './cs/categories';
 import aiAgent from './data/cs/ai-agent';
 import architecture from './data/cs/architecture';
 import browser from './data/cs/browser';
+import caseTraffic from './data/cs/case-traffic';
+import caseMigration from './data/cs/case-migration';
+import caseIntegration from './data/cs/case-integration';
+import caseConcurrency from './data/cs/case-concurrency';
+import casePerformance from './data/cs/case-performance';
+import caseIncident from './data/cs/case-incident';
+import caseLegacy from './data/cs/case-legacy';
+import caseFePerformance from './data/cs/case-fe-performance';
+import caseFeModernize from './data/cs/case-fe-modernize';
+import caseCollaboration from './data/cs/case-collaboration';
+import caseFePlatform from './data/cs/case-fe-platform';
 import database from './data/cs/database';
 import datastructure from './data/cs/datastructure';
 import frontendPractice from './data/cs/frontend-practice';
@@ -70,7 +81,7 @@ import type {
 
 export * from './types';
 export { ALGO_TOPICS, ALGO_TOPIC_MAP } from './algorithm/topics';
-export { CS_CATEGORIES, CS_CATEGORY_MAP, CS_GROUPS, FRAMEWORK_LANGUAGE_CATEGORIES } from './cs/categories';
+export { CS_CATEGORIES, CS_CATEGORY_MAP, CS_GROUPS, FRAMEWORK_LANGUAGE_CATEGORIES, isCaseCategory } from './cs/categories';
 export {
   DEV_TRACK_LABEL,
   DEV_TRACKS,
@@ -124,6 +135,17 @@ export const CS_CONTENT: Record<string, CsCategoryContent> = {
   infra,
   oop,
   practice,
+  'case-traffic': caseTraffic,
+  'case-migration': caseMigration,
+  'case-integration': caseIntegration,
+  'case-concurrency': caseConcurrency,
+  'case-performance': casePerformance,
+  'case-incident': caseIncident,
+  'case-legacy': caseLegacy,
+  'case-fe-performance': caseFePerformance,
+  'case-fe-modernize': caseFeModernize,
+  'case-fe-platform': caseFePlatform,
+  'case-collaboration': caseCollaboration,
   'ai-agent': aiAgent,
 };
 
