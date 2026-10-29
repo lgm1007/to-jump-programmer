@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { isCaseCategory } from '@/content';
 import { isLessonUnderstood, lessonStatus } from '@/features/progress/lessons';
 import { useProgress } from '@/features/progress/store';
 
@@ -13,4 +14,9 @@ export function LessonStatusBadge({ lessonId }: { lessonId: string }) {
   ) : (
     <Badge label="완료" tone="primary" icon="checkmark" />
   );
+}
+
+/** 실전 사례 · 문제 해결 카테고리의 레슨이면 '사례' 배지 */
+export function CaseBadge({ categoryId }: { categoryId: string }) {
+  return isCaseCategory(categoryId) ? <Badge label="사례" tone="review" icon="briefcase-outline" /> : null;
 }

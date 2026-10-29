@@ -333,6 +333,20 @@ test('AI Agent 카테고리는 모든 코스에서 출제', () => {
     assert.ok(catIds(c).includes('ai-agent'));
   }
 });
+test('실전 사례 카테고리는 코스(track) 범위만 따른다 — 백엔드 · 프론트엔드 · 공통', () => {
+  const caseCats = CS_CATEGORIES.filter((c) => c.group === 'case');
+  assert.ok(caseCats.length >= 3);
+  const backend = catIds(course('backend', 'django'));
+  const frontend = catIds(course('frontend', 'spring', 'vue'));
+  const fullstack = catIds(course('fullstack', 'nest', 'react'));
+  for (const c of caseCats) {
+    assert.ok(!c.framework, c.id);
+    assert.equal(backend.includes(c.id), c.track !== 'frontend', c.id);
+    assert.equal(frontend.includes(c.id), c.track !== 'backend', c.id);
+    assert.ok(fullstack.includes(c.id), c.id);
+  }
+});
+
 console.log('course scope (#23)');
 const ALGO_IDS = Object.keys(QUESTION_MAP).filter((id) => QUESTION_SOURCE[id] === 'algo');
 const algoWithCode = (lang: string) => ALGO_IDS.find((id) => QUESTION_MAP[id].code?.language === lang);

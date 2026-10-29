@@ -3,7 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { LessonStatusBadge } from '@/components/lesson-status-badge';
+import { CaseBadge, LessonStatusBadge } from '@/components/lesson-status-badge';
 import { Inline } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -122,6 +122,7 @@ export default function CategoryScreen() {
                       </Text>
                       <Inline text={lesson.summary} variant="caption" color={c.textTertiary} numberOfLines={2} />
                       <View style={styles.badges}>
+                        <CaseBadge categoryId={lesson.categoryId} />
                         <LessonStatusBadge lessonId={lesson.id} />
                         <DifficultyBadge level={lesson.difficulty} />
                         <Badge label={`${lesson.minutes}분`} icon="time-outline" />

@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { InstallAppCard } from '@/components/install-app-card';
-import { LessonStatusBadge } from '@/components/lesson-status-badge';
+import { CaseBadge, LessonStatusBadge } from '@/components/lesson-status-badge';
 import { Inline } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -206,6 +206,7 @@ export default function Home() {
                 {lesson.title}
               </Text>
               <View style={styles.badges}>
+                <CaseBadge categoryId={lesson.categoryId} />
                 <LessonStatusBadge lessonId={lesson.id} />
                 <Badge label={`${lesson.minutes}분 읽기 · 확인 퀴즈`} />
               </View>

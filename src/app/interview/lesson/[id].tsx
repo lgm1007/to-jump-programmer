@@ -3,7 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 
-import { LessonStatusBadge } from '@/components/lesson-status-badge';
+import { CaseBadge, LessonStatusBadge } from '@/components/lesson-status-badge';
 import { Inline, RichText } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -141,6 +141,7 @@ function LessonContent({ lesson, fromQuiz }: { lesson: CsLesson; fromQuiz: boole
           <Badge label={`레슨 ${index + 1}/${siblings.length}`} tone="cs" />
           <DifficultyBadge level={lesson.difficulty} />
           <Badge label={`${lesson.minutes}분`} icon="time-outline" />
+          <CaseBadge categoryId={lesson.categoryId} />
           <LessonStatusBadge lessonId={lesson.id} />
         </View>
         <Text variant="title2">{lesson.title}</Text>

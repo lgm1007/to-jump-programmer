@@ -7,6 +7,7 @@ export const CS_GROUPS: { id: CsGroupId; title: string; description: string }[] 
   { id: 'web', title: '웹 프론트엔드', description: '브라우저 · HTML/CSS · 성능 · 보안 · 상태 관리' },
   { id: 'architecture', title: '아키텍처 · 인프라', description: '시스템 설계 · 클라우드 · DevOps' },
   { id: 'practice', title: '개발 실무', description: '객체지향 · 디자인 패턴 · 협업 · 테스트' },
+  { id: 'case', title: '실전 사례 · 문제 해결', description: '대규모 트래픽 · 마이그레이션 · 외부 연동 · 장애 대응 경험을 말로 풀어내기' },
   { id: 'ai', title: 'AI · Agent', description: 'LLM 기본 · 에이전트 · 안전한 활용' },
 ];
 
@@ -194,6 +195,93 @@ export const CS_CATEGORIES: CsCategory[] = [
     icon: 'briefcase-outline',
   },
   {
+    id: 'case-traffic',
+    track: 'backend',
+    group: 'case',
+    title: '대규모 트래픽 처리',
+    description: '캐시 · 스탬피드, 읽기 분리 · 샤딩, 큐잉, 선착순 · 레이트 리밋',
+    icon: 'pulse-outline',
+  },
+  {
+    id: 'case-migration',
+    track: 'backend',
+    group: 'case',
+    title: '대용량 데이터 마이그레이션',
+    description: '무중단 이관(듀얼 라이트 · CDC), 배치 청크, 온라인 스키마 변경, 정합성 검증',
+    icon: 'swap-horizontal-outline',
+  },
+  {
+    id: 'case-integration',
+    track: 'backend',
+    group: 'case',
+    title: '외부 시스템 연동',
+    description: '타임아웃 · 재시도 · 서킷 브레이커, 웹훅 멱등성, 사가, 정산 대사',
+    icon: 'git-merge-outline',
+  },
+  {
+    id: 'case-concurrency',
+    track: 'backend',
+    group: 'case',
+    title: '동시성 · 데이터 정합성',
+    description: '재고 · 포인트 차감, 낙관적 · 비관적 락, 분산 락, 이벤트 중복 처리',
+    icon: 'lock-open-outline',
+  },
+  {
+    id: 'case-performance',
+    track: 'backend',
+    group: 'case',
+    title: '성능 병목 개선',
+    description: '병목 측정, 슬로우 쿼리 · 인덱스, N+1 · 커넥션 풀, 메모리 누수 · GC',
+    icon: 'speedometer-outline',
+  },
+  {
+    id: 'case-incident',
+    track: 'backend',
+    group: 'case',
+    title: '장애 대응 · 포스트모템',
+    description: '탐지 · 완화 · 원인 분석, 포스트모템, 모니터링 · 알림 설계',
+    icon: 'alert-circle-outline',
+  },
+  {
+    id: 'case-legacy',
+    track: 'backend',
+    group: 'case',
+    title: '레거시 개편 · 아키텍처 전환',
+    description: '모놀리스 분리(스트랭글러), 무중단 배포 · 카나리, 점진적 리팩터링',
+    icon: 'construct-outline',
+  },
+  {
+    id: 'case-fe-performance',
+    track: 'frontend',
+    group: 'case',
+    title: '프론트엔드 성능 개선',
+    description: '초기 로딩 · LCP, 대량 데이터 리스트 가상화, 렌더링 · 입력 반응성',
+    icon: 'flash-outline',
+  },
+  {
+    id: 'case-fe-modernize',
+    track: 'frontend',
+    group: 'case',
+    title: '프론트엔드 개편 · 운영',
+    description: '상태 관리 정리, 실시간 기능, JS→TS · 빌드 전환, 디자인 시스템 · 에러 모니터링',
+    icon: 'color-wand-outline',
+  },
+  {
+    id: 'case-fe-platform',
+    track: 'frontend',
+    group: 'case',
+    title: '웹뷰 · SSR · 품질 개선',
+    description: '웹뷰 · 하이브리드 앱, SSR 하이드레이션 · SEO, 크로스 브라우징, 테스트 도입',
+    icon: 'phone-portrait-outline',
+  },
+  {
+    id: 'case-collaboration',
+    group: 'case',
+    title: '의사결정 · 협업',
+    description: '기술 도입 트레이드오프 · ADR, 기술 부채 관리, 의견 충돌 · 코드 리뷰 문화',
+    icon: 'people-outline',
+  },
+  {
     id: 'ai-agent',
     group: 'ai',
     title: 'AI Agent 활용',
@@ -205,6 +293,9 @@ export const CS_CATEGORIES: CsCategory[] = [
 export const CS_CATEGORY_MAP: Record<string, CsCategory> = Object.fromEntries(
   CS_CATEGORIES.map((c) => [c.id, c]),
 );
+
+/** 실전 사례 · 문제 해결 카테고리인지 — 이 카테고리의 레슨은 '사례' 배지를 단다 */
+export const isCaseCategory = (categoryId: string) => CS_CATEGORY_MAP[categoryId]?.group === 'case';
 
 /**
  * 프레임워크에서 쓰는 언어 카테고리 (group 'language').
