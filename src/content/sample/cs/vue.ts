@@ -93,9 +93,30 @@ Vue 2는 초기화 시점에 \`Object.defineProperty\`로 프로퍼티마다 get
         'Object.defineProperty의 한계',
       ],
       followUps: [
-        'ref와 reactive 중 무엇을 기본으로 쓰나요?',
-        'reactive 객체를 구조 분해하면 왜 반응성을 잃나요?',
-        'shallowRef나 markRaw는 언제 쓰나요?',
+        {
+          question: 'ref와 reactive 중 무엇을 기본으로 쓰나요?',
+          answer: '공식 문서 권장대로 `ref`를 기본으로 씁니다. `reactive`는 객체 타입에만 쓸 수 있고, 변수에 새 객체를 재할당하거나 구조 분해 · 프로퍼티 값 전달을 하면 연결이 끊기는 제약이 있습니다. `ref`는 원시 값도 담고 `.value`에 새 객체를 통째로 넣어도 반응성이 유지되며, `.value`가 붙어 있어 반응형 값이라는 것이 코드에서 드러나는 장점도 있습니다. 폼 필드처럼 항상 함께 다니고 통째로 바꿀 일이 없는 묶음이라면 `reactive`도 괜찮습니다.',
+          followUps: [
+            {
+              question: 'reactive 객체 안에 ref를 넣으면 어떻게 되나요?',
+              answer: '깊은 반응형 객체의 프로퍼티로 접근하면 ref가 자동으로 풀려 `.value` 없이 읽고 쓸 수 있고, 원래 ref와의 연결도 유지됩니다. 다만 반응형 배열의 요소나 `Map` 같은 컬렉션 안에 든 ref는 풀리지 않으므로 그때는 `.value`를 붙여야 합니다.',
+            },
+          ],
+        },
+        {
+          question: 'reactive 객체를 구조 분해하면 왜 반응성을 잃나요?',
+          answer: '구조 분해는 그 순간 Proxy에서 값을 **한 번 읽어** 지역 변수에 복사하는 문법이기 때문입니다. 원시 값이면 이후 지역 변수를 읽어도 Proxy의 `get`을 거치지 않으니 track이 일어나지 않고, 지역 변수에 대입해도 `set`이 없어 trigger도 없습니다. 중첩 객체를 꺼내면 그 객체 자체는 Proxy라 안쪽 필드는 반응형이지만, 원본에서 그 프로퍼티를 새 객체로 바꾸면 꺼낸 변수는 옛 객체를 계속 가리킵니다. `toRefs`가 만든 ref는 읽기 · 쓰기를 원본 프로퍼티로 넘겨 주는 접근자라서 이 연결이 유지됩니다.',
+        },
+        {
+          question: 'shallowRef나 markRaw는 언제 쓰나요?',
+          answer: '둘 다 **깊은 반응성을 끄는** 도구입니다. `shallowRef`는 `.value` 자체를 바꿀 때만 반응하고 안쪽은 Proxy로 감싸지 않으므로, API에서 받은 큰 배열을 통째로 교체하는 경우처럼 내부를 고칠 일이 없는 큰 데이터에서 Proxy 비용을 줄입니다. `markRaw`는 객체가 절대 Proxy로 감싸지지 않게 표시하는 것으로, 지도 · 차트 라이브러리 인스턴스처럼 Proxy로 감싸면 내부 동작이 깨지거나 느려지는 외부 객체를 반응형 상태에 넣을 때 씁니다.',
+          followUps: [
+            {
+              question: 'shallowRef 안의 배열을 push로 고쳤는데 화면을 갱신하려면 어떻게 하나요?',
+              answer: '안쪽 변경은 추적되지 않으므로 `triggerRef(list)`로 그 ref에 의존하는 effect를 직접 깨우거나, `list.value = [...list.value, item]`처럼 새 배열을 대입합니다. 통째로 바꾸는 불변 방식이 `shallowRef`를 쓰는 의도에 더 잘 맞습니다.',
+            },
+          ],
+        },
       ],
     },
   ],

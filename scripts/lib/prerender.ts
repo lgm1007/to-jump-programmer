@@ -170,7 +170,7 @@ ${list(topics)}
 <p>실무에서 자주 지적되는 개선 패턴 ${s.patterns}개를 개선 전 · 후 코드로 익히고, 리뷰 실전 퀴즈 ${s.challenges}개에서 문제 있는 코드 줄을 직접 찾아봅니다.</p>
 ${list(frameworks)}
 <h2><a href="${href('interview')}">기술 면접 CS</a></h2>
-<p>${CS_CATEGORIES.length}개 카테고리의 이론 레슨 ${s.lessons}개, 퀴즈 ${s.csQuestions}문항, 모범 답변과 꼬리 질문이 있는 면접 질문 카드 ${s.cards}장을 제공합니다.</p>
+<p>${CS_CATEGORIES.length}개 카테고리의 이론 레슨 ${s.lessons}개, 퀴즈 ${s.csQuestions}문항, 모범 답변과 꼬리 질문 · 답변이 있는 면접 질문 카드 ${s.cards}장을 제공합니다.</p>
 ${groups}
 <h2>이렇게 공부해요</h2>
 ${list([
@@ -346,7 +346,7 @@ function categoryPage(href: Href, categoryId: string): StaticPage {
 <p class="lead">${esc(c.description)}</p>
 ${lessons.length ? `<h2>이론 학습 ${lessons.length}개</h2>${list(lessons.map((l, i) => `${i + 1}. <a href="${href(`interview/lesson/${l.id}`)}">${esc(l.title)}</a> (${DIFFICULTY[l.difficulty]} · ${l.minutes}분) — ${inline(l.summary)}`))}` : ''}
 ${content?.cards.length ? `<h2>면접 질문 ${content.cards.length}개</h2>${list(content.cards.map((card) => esc(card.question)))}` : ''}
-${content?.quiz.length ? `<p>앱에서 이 카테고리의 퀴즈 ${content.quiz.length}문항을 풀고, 면접 질문 카드로 모범 답변 · 핵심 키워드 · 꼬리 질문을 연습할 수 있습니다.</p>` : ''}`;
+${content?.quiz.length ? `<p>앱에서 이 카테고리의 퀴즈 ${content.quiz.length}문항을 풀고, 면접 질문 카드로 모범 답변 · 핵심 키워드 · 꼬리 질문과 답변을 연습할 수 있습니다.</p>` : ''}`;
   return {
     path: `interview/${categoryId}`,
     title: `${c.title} — 기술 면접 CS 이론 · 면접 질문`,

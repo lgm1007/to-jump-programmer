@@ -83,8 +83,26 @@ const content: CsCategoryContent = {
         'CPU 바운드 주의',
       ],
       followUps: [
-        'libuv 스레드 풀은 어떤 작업에 사용되나요?',
-        'CPU를 많이 쓰는 작업은 어떻게 처리하나요?',
+        {
+          question: 'libuv 스레드 풀은 어떤 작업에 사용되나요?',
+          answer: '운영체제 차원에서 논블로킹으로 처리하기 어렵거나 CPU를 오래 쓰는 작업에 씁니다. 대표적으로 `fs`의 비동기 API, `dns.lookup`, `crypto.pbkdf2` · `crypto.scrypt` 같은 비동기 crypto, `zlib`의 비동기 압축이 있습니다. 네트워크 소켓은 epoll · kqueue로 준비 여부를 감시할 수 있어 풀을 쓰지 않습니다. 주의할 점은 이 작업들이 기본 4개 스레드를 함께 나눠 쓴다는 것으로, 해시 계산이 몰리면 상관없어 보이는 파일 읽기까지 대기열에서 기다리게 됩니다.',
+          followUps: [
+            {
+              question: '`dns.lookup`이 스레드 풀을 쓴다는 점이 실무에서 왜 문제가 되나요?',
+              answer: 'HTTP 클라이언트는 기본적으로 `dns.lookup`으로 호스트 이름을 풀기 때문에, 풀이 해시 계산이나 파일 작업으로 꽉 차 있으면 외부 API 호출이 DNS 단계에서 밀립니다. 이럴 땐 프로세스 시작 시점의 환경 변수로 `UV_THREADPOOL_SIZE`를 늘리거나, DNS 결과를 캐싱하거나, 네트워크로 질의해 풀을 쓰지 않는 `dns.resolve` 계열을 검토합니다.',
+            },
+          ],
+        },
+        {
+          question: '운영 중에 이벤트 루프가 막히고 있는지는 어떻게 확인하나요?',
+          answer: '이벤트 루프 지연(event loop lag)을 지표로 봅니다. `perf_hooks.monitorEventLoopDelay()`로 지연 분포를, `performance.eventLoopUtilization()`으로 루프가 쉬지 않고 일한 비율을 수집해 p99 지연에 알림을 겁니다. 특정 API만이 아니라 모든 API의 응답 시간이 함께 튀고, 코어 하나만 CPU 100%에 붙어 있다면 블로킹을 의심합니다.',
+          followUps: [
+            {
+              question: '루프를 막는 함수는 어떻게 찾아내나요?',
+              answer: '`node --cpu-prof`로 CPU 프로파일을 남기거나 `--inspect`로 DevTools를 붙여 플레임 그래프를 봅니다. 메인 스레드에서 폭이 넓게 이어지는 동기 호출이 범인으로, 큰 `JSON.parse`, 백트래킹이 심한 정규식, Sync API 호출이 자주 나옵니다.',
+            },
+          ],
+        },
       ],
     },
   ],

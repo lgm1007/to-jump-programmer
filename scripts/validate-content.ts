@@ -29,6 +29,7 @@ import type {
   CompareMode,
   CsCategoryContent,
   CsLesson,
+  FollowUp,
   InterviewCard,
   QuizQuestion,
   ReviewChallenge,
@@ -269,7 +270,35 @@ function checkCard(c: InterviewCard, categoryId: string, where: string) {
   checkRich(c.answer, w, 'answer', 60);
   if (!Array.isArray(c.keywords) || c.keywords.length < 2 || c.keywords.length > 8) err(w, `keywords 는 2~8개`);
   else c.keywords.forEach((k, i) => nonEmpty(k, w, `keywords[${i}]`));
-  if (c.followUps && (!Array.isArray(c.followUps) || c.followUps.length > 4)) err(w, `followUps 는 0~4개`);
+  checkFollowUps(c, w);
+}
+
+/** 꼬리 질문: 1~3개, 각각 질문 + 답변, 추가 꼬리 질문은 0~2개이고 그 안에는 더 두지 않는다 */
+function checkFollowUps(c: InterviewCard, w: string) {
+  if (c.followUps === undefined) return warn(w, 'followUps 가 없습니다 (꼬리 질문 1~3개 권장)');
+  if (!Array.isArray(c.followUps) || c.followUps.length < 1 || c.followUps.length > 3) return err(w, 'followUps 는 1~3개');
+  const seen = new Set([c.question.trim()]);
+  const checkOne = (f: FollowUp, at: string, nested: boolean) => {
+    if (!f || typeof f !== 'object' || Array.isArray(f)) return err(w, `${at}: { question, answer } 객체여야 합니다`);
+    if (nonEmpty(f.question, w, `${at}.question`, 8)) {
+      if (seen.has(f.question.trim())) err(w, `${at}: 같은 질문이 이미 있습니다: ${f.question}`);
+      seen.add(f.question.trim());
+    }
+    checkRich(f.answer, w, `${at}.answer`, nested ? 30 : 50);
+    if (typeof f.answer === 'string') {
+      if (f.answer.length > (nested ? 500 : 700)) warn(w, `${at}.answer: ${f.answer.length}자 — 꼬리 질문 답변은 말하듯 짧게(${nested ? '1~3' : '2~4'}문장)`);
+      if (/^###\s/m.test(f.answer)) err(w, `${at}.answer: 꼬리 질문 답변에는 ### 제목을 쓰지 않습니다`);
+    }
+    if (nested) {
+      if ('followUps' in f) err(w, `${at}: 추가 꼬리 질문은 한 단계까지만 둡니다`);
+      return;
+    }
+    const deeper = f.followUps;
+    if (deeper === undefined) return;
+    if (!Array.isArray(deeper) || deeper.length < 1 || deeper.length > 2) return err(w, `${at}.followUps 는 1~2개 (없으면 필드를 빼세요)`);
+    deeper.forEach((d, j) => checkOne(d, `${at}.followUps[${j}]`, true));
+  };
+  c.followUps.forEach((f, i) => checkOne(f, `followUps[${i}]`, false));
 }
 
 

@@ -119,8 +119,20 @@ for post in qs:
         '`HttpResponse`',
       ],
       followUps: [
-        '커스텀 미들웨어는 어떻게 작성하고, 어떤 용도로 써 봤나요?',
-        '`process_view()`와 `process_exception()`은 언제 호출되나요?',
+        {
+          question: '커스텀 미들웨어는 어떻게 작성하고, 어떤 용도로 써 봤나요?',
+          answer: '`get_response`를 받아 저장하는 `__init__`과, 요청을 받아 응답을 돌려주는 `__call__`을 가진 클래스(또는 같은 구조의 함수 팩토리)를 만들어 `MIDDLEWARE`에 등록합니다. 대표적인 용도는 요청 ID입니다. 요청 단계에서 `X-Request-ID` 헤더를 읽거나 새로 만들어 `contextvars`에 넣고 로깅 필터가 모든 로그에 찍게 한 뒤, 응답 단계에서 같은 값을 응답 헤더로 돌려주면 장애 때 한 요청의 로그를 묶어 추적할 수 있습니다. 미들웨어는 모든 요청에서 실행되므로 DB 조회 같은 무거운 일은 넣지 않습니다.',
+          followUps: [
+            {
+              question: '요청 ID를 `contextvars` 대신 `threading.local`에 담으면 안 되나요?',
+              answer: 'WSGI 동기 워커에서는 요청 하나가 스레드 하나에서 끝나므로 동작하지만, ASGI나 async 뷰에서는 여러 요청이 한 스레드의 이벤트 루프에서 번갈아 실행되어 값이 섞입니다. `contextvars`는 태스크마다 컨텍스트가 분리되고 `sync_to_async`로 스레드를 넘어갈 때도 복사되므로 두 환경 모두에서 안전합니다.',
+            },
+          ],
+        },
+        {
+          question: '`process_view()`와 `process_exception()`은 언제 호출되나요?',
+          answer: '`process_view()`는 URLconf가 뷰를 정한 뒤 **뷰를 호출하기 직전**에 불리고, 실행될 뷰 함수와 인자를 받으므로 뷰에 붙은 표시(예: `csrf_exempt`)를 보고 처리를 바꿀 수 있습니다. `CsrfViewMiddleware`가 실제로 이 훅에서 토큰을 검사합니다. 여기서 응답을 반환하면 뷰는 호출되지 않습니다. `process_exception()`은 **뷰가 예외를 던졌을 때만** 불리며, `HttpResponse`를 반환하면 그 응답이 쓰이고 `None`이면 다른 미들웨어나 Django 기본 예외 처리로 넘어갑니다.',
+        },
       ],
     },
   ],
