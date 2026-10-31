@@ -95,9 +95,30 @@ HTML을 꼭 렌더링해야 한다면 DOMPurify 같은 sanitizer로 정제한 �
         '개발 서버 프록시',
       ],
       followUps: [
-        '프리플라이트 요청은 언제 발생하나요?',
-        'CORS 설정에서 요청의 Origin을 그대로 돌려주면 어떤 문제가 있나요?',
-        '서버끼리 통신할 때는 왜 CORS 에러가 나지 않나요?',
+        {
+          question: '프리플라이트 요청은 언제 발생하나요?',
+          answer: '단순 요청의 조건을 하나라도 벗어나면 발생합니다. 메서드가 `GET`·`HEAD`·`POST`가 아니거나, `Authorization`·`X-Request-Id`처럼 안전 목록 밖의 헤더를 직접 붙이거나, `Content-Type`이 `application/json`처럼 폼 형식(`application/x-www-form-urlencoded`, `multipart/form-data`, `text/plain`)이 아닌 경우입니다. 그래서 토큰을 헤더로 보내는 JSON API는 거의 모든 요청에 프리플라이트가 붙고, 서버가 `Access-Control-Max-Age`로 결과를 캐시하게 하면 반복되는 `OPTIONS`를 줄일 수 있습니다.',
+          followUps: [
+            {
+              question: '프리플라이트를 피하려고 Content-Type을 text/plain으로 바꿔 보내면 안 되나요?',
+              answer: '동작은 하지만 권하지 않습니다. 서버가 `text/plain` 본문을 JSON으로 받아 주면, 다른 사이트의 폼이나 단순 요청도 같은 API를 프리플라이트 없이 보낼 수 있게 되어 CSRF를 어렵게 하던 방어선 하나가 사라집니다. 지연이 문제라면 프리플라이트 캐시나 같은 출처 프록시로 해결하는 편이 낫습니다.',
+            },
+          ],
+        },
+        {
+          question: 'CORS 설정에서 요청의 Origin을 그대로 돌려주면 어떤 문제가 있나요?',
+          answer: '요청의 `Origin`을 검사 없이 `Access-Control-Allow-Origin`에 되돌려 주면서 `Access-Control-Allow-Credentials: true`까지 보내면, 어떤 사이트든 로그인한 사용자의 쿠키로 우리 API를 호출하고 응답을 읽을 수 있습니다. 공격자 페이지가 피해자의 브라우저로 개인정보 API를 불러 결과를 자기 서버로 보내는 식입니다. 허용 출처는 정확히 일치하는 목록으로 검사하고, `endsWith(\'example.com\')` 같은 느슨한 비교나 `null` Origin 허용을 피하며, 응답이 출처마다 달라지므로 `Vary: Origin`을 붙입니다.',
+        },
+        {
+          question: '서버끼리 통신할 때는 왜 CORS 에러가 나지 않나요?',
+          answer: 'CORS는 브라우저가 사용자를 대신해 지키는 규칙이라서, 서버의 HTTP 클라이언트나 curl에는 응답 읽기를 막는 주체가 없습니다. 브라우저에서는 악성 페이지가 사용자의 쿠키와 사내망 접근 권한을 빌려 요청할 수 있어 막아야 하지만, 서버 간 통신에서는 요청하는 쪽이 자기 권한으로만 요청하므로 그런 대리 위험이 없습니다. 그래서 BFF나 리버스 프록시를 두면 브라우저는 같은 출처와만 통신하고, 다른 출처 API는 서버가 대신 불러 CORS 문제가 생기지 않습니다.',
+          followUps: [
+            {
+              question: '그럼 CORS 설정으로 우리 API를 외부 호출로부터 보호할 수 있나요?',
+              answer: '보호할 수 없습니다. CORS는 브라우저에서 응답을 읽는 것만 제한하므로 curl이나 스크립트로 직접 호출하는 것은 막지 못하고, 단순 요청은 서버에 도착해 처리되기까지 합니다. API 보호는 인증·인가와 요청량 제한 같은 서버 쪽 장치로 해야 합니다.',
+            },
+          ],
+        },
       ],
     },
   ],

@@ -126,7 +126,17 @@ export interface InterviewCard {
   /** 답변에 반드시 들어가야 할 핵심 키워드 (3~6개) */
   keywords: string[];
   /** 예상 꼬리 질문 (1~3개) */
-  followUps?: string[];
+  followUps?: FollowUp[];
+}
+
+/** 예상 꼬리 질문과 답변 — 추가 꼬리 질문은 한 단계까지만 둔다 */
+export interface FollowUp {
+  /** 면접관이 이어서 할 법한 질문 */
+  question: string;
+  /** 답변 (RichText) — 말하듯 2~4문장, 본 답변을 반복하지 않고 한 걸음 더 들어간다 */
+  answer: RichText;
+  /** 이 답변에 이어질 추가 꼬리 질문 (0~2개, 그 안에는 더 두지 않음) */
+  followUps?: Omit<FollowUp, 'followUps'>[];
 }
 
 /* ------------------------------------------------------------------ */

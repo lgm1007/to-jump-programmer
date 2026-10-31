@@ -12,7 +12,7 @@ import { PressableScale } from '@/components/ui/pressable-scale';
 import { ProgressBar } from '@/components/ui/progress';
 import { Footer, InsetView } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
-import { CARD_MAP, CS_CATEGORY_MAP, CS_CONTENT } from '@/content';
+import { CARD_MAP, CS_CATEGORY_MAP, CS_CONTENT, type FollowUp } from '@/content';
 import { showInterstitialAtBreak } from '@/features/ads';
 import { againCardIds } from '@/features/progress/selectors';
 import { useProgress, type CardRating } from '@/features/progress/store';
@@ -214,17 +214,17 @@ export default function CardsScreen() {
                 </View>
               </Card>
               {card.followUps && card.followUps.length > 0 && (
-                <Card style={{ gap: spacing.sm }}>
-                  <Text variant="captionStrong" color="textTertiary">
-                    예상 꼬리 질문
-                  </Text>
+                <Card style={{ gap: spacing.md }}>
+                  <View style={{ gap: 2 }}>
+                    <Text variant="captionStrong" color="textTertiary">
+                      예상 꼬리 질문
+                    </Text>
+                    <Text variant="caption" color="textTertiary">
+                      먼저 답해본 뒤 질문을 눌러 답변을 확인해보세요.
+                    </Text>
+                  </View>
                   {card.followUps.map((f, i) => (
-                    <View key={i} style={{ flexDirection: 'row', gap: 8 }}>
-                      <Ionicons name="return-down-forward" size={16} color={c.textTertiary} style={{ marginTop: 3 }} />
-                      <Text variant="callout" style={{ flex: 1 }}>
-                        {f}
-                      </Text>
-                    </View>
+                    <FollowUpItem key={`${card.id}-${i}`} item={f} />
                   ))}
                 </Card>
               )}
@@ -264,6 +264,46 @@ export default function CardsScreen() {
   );
 }
 
+/** 꼬리 질문 — 눌러서 답변을 펼치고, 답변 아래에 추가 꼬리 질문(한 단계)을 같은 방식으로 보여준다 */
+function FollowUpItem({ item, nested = false }: { item: FollowUp; nested?: boolean }) {
+  const c = useColors();
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={{ gap: spacing.sm }}>
+      <Pressable
+        onPress={() => {
+          haptic('selection');
+          setOpen((v) => !v);
+        }}
+        style={styles.followUpRow}
+        accessibilityRole="button"
+        aria-expanded={open}
+        accessibilityHint={open ? '답변 접기' : '답변 보기'}>
+        <Ionicons name="return-down-forward" size={16} color={open ? c.cs : c.textTertiary} style={{ marginTop: 3 }} />
+        <Text variant={nested ? 'subhead' : 'callout'} weight="600" style={{ flex: 1 }}>
+          {item.question}
+        </Text>
+        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={c.textTertiary} style={{ marginTop: 2 }} />
+      </Pressable>
+      {open && (
+        <View style={[styles.followUpAnswer, { backgroundColor: nested ? c.surface : c.surfaceAlt, borderColor: c.border, marginLeft: nested ? 0 : 24 }]}>
+          <RichText text={item.answer} variant={nested ? 'subhead' : 'callout'} />
+          {!nested && item.followUps && item.followUps.length > 0 && (
+            <View style={{ gap: spacing.sm, marginTop: spacing.xs }}>
+              <Text variant="caption" tint={c.cs} weight="700">
+                추가 꼬리 질문
+              </Text>
+              {item.followUps.map((d, j) => (
+                <FollowUpItem key={j} item={d} nested />
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+    </View>
+  );
+}
+
 function Header({ onClose, progress, label }: { onClose: () => void; progress: number; label: string }) {
   const c = useColors();
   return (
@@ -287,6 +327,8 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   tip: { flexDirection: 'row', gap: 8, padding: spacing.md, borderRadius: radius.md, alignItems: 'flex-start' },
   keywords: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  followUpRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  followUpAnswer: { gap: spacing.sm, padding: spacing.md, borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth },
   keyword: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill },
   rateBtn: { flex: 1, height: 58, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center', gap: 2 },
   countRow: { flexDirection: 'row', width: '100%', marginTop: spacing.sm },

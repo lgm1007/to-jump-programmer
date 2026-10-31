@@ -131,9 +131,30 @@ System.out.println(a == c.intern());`,
         'GC',
       ],
       followUps: [
-        '클래스 로더의 부모 위임 모델(Parent Delegation)은 무엇인가요?',
-        'static 변수와 String Pool은 어느 메모리 영역에 저장되나요?',
-        'Java 8에서 PermGen이 Metaspace로 바뀐 이유는 무엇인가요?',
+        {
+          question: '클래스 로더의 부모 위임 모델(Parent Delegation)은 무엇인가요?',
+          answer: '클래스 로딩 요청을 받은 클래스 로더가 직접 찾기 전에 먼저 부모 로더에게 맡기고, 부모가 찾지 못했을 때만 스스로 로딩하는 방식입니다. 계층은 Bootstrap(`java.lang` 같은 핵심 클래스) → Platform(Java 9+, 이전의 Extension) → Application(클래스패스) 순서입니다. 그래서 애플리케이션에 `java.lang.String`과 같은 이름의 클래스가 있어도 항상 Bootstrap이 로딩한 핵심 클래스가 쓰여 보안과 일관성이 지켜지고, 같은 클래스를 여러 로더가 중복으로 로딩하지 않습니다.',
+          followUps: [
+            {
+              question: '부모 위임을 일부러 따르지 않는 경우도 있나요?',
+              answer: '톰캣 같은 서블릿 컨테이너가 대표적입니다. 웹 애플리케이션마다 별도 클래스 로더를 두고, JVM 핵심 클래스를 제외하면 자기 `WEB-INF/classes`·`WEB-INF/lib`를 공용 라이브러리보다 먼저 찾아 애플리케이션끼리 라이브러리 버전이 달라도 충돌하지 않게 합니다. JVM은 이름이 같아도 로딩한 로더가 다르면 다른 클래스로 취급하므로, 이런 환경에서는 같은 이름의 클래스끼리 형변환하다 `ClassCastException`이 나기도 합니다.',
+            },
+          ],
+        },
+        {
+          question: 'static 변수와 String Pool은 어느 메모리 영역에 저장되나요?',
+          answer: 'Java 8 이후 HotSpot JVM 기준으로 둘 다 **힙**에 있습니다. String Pool은 Java 7에서 PermGen에서 힙으로 옮겨졌고, static 변수도 PermGen 제거를 준비하면서 클래스 메타데이터와 분리되어 힙의 `Class` 객체 쪽에 저장됩니다. Metaspace에는 클래스 구조와 메서드 바이트코드 같은 메타데이터만 남습니다. "static은 메서드 영역"이라는 설명은 JVM 명세의 논리적 구분이고 실제 HotSpot 구현은 이렇게 다르다는 점을 함께 말하면 좋습니다.',
+        },
+        {
+          question: 'Java 8에서 PermGen이 Metaspace로 바뀐 이유는 무엇인가요?',
+          answer: 'PermGen은 힙과 별도로 최대 크기(`-XX:MaxPermSize`)를 미리 정해야 했고, 그 크기를 맞추기가 어려웠기 때문입니다. 프레임워크가 프록시 클래스를 많이 만들거나 WAS에서 재배포를 반복하면 로딩되는 클래스가 늘어 `OutOfMemoryError: PermGen space`가 자주 났습니다. Metaspace는 힙이 아닌 네이티브 메모리를 쓰고 기본적으로 상한 없이 필요한 만큼 늘어나 이런 튜닝 부담을 줄였고, 클래스 로더가 회수되면 그 로더가 쓰던 메타데이터를 통째로 해제합니다.',
+          followUps: [
+            {
+              question: '그럼 Metaspace는 무한히 늘어나도 괜찮나요?',
+              answer: '아닙니다. 재배포 뒤에도 이전 클래스 로더가 어딘가에서 참조되어 남는 클래스 로더 누수나, 실행 중에 클래스를 계속 생성하는 코드가 있으면 서버의 네이티브 메모리를 계속 차지합니다. 그래서 운영에서는 `-XX:MaxMetaspaceSize`로 상한을 두고, `OutOfMemoryError: Metaspace`가 나면 로딩된 클래스 수 추이(`jstat -class` 등)를 확인합니다.',
+            },
+          ],
+        },
       ],
     },
   ],

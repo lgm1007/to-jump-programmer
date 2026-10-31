@@ -139,9 +139,24 @@ public int apply(int price, int rate) {
         '순환 참조',
       ],
       followUps: [
-        '같은 타입의 빈이 여러 개면 어떻게 주입하나요?',
-        '빈 생명주기 콜백(@PostConstruct, @PreDestroy)은 언제 호출되나요?',
-        '싱글톤 외에 어떤 빈 스코프가 있고, 언제 사용하나요?',
+        {
+          question: '같은 타입의 빈이 여러 개면 어떻게 주입하나요?',
+          answer: '타입으로 찾은 후보가 여러 개면 `NoUniqueBeanDefinitionException`이 나므로 어느 빈을 쓸지 알려 줘야 합니다. 주로 쓰는 구현에 `@Primary`를 붙여 기본값으로 정하고, 다른 구현이 필요한 곳만 `@Qualifier("이름")`으로 지정하는 조합이 일반적이며, 둘이 함께 있으면 더 구체적인 `@Qualifier`가 우선합니다. 결제 수단처럼 모든 구현을 상황에 따라 골라 써야 한다면 `List<PaymentGateway>`나 `Map<String, PaymentGateway>`로 한꺼번에 주입받아 전략 패턴으로 선택합니다.',
+          followUps: [
+            {
+              question: '`Map<String, PaymentGateway>`로 주입받으면 키에는 무엇이 들어가나요?',
+              answer: '빈 이름이 키로 들어갑니다. 컴포넌트 스캔으로 등록한 빈은 기본적으로 클래스 이름의 첫 글자를 소문자로 바꾼 이름(`kakaoPayGateway`)이라, 클래스 이름을 바꾸면 키도 바뀝니다. 그래서 요청 값으로 구현을 고른다면 각 구현이 자기 결제 수단 코드를 반환하는 메서드를 두고, 그 값으로 직접 맵을 만드는 편이 안전합니다.',
+            },
+          ],
+        },
+        {
+          question: '빈 생명주기 콜백(@PostConstruct, @PreDestroy)은 언제 호출되나요?',
+          answer: '`@PostConstruct`는 빈이 생성되고 의존성 주입까지 끝난 직후 한 번 호출되고, `@PreDestroy`는 애플리케이션이 정상 종료되며 컨테이너가 닫힐 때 싱글톤 빈에 대해 호출됩니다. 주의할 점은 `@PostConstruct`가 AOP 프록시가 씌워지기 **전**의 원본 객체에서 실행되어, 그 빈 자신의 `@Transactional`·`@Async` 같은 부가 기능이 적용되지 않는다는 것입니다. 그래서 트랜잭션이 필요한 초기 작업(초기 데이터 적재 등)은 다른 빈의 트랜잭션 메서드로 분리해 호출하거나, 애플리케이션이 완전히 준비된 뒤 실행되는 `ApplicationReadyEvent` 리스너로 옮깁니다.',
+        },
+        {
+          question: '싱글톤 외에 어떤 빈 스코프가 있고, 언제 사용하나요?',
+          answer: '`prototype`과 웹 스코프(`request`, `session`, `application`, `websocket`)가 있습니다. `prototype`은 요청할 때마다 새 객체가 필요한 상태 있는 객체에, `request`는 요청 추적 ID나 요청별 사용자 정보처럼 요청 하나 동안 여러 빈이 함께 써야 하는 값에 씁니다. 웹 스코프 빈을 싱글톤에 그대로 주입하면 시작 시점에는 요청이 없어 실패하므로, `@RequestScope`(기본으로 프록시 모드)처럼 **스코프 프록시**를 주입해 메서드를 호출할 때마다 현재 요청의 객체를 찾아가게 합니다.',
+        },
       ],
     },
   ],

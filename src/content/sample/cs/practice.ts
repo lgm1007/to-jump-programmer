@@ -116,9 +116,30 @@ merge commit을 되돌릴 때는 \`git revert -m 1 <merge-commit>\`처럼 기준
         'squash merge',
       ],
       followUps: [
-        'reset과 revert는 어떻게 다른가요?',
-        'rebase 도중 충돌이 나면 어떻게 처리하나요?',
-        'squash merge의 장단점은?',
+        {
+          question: 'reset과 revert는 어떻게 다른가요?',
+          answer: '`reset` 은 브랜치 포인터를 과거 커밋으로 옮겨 그 뒤의 커밋을 브랜치에서 빼는 **이력 재작성**이고, `revert` 는 지정한 커밋의 변경을 반대로 적용한 **새 커밋**을 추가해 기존 이력을 그대로 둡니다. 그래서 아직 push 하지 않은 내 커밋은 `reset` 으로 정리하고, 이미 공유된 커밋은 `revert` 로 취소해 강제 push 없이 팀원 이력과 맞춥니다. `reset` 은 `--soft` · `--mixed` · `--hard` 에 따라 취소한 변경을 staged 로 남길지, unstaged 로 남길지, 지울지가 달라집니다.',
+          followUps: [
+            {
+              question: 'merge commit을 revert하면 어떻게 되나요?',
+              answer: 'merge commit 은 부모가 둘이라 `git revert -m 1 <커밋>` 처럼 어느 부모를 기준(보통 main 쪽인 1번)으로 되돌릴지 정해야 합니다. 주의할 점은 그 브랜치의 커밋들이 여전히 이력에 남아 있다는 것입니다. 나중에 고친 브랜치를 다시 merge 해도 되돌린 변경은 돌아오지 않으므로, 먼저 그 revert 커밋을 다시 revert 해야 합니다.',
+            },
+          ],
+        },
+        {
+          question: 'rebase 도중 충돌이 나면 어떻게 처리하나요?',
+          answer: 'rebase 는 커밋을 하나씩 다시 적용하므로 충돌도 커밋 단위로 멈춥니다. 충돌 파일을 고쳐 `git add` 한 뒤 `git rebase --continue` 로 다음 커밋으로 넘어가고, 그 커밋이 필요 없어졌으면 `--skip`, 처음부터 다시 하고 싶으면 `--abort` 로 rebase 전 상태로 돌아갑니다. 커밋이 많아 같은 충돌이 반복되면 먼저 `rebase -i` 로 커밋을 합쳐 두거나 `git rerere` 를 켜서 한 번 해결한 방식을 다시 쓰게 합니다. 충돌을 푼 뒤에는 빌드와 테스트를 돌려 의미상 충돌이 없는지도 확인합니다.',
+          followUps: [
+            {
+              question: 'rebase를 잘못해서 커밋이 꼬였다면 어떻게 되돌리나요?',
+              answer: '`git reflog` 에는 HEAD 가 거쳐 간 위치가 남아 있어, rebase 를 시작하기 직전 커밋을 찾아 `git reset --hard <그 커밋>` 으로 되돌릴 수 있습니다. 방금 끝난 rebase 라면 rebase 전 위치를 가리키는 `ORIG_HEAD` 를 써도 됩니다. 다만 `--hard` 는 커밋하지 않은 변경을 지우므로, 작업 중인 변경이 있으면 먼저 stash 해 둡니다.',
+            },
+          ],
+        },
+        {
+          question: 'squash merge의 장단점은?',
+          answer: 'PR 하나가 main 에 커밋 하나로 남아 이력이 깔끔하고, 문제가 생기면 그 커밋 하나만 revert 하면 되는 것이 장점입니다. 오타 수정 같은 중간 커밋이 main 에 섞이지 않는 것도 좋습니다. 대신 PR 안의 세부 커밋이 사라져 `git bisect` 로 원인을 좁힐 때 범위가 커지고, 원래 브랜치의 커밋이 main 의 조상이 아니게 되어 머지한 브랜치에서 계속 작업하면 이미 들어간 변경과 다시 충돌합니다. 그래서 squash 를 쓰는 팀은 PR 을 작게 유지하고, 머지한 브랜치는 지우고 새로 만듭니다.',
+        },
       ],
     },
   ],
