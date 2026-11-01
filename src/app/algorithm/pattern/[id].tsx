@@ -93,6 +93,7 @@ function PatternContent({ pattern }: { pattern: AlgoPattern }) {
           icon={read ? 'arrow-forward' : 'checkmark'}
           tint={c.algo}
           style={{ flex: 1 }}
+          href={next ? `/algorithm/pattern/${next.id}` : undefined}
           onPress={complete}
         />
       }>
@@ -118,7 +119,9 @@ function PatternContent({ pattern }: { pattern: AlgoPattern }) {
           <DifficultyBadge level={pattern.difficulty} />
           {read && <Badge label="학습 완료" tone="success" icon="checkmark" />}
         </View>
-        <Text variant="title2">{pattern.title}</Text>
+        <Text variant="title2" heading={1}>
+          {pattern.title}
+        </Text>
         <Text variant="callout" color="textSecondary">
           {pattern.summary}
         </Text>

@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
 import { View } from 'react-native';
 
 import { RichText } from '@/components/rich-text';
@@ -15,11 +15,11 @@ export default function AboutScreen() {
     <Screen>
       <Stack.Screen options={{ title: '서비스 소개' }} />
       <Card>
-        <RichText text={aboutText()} variant="callout" />
+        <RichText text={aboutText()} variant="callout" headingLevel={2} />
       </Card>
       <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
         <Button title="GitHub 저장소" icon="logo-github" variant="secondary" style={{ flex: 1 }} onPress={() => openExternal(GITHUB_URL)} />
-        <Button title="개인정보 처리방침" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/privacy')} />
+        <Button title="개인정보 처리방침" variant="secondary" style={{ flex: 1 }} href="/privacy" />
       </View>
     </Screen>
   );

@@ -6,12 +6,12 @@ import { AlgoPatternRow } from '@/components/algo-pattern-row';
 import { RichText } from '@/components/rich-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Divider, EmptyState, IconBadge } from '@/components/ui/misc';
+import { Divider, EmptyState, IconBadge, SectionHeader } from '@/components/ui/misc';
 import { ProgressBar } from '@/components/ui/progress';
 import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented';
 import { Text } from '@/components/ui/text';
-import { ALGO_PATTERNS, ALGO_QUIZ, ALGO_TOPIC_MAP } from '@/content';
+import { ALGO_PATTERNS, ALGO_QUIZ, ALGO_TOPIC_MAP, type AlgoPattern } from '@/content';
 import { AdSlot } from '@/features/ads';
 import { algoTopicQuestionIds, quizSetStats, wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
@@ -71,7 +71,9 @@ export default function TopicScreen() {
       <View style={styles.head}>
         <IconBadge name={topic.icon} color={c.algo} background={c.algoSoft} size={52} />
         <View style={{ flex: 1, gap: 2 }}>
-          <Text variant="title2">{topic.title}</Text>
+          <Text variant="title2" heading={1}>
+            {topic.title}
+          </Text>
           <Text variant="caption" color="textTertiary">
             {topic.description}
           </Text>
@@ -117,14 +119,7 @@ export default function TopicScreen() {
       )}
 
       {showPatterns ? (
-        <Card padded={false}>
-          {patterns.map((p, i) => (
-            <View key={p.id}>
-              {i > 0 && <Divider inset={spacing.lg} />}
-              <AlgoPatternRow pattern={p} />
-            </View>
-          ))}
-        </Card>
+        <PatternList patterns={patterns} />
       ) : (
         <>
           <Card style={{ gap: spacing.md }}>
@@ -136,19 +131,31 @@ export default function TopicScreen() {
               </Text>
             )}
           </Card>
+          {/* 개념 정리를 읽고 바로 유형으로 넘어갈 수 있게 목록을 이어서 보여준다 (정적 토픽 페이지와 같은 구성) */}
           {patterns.length > 0 && (
-            <Button
-              title={`자주 나오는 유형 ${patterns.length}가지 보기`}
-              icon="arrow-forward"
-              variant="secondary"
-              onPress={() => setTab('patterns')}
-            />
+            <>
+              <SectionHeader title={`자주 나오는 유형 ${patterns.length}가지`} subtitle="유형마다 5개 언어 구현 예제가 있어요" />
+              <PatternList patterns={patterns} />
+            </>
           )}
         </>
       )}
 
       <AdSlot />
     </Screen>
+  );
+}
+
+function PatternList({ patterns }: { patterns: AlgoPattern[] }) {
+  return (
+    <Card padded={false}>
+      {patterns.map((p, i) => (
+        <View key={p.id}>
+          {i > 0 && <Divider inset={spacing.lg} />}
+          <AlgoPatternRow pattern={p} />
+        </View>
+      ))}
+    </Card>
   );
 }
 

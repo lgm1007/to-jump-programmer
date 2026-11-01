@@ -186,7 +186,9 @@ export default function ChallengeScreen() {
                   <Badge label={`숨은 이슈 ${ch.issues.length}개`} tone="review" />
                   {record && <Badge label={`최고 ${record.best}점`} tone="success" />}
                 </View>
-                <Text variant="title2">{ch.title}</Text>
+                <Text variant="title2" heading={1}>
+                  {ch.title}
+                </Text>
               </View>
               <Card style={{ gap: spacing.sm }}>
                 <Text variant="captionStrong" color="textTertiary">

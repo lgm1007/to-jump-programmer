@@ -13,6 +13,10 @@ type ButtonSize = 'lg' | 'md' | 'sm';
 export interface ButtonProps {
   title: string;
   onPress?: () => void;
+  /** 콘텐츠 화면으로 가는 버튼 — 웹에서는 `<a href>` 로 그린다 (PressableScale). onPress 가 있으면 이동은 onPress 가 맡는다 */
+  href?: string;
+  /** href 로 이동할 때 지금 화면을 바꾼다 */
+  replace?: boolean;
   variant?: ButtonVariant;
   size?: ButtonSize;
   icon?: keyof typeof Ionicons.glyphMap;
@@ -31,6 +35,8 @@ const HEIGHT: Record<ButtonSize, number> = { lg: 54, md: 46, sm: 36 };
 export function Button({
   title,
   onPress,
+  href,
+  replace,
   variant = 'primary',
   size = 'lg',
   icon,
@@ -56,8 +62,10 @@ export function Button({
   return (
     <PressableScale
       onPress={onPress}
+      href={inactive ? undefined : href}
+      replace={replace}
       disabled={inactive}
-      accessibilityRole="button"
+      accessibilityRole={href && !inactive ? 'link' : 'button'}
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
       style={[

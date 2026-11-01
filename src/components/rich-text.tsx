@@ -7,6 +7,7 @@ import { useColors } from '@/theme/theme-provider';
 import { fonts, radius, spacing, typography, type TypographyVariant } from '@/theme/tokens';
 
 import { CodeBlock } from './code-block';
+import { headingProps, type HeadingLevel } from './ui/text';
 
 export function InlineText({
   spans,
@@ -14,17 +15,20 @@ export function InlineText({
   color,
   style,
   numberOfLines,
+  heading,
 }: {
   spans: InlineSpan[];
   variant?: TypographyVariant;
   color?: string;
   style?: StyleProp<TextStyle>;
   numberOfLines?: number;
+  /** 제목 단계 (웹에서 <h2> · <h3>) */
+  heading?: HeadingLevel;
 }) {
   const c = useColors();
   const base = typography[variant];
   return (
-    <RNText style={[base, { color: color ?? c.text }, style]} numberOfLines={numberOfLines}>
+    <RNText {...headingProps(heading)} style={[base, { color: color ?? c.text }, style]} numberOfLines={numberOfLines}>
       {spans.map((s, i) =>
         s.code ? (
           <RNText
@@ -72,12 +76,15 @@ export function RichText({
   color,
   style,
   codeFontSize = 12.5,
+  headingLevel = 3,
 }: {
   text: string;
   variant?: TypographyVariant;
   color?: string;
   style?: StyleProp<ViewStyle>;
   codeFontSize?: number;
+  /** '###' 소제목의 제목 단계 — 화면의 섹션 제목(SectionHeader, h2) 아래에 오면 3, 본문이 곧 화면 전체(레슨 · 소개)면 2 */
+  headingLevel?: HeadingLevel;
 }) {
   const c = useColors();
   const blocks = useMemo(() => parseMarkdown(text), [text]);
@@ -97,7 +104,14 @@ export function RichText({
             );
           case 'heading':
             return (
-              <InlineText key={i} variant="headline" color={textColor} spans={b.spans} style={i > 0 ? styles.headingGap : undefined} />
+              <InlineText
+                key={i}
+                variant="headline"
+                color={textColor}
+                spans={b.spans}
+                heading={headingLevel}
+                style={i > 0 ? styles.headingGap : undefined}
+              />
             );
           case 'bullet':
             return (

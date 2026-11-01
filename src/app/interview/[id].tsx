@@ -62,7 +62,9 @@ export default function CategoryScreen() {
       <View style={styles.head}>
         <IconBadge name={category.icon} color={c.cs} background={c.csSoft} size={52} />
         <View style={{ flex: 1, gap: 2 }}>
-          <Text variant="title2">{category.title}</Text>
+          <Text variant="title2" heading={1}>
+            {category.title}
+          </Text>
           <Text variant="caption" color="textTertiary">
             {category.description}
           </Text>
@@ -97,7 +99,7 @@ export default function CategoryScreen() {
                 <Card
                   tint={c.csSoft}
                   style={styles.continue}
-                  onPress={() => router.push(`/interview/lesson/${nextLesson.id}`)}
+                  href={`/interview/lesson/${nextLesson.id}`}
                   accessibilityLabel={reading ? '읽던 레슨 이어 읽기' : '다음 레슨 읽기'}>
                   <Text variant="small" tint={c.cs} weight="700">
                     {reading ? '이어 읽기' : doneLessons ? '다음 레슨' : '첫 레슨부터'}
@@ -112,7 +114,7 @@ export default function CategoryScreen() {
               {lessons.map((lesson, i) => (
                 <View key={lesson.id}>
                   {i > 0 && <Divider inset={spacing.lg} />}
-                  <Card tint="transparent" style={styles.row} onPress={() => router.push(`/interview/lesson/${lesson.id}`)}>
+                  <Card tint="transparent" style={styles.row} href={`/interview/lesson/${lesson.id}`}>
                     <Text variant="captionStrong" color="textTertiary" style={{ width: 24 }}>
                       {i + 1}
                     </Text>

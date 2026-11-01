@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
@@ -15,7 +14,7 @@ export function AlgoPatternRow({ pattern, showTopic }: { pattern: AlgoPattern; s
   const c = useColors();
   const read = useProgress((s) => !!s.algoPatterns[pattern.id]);
   return (
-    <Card onPress={() => router.push(`/algorithm/pattern/${pattern.id}`)} style={styles.row} tint="transparent">
+    <Card href={`/algorithm/pattern/${pattern.id}`} style={styles.row} tint="transparent">
       <View style={[styles.order, { backgroundColor: read ? c.successSoft : c.algoSoft }]}>
         {read ? (
           <Ionicons name="checkmark" size={16} color={c.success} />

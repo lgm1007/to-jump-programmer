@@ -64,6 +64,7 @@ export default function PatternScreen() {
           icon={read ? 'arrow-forward' : 'checkmark'}
           tint={c.review}
           style={{ flex: 1 }}
+          href={next ? `/review/pattern/${next.id}` : undefined}
           onPress={complete}
         />
       }>
@@ -90,7 +91,9 @@ export default function PatternScreen() {
           {pattern.subFramework && <Badge label={pattern.subFramework} />}
           {read && <Badge label="학습 완료" tone="success" icon="checkmark" />}
         </View>
-        <Text variant="title2">{pattern.title}</Text>
+        <Text variant="title2" heading={1}>
+          {pattern.title}
+        </Text>
         <Text variant="callout" color="textSecondary">
           {pattern.summary}
         </Text>

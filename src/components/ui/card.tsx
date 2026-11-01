@@ -7,6 +7,10 @@ import { PressableScale } from './pressable-scale';
 
 export interface CardProps extends ViewProps {
   onPress?: () => void;
+  /** 콘텐츠 화면으로 가는 카드 — 웹에서는 `<a href>` 로 그린다 (PressableScale) */
+  href?: string;
+  /** href 로 이동할 때 지금 화면을 바꾼다 */
+  replace?: boolean;
   padded?: boolean;
   style?: StyleProp<ViewStyle>;
   /** 배경색 직접 지정 */
@@ -14,7 +18,7 @@ export interface CardProps extends ViewProps {
   accessibilityLabel?: string;
 }
 
-export function Card({ onPress, padded = true, style, tint, children, accessibilityLabel, ...rest }: CardProps) {
+export function Card({ onPress, href, replace, padded = true, style, tint, children, accessibilityLabel, ...rest }: CardProps) {
   const { colors, scheme } = useTheme();
   const base: StyleProp<ViewStyle> = [
     styles.card,
@@ -27,9 +31,16 @@ export function Card({ onPress, padded = true, style, tint, children, accessibil
     padded && styles.padded,
     style,
   ];
-  if (onPress) {
+  if (onPress || href) {
     return (
-      <PressableScale onPress={onPress} style={base} accessibilityRole="button" accessibilityLabel={accessibilityLabel} {...rest}>
+      <PressableScale
+        onPress={onPress}
+        href={href}
+        replace={replace}
+        style={base}
+        accessibilityRole={href ? 'link' : 'button'}
+        accessibilityLabel={accessibilityLabel}
+        {...rest}>
         {children}
       </PressableScale>
     );
