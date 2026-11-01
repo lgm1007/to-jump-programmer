@@ -101,7 +101,7 @@ function LessonContent({ lesson, fromQuiz }: { lesson: CsLesson; fromQuiz: boole
               onPress={startCheck}
             />
           ) : (
-            next && <Button title="다음 레슨" icon="arrow-forward" tint={c.cs} onPress={() => router.replace(`/interview/lesson/${next.id}`)} />
+            next && <Button title="다음 레슨" icon="arrow-forward" tint={c.cs} href={`/interview/lesson/${next.id}`} replace />
           )}
         </View>
       }>
@@ -144,11 +144,13 @@ function LessonContent({ lesson, fromQuiz }: { lesson: CsLesson; fromQuiz: boole
           <CaseBadge categoryId={lesson.categoryId} />
           <LessonStatusBadge lessonId={lesson.id} />
         </View>
-        <Text variant="title2">{lesson.title}</Text>
+        <Text variant="title2" heading={1}>
+          {lesson.title}
+        </Text>
         <Inline text={lesson.summary} variant="callout" color={c.textSecondary} />
       </View>
 
-      <RichText text={lesson.body} variant={textSize === 'lg' ? 'body' : 'callout'} />
+      <RichText text={lesson.body} variant={textSize === 'lg' ? 'body' : 'callout'} headingLevel={2} />
 
       <Card style={[styles.keyPoints, { borderLeftColor: c.cs }]}>
         <Text variant="captionStrong" tint={c.cs}>
@@ -175,7 +177,7 @@ function LessonContent({ lesson, fromQuiz }: { lesson: CsLesson; fromQuiz: boole
       {(prev || next) && (
         <View style={styles.nav}>
           {prev ? (
-            <Card style={styles.navCard} onPress={() => router.replace(`/interview/lesson/${prev.id}`)}>
+            <Card style={styles.navCard} href={`/interview/lesson/${prev.id}`} replace>
               <Text variant="small" color="textTertiary">
                 ← 이전 레슨
               </Text>
@@ -187,7 +189,7 @@ function LessonContent({ lesson, fromQuiz }: { lesson: CsLesson; fromQuiz: boole
             <View style={styles.navCard} />
           )}
           {next ? (
-            <Card style={styles.navCard} onPress={() => router.replace(`/interview/lesson/${next.id}`)}>
+            <Card style={styles.navCard} href={`/interview/lesson/${next.id}`} replace>
               <Text variant="small" color="textTertiary" align="right">
                 다음 레슨 →
               </Text>

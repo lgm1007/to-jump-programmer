@@ -10,7 +10,7 @@ export default function PrivacyScreen() {
     <Screen>
       <Stack.Screen options={{ title: '개인정보 처리방침' }} />
       <Card>
-        <RichText text={PRIVACY_POLICY} variant="callout" />
+        <RichText text={PRIVACY_POLICY} variant="callout" headingLevel={2} />
       </Card>
     </Screen>
   );

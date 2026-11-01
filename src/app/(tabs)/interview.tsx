@@ -38,7 +38,9 @@ export default function InterviewTab() {
   return (
     <Screen edges={['top']}>
       <View style={{ gap: 4, paddingTop: spacing.sm }}>
-        <Text variant="title1">기술 면접 CS</Text>
+        <Text variant="title1" heading={1}>
+          기술 면접 CS
+        </Text>
         <Text variant="callout" color="textTertiary">
           이론으로 익히고, 퀴즈로 확인하고, 질문 카드로 말하기 연습까지
         </Text>
@@ -54,7 +56,7 @@ export default function InterviewTab() {
       />
 
       {mode === 'lessons' && reading && (
-        <Card tint={c.csSoft} style={styles.resume} onPress={() => router.push(`/interview/lesson/${reading.id}`)}>
+        <Card tint={c.csSoft} style={styles.resume} href={`/interview/lesson/${reading.id}`}>
           <Ionicons name="book" size={22} color={c.cs} />
           <View style={{ flex: 1, gap: 2 }}>
             <Text variant="small" tint={c.cs} weight="700">
@@ -147,6 +149,7 @@ function CategoryGroups({ categories, mode }: { categories: CsCategory[]; mode: 
               <Card
                 key={cat.id}
                 style={styles.cell}
+                href={`/interview/${cat.id}`}
                 onPress={() => router.push({ pathname: '/interview/[id]', params: { id: cat.id, tab: mode } })}>
                 <View style={styles.cellTop}>
                   <IconBadge name={cat.icon} color={c.cs} background={c.csSoft} size={38} />

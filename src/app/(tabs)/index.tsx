@@ -9,21 +9,26 @@ import { Inline } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { IconBadge, SectionHeader } from '@/components/ui/misc';
+import { Divider, IconBadge, SectionHeader } from '@/components/ui/misc';
 import { ProgressBar, ProgressRing } from '@/components/ui/progress';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import {
   ALGO_PATTERN_MAP,
   ALGO_TOPIC_MAP,
+  ALGO_TOPICS,
   CARD_MAP,
   CHALLENGE_MAP,
+  CONTENT_STATS,
+  CS_CATEGORIES,
   CS_CATEGORY_MAP,
+  CS_GROUPS,
   LESSON_MAP,
   PATTERN_MAP,
   resolveChallenge,
   resolvePattern,
   REVIEW_FRAMEWORK_MAP,
+  REVIEW_FRAMEWORKS,
 } from '@/content';
 import { AdSlot } from '@/features/ads';
 import { useReviewLanguageMap } from '@/features/progress/review-language';
@@ -156,7 +161,7 @@ export default function Home() {
       <SectionHeader title="오늘의 추천" subtitle="매일 새로운 조합으로 추천해드려요" />
       <View style={{ gap: spacing.md }}>
         {algoPattern && (
-          <Card onPress={() => router.push(`/algorithm/pattern/${algoPattern.id}`)} style={styles.recCard}>
+          <Card href={`/algorithm/pattern/${algoPattern.id}`} style={styles.recCard}>
             <IconBadge name="code-slash" color={c.algo} background={c.algoSoft} />
             <View style={{ flex: 1, gap: 4 }}>
               <Text variant="small" tint={c.algo} weight="700">
@@ -176,9 +181,7 @@ export default function Home() {
         )}
         {reviewItem && review && (
           <Card
-            onPress={() =>
-              router.push(review.kind === 'pattern' ? `/review/pattern/${reviewItem.id}` : `/review/challenge/${reviewItem.id}`)
-            }
+            href={review.kind === 'pattern' ? `/review/pattern/${reviewItem.id}` : `/review/challenge/${reviewItem.id}`}
             style={styles.recCard}>
             <IconBadge name="git-pull-request" color={c.review} background={c.reviewSoft} />
             <View style={{ flex: 1, gap: 4 }}>
@@ -196,7 +199,7 @@ export default function Home() {
           </Card>
         )}
         {lesson && (
-          <Card onPress={() => router.push(`/interview/lesson/${lesson.id}`)} style={styles.recCard}>
+          <Card href={`/interview/lesson/${lesson.id}`} style={styles.recCard}>
             <IconBadge name="book" color={c.cs} background={c.csSoft} />
             <View style={{ flex: 1, gap: 4 }}>
               <Text variant="small" tint={c.cs} weight="700">
@@ -237,7 +240,7 @@ export default function Home() {
           soft={c.algoSoft}
           value={progress.algo}
           detail={`유형 ${summary.algo.patternsRead}/${summary.algo.patterns} · 개념 퀴즈 ${summary.algo.quiz.attempted}/${summary.algo.quiz.total}`}
-          onPress={() => router.push('/algorithm')}
+          href="/algorithm"
         />
         <TrackCard
           title="코드 리뷰 테스트"
@@ -246,7 +249,7 @@ export default function Home() {
           soft={c.reviewSoft}
           value={progress.review}
           detail={`패턴 ${summary.review.patternsRead}/${summary.review.patterns} · 리뷰 퀴즈 ${summary.review.challengesDone}/${summary.review.challenges}`}
-          onPress={() => router.push('/review')}
+          href="/review"
         />
         <TrackCard
           title="기술 면접 CS"
@@ -255,9 +258,12 @@ export default function Home() {
           soft={c.csSoft}
           value={progress.cs}
           detail={`이론 ${summary.cs.lessonsDone}/${summary.cs.lessons} · 퀴즈 ${summary.cs.quiz.attempted}/${summary.cs.quiz.total} · 카드 ${summary.cs.cardsReviewed}/${summary.cs.cards}`}
-          onPress={() => router.push('/interview')}
+          href="/interview"
         />
       </View>
+
+      {/* 웹으로 처음 방문해 아직 코스를 설정하지 않은 사람 — 전체 콘텐츠를 펼쳐 보여준다 */}
+      {!state.profile.onboarded && <ContentDirectory />}
       <AdSlot />
     </Screen>
   );
@@ -268,7 +274,9 @@ function WelcomeCard() {
   return (
     <Card style={{ gap: spacing.md }} tint={c.primarySoft}>
       <View style={{ gap: 6 }}>
-        <Text variant="headline">개발자 취업 · 이직, 하루 10분씩 준비해요</Text>
+        <Text variant="headline" heading={1}>
+          개발자 취업 · 이직, 하루 10분씩 준비해요
+        </Text>
         <Text variant="callout" color="textSecondary">
           알고리즘 이론과 자주 나오는 유형의 5개 언어 구현 예제, 실무 코드 리뷰 테스트, 기술 면접 CS 이론 레슨과 퀴즈 ·
           질문 카드를 무료로 공부할 수 있어요. 지금은 기본 코스(백엔드 · Spring · Python)로 보여드리고 있어요.
@@ -276,8 +284,91 @@ function WelcomeCard() {
       </View>
       <View style={styles.welcomeActions}>
         <Button title="내 코스로 시작하기" icon="sparkles" style={{ flex: 1 }} onPress={() => router.push('/onboarding')} />
-        <Button title="서비스 소개" variant="secondary" style={{ flex: 1 }} onPress={() => router.push('/about')} />
+        <Button title="서비스 소개" variant="secondary" style={{ flex: 1 }} href="/about" />
       </View>
+    </Card>
+  );
+}
+
+/**
+ * 전체 학습 콘텐츠 목록 — 토픽 · 카테고리마다 링크라 코스를 정하기 전에 둘러보기 쉽고, 크롤러도 홈에서 모든 콘텐츠 화면으로 갈 수 있다.
+ * 정적 홈 페이지(scripts/lib/prerender.ts 의 homePage)와 같은 목록이다
+ */
+function ContentDirectory() {
+  const c = useColors();
+  const s = CONTENT_STATS;
+  return (
+    <>
+      <SectionHeader
+        title="전체 학습 콘텐츠"
+        subtitle={`알고리즘 유형 ${s.algoPatterns}개 · 코드 리뷰 패턴 ${s.patterns}개 · CS 이론 레슨 ${s.lessons}개 · 면접 질문 ${s.cards}개`}
+      />
+      <DirectoryCard
+        title="알고리즘 · 코딩 테스트"
+        href="/algorithm"
+        color={c.algo}
+        items={ALGO_TOPICS.map((t) => ({ href: `/algorithm/topic/${t.id}`, title: t.title, description: t.description }))}
+      />
+      <DirectoryCard
+        title="코드 리뷰 테스트"
+        href="/review"
+        color={c.review}
+        items={REVIEW_FRAMEWORKS.map((f) => ({ href: '/review', title: f.title, description: f.subtitle }))}
+      />
+      {CS_GROUPS.map((g) => (
+        <DirectoryCard
+          key={g.id}
+          title={`기술 면접 CS · ${g.title}`}
+          href="/interview"
+          color={c.cs}
+          items={CS_CATEGORIES.filter((cat) => cat.group === g.id).map((cat) => ({
+            href: `/interview/${cat.id}`,
+            title: cat.title,
+            description: cat.description,
+          }))}
+        />
+      ))}
+    </>
+  );
+}
+
+function DirectoryCard({
+  title,
+  href,
+  color,
+  items,
+}: {
+  title: string;
+  href: string;
+  color: string;
+  items: { href: string; title: string; description: string }[];
+}) {
+  const c = useColors();
+  if (!items.length) return null;
+  return (
+    <Card padded={false}>
+      <Card href={href} tint="transparent" style={styles.dirHead}>
+        <Text variant="subhead" weight="700" tint={color} heading={3} style={{ flex: 1 }}>
+          {title}
+        </Text>
+        <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+      </Card>
+      {items.map((item) => (
+        <View key={`${item.href}-${item.title}`}>
+          <Divider inset={spacing.lg} />
+          <Card href={item.href} tint="transparent" style={styles.dirRow}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="callout" weight="600">
+                {item.title}
+              </Text>
+              <Text variant="caption" color="textTertiary" numberOfLines={2}>
+                {item.description}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={c.textTertiary} />
+          </Card>
+        </View>
+      ))}
     </Card>
   );
 }
@@ -289,7 +380,7 @@ function TrackCard({
   soft,
   value,
   detail,
-  onPress,
+  href,
 }: {
   title: string;
   icon: string;
@@ -297,10 +388,10 @@ function TrackCard({
   soft: string;
   value: number;
   detail: string;
-  onPress: () => void;
+  href: string;
 }) {
   return (
-    <Card onPress={onPress} style={{ gap: spacing.md }}>
+    <Card href={href} style={{ gap: spacing.md }}>
       <View style={styles.trackTop}>
         <IconBadge name={icon} color={color} background={soft} size={36} />
         <Text variant="bodyStrong" style={{ flex: 1 }}>
@@ -328,4 +419,14 @@ const styles = StyleSheet.create({
   recCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   badges: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   trackTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  dirHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.md, borderWidth: 0, shadowOpacity: 0 },
+  dirRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    borderRadius: 0,
+    borderWidth: 0,
+    shadowOpacity: 0,
+  },
 });

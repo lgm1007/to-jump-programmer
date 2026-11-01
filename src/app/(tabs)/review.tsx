@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -72,7 +71,9 @@ export default function ReviewTab() {
   return (
     <Screen edges={['top']}>
       <View style={{ gap: 4, paddingTop: spacing.sm }}>
-        <Text variant="title1">코드 리뷰</Text>
+        <Text variant="title1" heading={1}>
+          코드 리뷰
+        </Text>
         <Text variant="callout" color="textTertiary">
           실무에서 자주 지적되는 패턴을 익히고, 직접 리뷰해봐요
         </Text>
@@ -159,7 +160,7 @@ export default function ReviewTab() {
                 return (
                   <View key={p.id}>
                     {i > 0 && <Divider inset={spacing.lg} />}
-                    <Card onPress={() => router.push(`/review/pattern/${p.id}`)} tint="transparent" style={styles.row}>
+                    <Card href={`/review/pattern/${p.id}`} tint="transparent" style={styles.row}>
                       <Ionicons
                         name={read ? 'checkmark-circle' : 'book-outline'}
                         size={22}
@@ -209,7 +210,7 @@ export default function ReviewTab() {
               const ch = resolveChallenge(base, language);
               const rec = challenges[ch.id];
               return (
-                <Card key={ch.id} onPress={() => router.push(`/review/challenge/${ch.id}`)} style={styles.challenge}>
+                <Card key={ch.id} href={`/review/challenge/${ch.id}`} style={styles.challenge}>
                   <View style={[styles.num, { backgroundColor: rec ? c.reviewSoft : c.surfaceAlt }]}>
                     <Text variant="captionStrong" tint={rec ? c.review : c.textSecondary}>
                       {String(i + 1).padStart(2, '0')}

@@ -1,5 +1,4 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/ui/card';
@@ -24,7 +23,9 @@ export default function AlgorithmTab() {
   return (
     <Screen edges={['top']}>
       <View style={{ gap: 4, paddingTop: spacing.sm }}>
-        <Text variant="title1">알고리즘</Text>
+        <Text variant="title1" heading={1}>
+          알고리즘
+        </Text>
         <Text variant="callout" color="textTertiary">
           이론을 익히고, 자주 나오는 유형을 5개 언어 구현 예제로 비교해요
         </Text>
@@ -66,7 +67,7 @@ export default function AlgorithmTab() {
           const stats = quizSetStats(algoTopicQuestionIds(t.id), quiz);
           const progress = patterns.length ? read / patterns.length : stats.progress;
           return (
-            <Card key={t.id} onPress={() => router.push(`/algorithm/topic/${t.id}`)} style={styles.topicCard}>
+            <Card key={t.id} href={`/algorithm/topic/${t.id}`} style={styles.topicCard}>
               <IconBadge name={t.icon} color={c.algo} background={c.algoSoft} size={44} />
               <View style={{ flex: 1, gap: 6 }}>
                 <View style={{ gap: 2 }}>

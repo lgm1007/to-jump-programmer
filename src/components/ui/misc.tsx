@@ -61,7 +61,9 @@ export function SectionHeader({
   return (
     <View style={[styles.sectionHeader, style]}>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text variant="title3">{title}</Text>
+        <Text variant="title3" heading={2}>
+          {title}
+        </Text>
         {subtitle && (
           <Text variant="caption" color="textTertiary">
             {subtitle}
