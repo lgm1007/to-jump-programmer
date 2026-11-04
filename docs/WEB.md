@@ -96,6 +96,7 @@ npm run preview:web
 - **URL 접두어 속성** `https://jumpprogrammer.app/` 으로 등록할 때는 HTML 파일 방법을 쓸 수 있습니다. 내려받은 `google….html` 을 `public/` 에 두면 빌드가 도메인 루트로 복사합니다(이미 `public/google6f2d767f4614ac15.html` 이 있음 — 확인된 상태를 유지하려면 지우지 않습니다).
 - **Sitemaps** 에 `https://jumpprogrammer.app/sitemap.xml` 을 제출합니다. (홈 · 탭 · 토픽 · 알고리즘 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침, `robots.txt` 에도 들어 있음)
 - 페이지마다 제목 · 설명 · canonical 이 다르고 본문이 HTML 에 들어 있어, [URL 검사]의 '크롤링된 페이지 보기'에서 본문이 보여야 합니다.
+- **네이버 서치어드바이저**: 사이트 `https://jumpprogrammer.app` 은 HTML 메타 태그 방법으로 확인합니다. `scripts/build-web.mjs` 의 `headTags()` 에 `naver-site-verification` 태그가 있어 모든 페이지 `<head>` 에 들어갑니다(지우면 확인이 풀림). 확인 뒤 [요청 › 사이트맵 제출]에 `https://jumpprogrammer.app/sitemap.xml` 을 넣습니다. Bing 웹마스터 도구는 Google Search Console 에서 사이트를 가져올 수 있습니다.
 
 ## 6. 알아 둘 점
 
