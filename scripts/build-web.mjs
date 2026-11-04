@@ -72,6 +72,8 @@ function headTags() {
     '<meta name="apple-mobile-web-app-status-bar-style" content="default">',
     `<meta property="og:title" content="${APP.web?.name ?? APP.name}">`,
     `<meta property="og:description" content="${DESCRIPTION}">`,
+    // 네이버 서치어드바이저 사이트 소유 확인 (https://jumpprogrammer.app) — 확인된 상태를 유지하려면 지우지 않는다
+    '<meta name="naver-site-verification" content="461578fee0c78e75f8985fb8273a3a7d271979fa">',
     // iOS Safari 는 16px 보다 작은 입력 칸을 누르면 화면을 확대하므로 iOS 에서만 자동 확대를 막는다
     '<script>(function(){var u=navigator.userAgent;if(!/Android/i.test(u)&&(/iP(hone|ad|od)/.test(u)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1))){var m=document.querySelector("meta[name=viewport]");if(m)m.setAttribute("content",m.getAttribute("content")+", maximum-scale=1")}})()</script>',
     `<script>if("serviceWorker"in navigator)addEventListener("load",function(){navigator.serviceWorker.register("${PREFIX}sw.js",{scope:"${PREFIX}"}).catch(function(){})})</script>`,
