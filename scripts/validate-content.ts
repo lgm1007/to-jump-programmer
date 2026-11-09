@@ -440,16 +440,41 @@ function checkIssueLines(lines: unknown, source: string | undefined, iw: string)
   });
 }
 
-function checkChallengeQuestion(question: ReviewChallenge['question'] | undefined, w: string) {
+/** 보기는 5~6개, 정답은 숨긴 이슈와 같은 수(2~4개) */
+function checkChallengeQuestion(question: ReviewChallenge['question'] | undefined, issueCount: number, w: string) {
   const opts = question?.options;
   nonEmpty(question?.prompt, w, 'question.prompt', 5);
-  if (!Array.isArray(opts) || opts.length < 4 || opts.length > 7) err(w, 'question.options 는 4~7개');
+  if (!Array.isArray(opts) || opts.length < 5 || opts.length > 6) err(w, 'question.options 는 5~6개');
   else {
     const correct = opts.filter((o) => o.correct).length;
-    if (correct < 1 || correct > 5) err(w, `정답 선택지는 1~5개여야 합니다 (현재 ${correct})`);
-    if (correct === opts.length) err(w, '모든 선택지가 정답입니다');
+    if (correct !== issueCount) err(w, `정답 보기 수(${correct})는 이슈 수(${issueCount})와 같아야 합니다`);
+    if (new Set(opts.map((o) => o.text)).size !== opts.length) err(w, '같은 보기가 있습니다');
     opts.forEach((o, i) => nonEmpty(o.text, w, `options[${i}]`) && checkInline(o.text, w, `options[${i}]`));
   }
+}
+
+/** 리뷰 퀴즈 코드의 주석이 숨긴 이슈를 알려 주면 퀴즈가 되지 않는다 */
+const SPOILER_COMMENT = /(?:\/\/|#|\/\*|\*|<!--|--)\s*.*(TODO|FIXME|문제|취약|위험|버그|안티패턴|개선 필요)/;
+
+function checkChallengeCode(source: string | undefined, w: string) {
+  if (!source) return;
+  const total = lineCount(source);
+  if (total < 30 || total > 80) warn(w, `리뷰 대상 코드는 30~80줄을 권장합니다 (현재 ${total}줄)`);
+  source
+    .replace(/^\n+/, '')
+    .split('\n')
+    .forEach((line, i) => {
+      if (SPOILER_COMMENT.test(line)) warn(w, `${i + 1}번째 줄 주석이 정답을 알려 줄 수 있습니다: ${line.trim().slice(0, 60)}`);
+    });
+}
+
+function checkPatternCode(source: string | undefined, w: string, field: string) {
+  if (source && lineCount(source) > 70) warn(w, `${field} 코드는 70줄 이하를 권장합니다 (현재 ${lineCount(source)}줄)`);
+}
+
+function checklistRule(list: unknown, w: string) {
+  if (!Array.isArray(list) || list.length < 3 || list.length > 6) err(w, 'checklist 는 3~6개');
+  else list.forEach((c, i) => nonEmpty(c, w, `checklist[${i}]`) && checkInline(c, w, `checklist[${i}]`));
 }
 
 /** 설명에 기본 언어 코드 블록(예: ```java)이 있는데 다른 언어 버전이 덮어쓰지 않았으면 그 언어 화면에 Java 코드가 보인다 */
@@ -490,10 +515,9 @@ async function validateReviewVariants(fwId: string, baseLang: string, lang: stri
     if (pv.summary !== undefined) nonEmpty(pv.summary, w, 'summary', 8);
     if (pv.problem !== undefined) checkRich(pv.problem, w, 'problem', 30);
     if (pv.explanation !== undefined) checkRich(pv.explanation, w, 'explanation', 50);
-    if (pv.checklist !== undefined) {
-      if (!Array.isArray(pv.checklist) || pv.checklist.length < 2 || pv.checklist.length > 6) err(w, 'checklist 는 2~6개');
-      else pv.checklist.forEach((c, i) => nonEmpty(c, w, `checklist[${i}]`) && checkInline(c, w, `checklist[${i}]`));
-    }
+    if (pv.checklist !== undefined) checklistRule(pv.checklist, w);
+    checkPatternCode(pv.before?.source, w, 'before');
+    checkPatternCode(pv.after?.source, w, 'after');
     checkFenceOverride(p.problem, pv.problem, baseLang, lang, w, 'problem');
     checkFenceOverride(p.explanation, pv.explanation, baseLang, lang, w, 'explanation');
   }
@@ -511,7 +535,8 @@ async function validateReviewVariants(fwId: string, baseLang: string, lang: stri
     if (cv.title !== undefined) nonEmpty(cv.title, w, 'title', 3);
     if (cv.context !== undefined) checkRich(cv.context, w, 'context', 20);
     if (cv.summary !== undefined) checkRich(cv.summary, w, 'summary', 30);
-    if (cv.question !== undefined) checkChallengeQuestion(cv.question, w);
+    if (cv.question !== undefined) checkChallengeQuestion(cv.question, c.issues.length, w);
+    checkChallengeCode(cv.code?.source, w);
     checkFenceOverride(c.context, cv.context, baseLang, lang, w, 'context');
     checkFenceOverride(c.summary, cv.summary, baseLang, lang, w, 'summary');
     if (!Array.isArray(cv.issues) || cv.issues.length !== c.issues.length) {
@@ -544,6 +569,7 @@ async function validateReview() {
     for (const p of content.patterns) {
       const w = `${where}/${p.id}`;
       checkId(p.id, w);
+      if (!p.id.startsWith(`${fw.id}-p-`)) err(w, `패턴 id 는 '${fw.id}-p-…' 형식이어야 합니다`);
       if (p.framework !== fw.id) err(w, `framework 가 '${fw.id}' 이어야 합니다`);
       if (!REVIEW_CATEGORIES.has(p.category)) err(w, `category 오류: ${p.category}`);
       if (![1, 2, 3].includes(p.difficulty)) err(w, `difficulty 는 1|2|3`);
@@ -553,21 +579,24 @@ async function validateReview() {
       checkSnippet(p.before, w, 'before');
       checkSnippet(p.after, w, 'after');
       if (p.before?.source?.trim() === p.after?.source?.trim()) err(w, 'before 와 after 코드가 같습니다');
+      checkPatternCode(p.before?.source, w, 'before');
+      checkPatternCode(p.after?.source, w, 'after');
       checkRich(p.explanation, w, 'explanation', 50);
-      if (!Array.isArray(p.checklist) || p.checklist.length < 2 || p.checklist.length > 6) err(w, 'checklist 는 2~6개');
-      else p.checklist.forEach((c, i) => nonEmpty(c, w, `checklist[${i}]`) && checkInline(c, w, `checklist[${i}]`));
+      checklistRule(p.checklist, w);
     }
     for (const c of content.challenges) {
       const w = `${where}/${c.id}`;
       checkId(c.id, w);
+      if (!new RegExp(`^${fw.id}-c\\d{2}$`).test(c.id)) err(w, `리뷰 퀴즈 id 는 '${fw.id}-c01' 형식이어야 합니다`);
       if (c.framework !== fw.id) err(w, `framework 가 '${fw.id}' 이어야 합니다`);
       if (![1, 2, 3].includes(c.difficulty)) err(w, `difficulty 는 1|2|3`);
       nonEmpty(c.title, w, 'title', 3);
       checkRich(c.context, w, 'context', 20);
       checkSnippet(c.code, w, 'code');
+      checkChallengeCode(c.code?.source, w);
       checkSnippet(c.improved, w, 'improved');
       if (c.code?.source?.trim() === c.improved?.source?.trim()) err(w, 'code 와 improved 가 같습니다');
-      if (!Array.isArray(c.issues) || c.issues.length < 1 || c.issues.length > 5) err(w, 'issues 는 1~5개');
+      if (!Array.isArray(c.issues) || c.issues.length < 2 || c.issues.length > 4) err(w, 'issues 는 2~4개');
       c.issues?.forEach((is, i) => {
         const iw = `${w}/issues[${i}]`;
         if (!REVIEW_CATEGORIES.has(is.category)) err(iw, `category 오류: ${is.category}`);
@@ -577,7 +606,7 @@ async function validateReview() {
         checkRich(is.suggestion, iw, 'suggestion', 10);
         checkIssueLines(is.lines, c.code?.source, iw);
       });
-      checkChallengeQuestion(c.question, w);
+      checkChallengeQuestion(c.question, c.issues?.length ?? 0, w);
       checkRich(c.summary, w, 'summary', 30);
     }
     console.log(`  review/${fw.id}: 패턴 ${content.patterns.length} · 챌린지 ${content.challenges.length}`);

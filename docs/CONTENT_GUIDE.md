@@ -157,9 +157,11 @@ followUps: [
 - **ReviewPattern(개선 패턴 학습)**: 실무 코드 리뷰에서 자주 지적되는 패턴 하나에 집중합니다.
   `before`/`after` 코드는 15~45줄 내외로, 핵심이 드러나도록 작성합니다.
 - **ReviewChallenge(리뷰 실전 퀴즈)**: 실제 서비스 코드처럼 보이는 30~70줄 코드에 2~4개의 이슈를 숨깁니다.
-  - `issues[].lines`는 `code.source` 기준 1부터 시작하는 라인 번호이며, 검증 스크립트가 범위를 확인합니다.
-  - `question.options`는 5~6개, 그중 정답(`correct: true`) 2~4개. 오답 선택지는 코드에 실제로 없는 문제여야 합니다.
+  - `issues[].lines`는 `code.source` 기준 1부터 시작하는 라인 번호이며, 검증 스크립트가 범위를 확인합니다. 채점이 이 줄 번호로 되므로 리뷰어가 코멘트를 달 줄(1~3줄)을 가리킵니다.
+  - `question.options`는 5~6개, 정답(`correct: true`) 수는 이슈 수와 같습니다(검증 오류). 오답 선택지는 코드에 실제로 없는 문제여야 합니다.
   - `improved`는 모든 이슈를 해결한 베스트 개선안입니다.
+  - **공정성**: 숨긴 이슈 말고는 지적당할 만한 다른 문제가 코드에 없어야 합니다. 다른 문제가 있으면 학습자가 그 줄을 골랐다가 감점됩니다. 주석 · 변수 이름으로 정답을 알려 주지 않습니다(주석의 `TODO`, 문제 · 취약 같은 말은 검증 경고).
+- **파일**: 프레임워크마다 `review/<fw>-patterns.ts` · `review/<fw>-challenges.ts` 에 나눠 쓰고 `review/<fw>.ts` 가 합칩니다. 새 항목은 배열 끝에 덧붙이면 앱이 쉬운 것부터 정렬해 보여 줍니다. 기존 id 는 바꾸지 않습니다(학습 기록 호환).
 
 - 리뷰 카테고리(`category`)는 성능 · 보안 · 설계 · 트랜잭션 · 예외 처리 · 동시성 · 가독성 · 테스트 · API 설계에 더해, 프론트엔드용 **상태 관리(`state`) · 접근성(`accessibility`)** 이 있습니다.
 
@@ -173,7 +175,7 @@ followUps: [
 
 Spring Boot 리뷰 콘텐츠는 Java(기본)와 Kotlin 두 언어로 제공합니다. 앱에서는 코드 언어를 바꾸면 코드와 설명이 함께 바뀌고, 학습 기록은 언어와 관계없이 하나로 유지됩니다.
 
-- Kotlin 버전은 `review/spring-kotlin.ts`(`ReviewVariantContent`)에 패턴 · 리뷰 퀴즈 **id 별로** 작성합니다. `review/spring.ts`의 모든 항목에 Kotlin 버전이 있어야 합니다(검증 스크립트가 확인).
+- Kotlin 버전은 `review/spring-kotlin-patterns.ts` · `review/spring-kotlin-challenges.ts`(`ReviewVariantContent`)에 패턴 · 리뷰 퀴즈 **id 별로** 작성합니다. `review/spring.ts`의 모든 항목에 Kotlin 버전이 있어야 합니다(검증 스크립트가 확인).
 - **코드는 반드시 Kotlin 으로 새로** 씁니다. 설명(`problem`, `explanation`, `checklist`, 이슈 `description`/`suggestion`, `summary` 등)은 **Kotlin 에서 달라지는 것만** 덮어쓰고, 나머지는 Java 버전을 그대로 씁니다.
   - Java 코드 블록(` ```java `)이나 Java 전용 표현(Lombok, `final` 필드, `Optional.get()` 등)이 들어 있는 설명은 Kotlin 버전에서 덮어씁니다. 덮어쓰지 않은 필드에 Java 코드 블록이 있으면 검증 스크립트가 오류를 냅니다.
   - 제목(`title`)과 요약(`summary`)도 Java 전용 표현이 있으면 덮어씁니다. 목록 화면에도 선택한 언어의 제목이 보입니다.

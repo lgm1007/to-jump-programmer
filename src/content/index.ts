@@ -149,12 +149,18 @@ export const CS_CONTENT: Record<string, CsCategoryContent> = {
   'ai-agent': aiAgent,
 };
 
+/** 콘텐츠는 새 항목을 뒤에 덧붙이므로, 목록 · '다음' 순서는 여기서 쉬운 것부터로 맞춘다 (같은 난이도는 원래 순서) */
+function easyFirst({ patterns, challenges }: ReviewFrameworkContent): ReviewFrameworkContent {
+  const byDifficulty = (a: { difficulty: number }, b: { difficulty: number }) => a.difficulty - b.difficulty;
+  return { patterns: [...patterns].sort(byDifficulty), challenges: [...challenges].sort(byDifficulty) };
+}
+
 export const REVIEW_CONTENT: Record<FrameworkId, ReviewFrameworkContent> = {
-  spring: reviewSpring,
-  nest: reviewNest,
-  django: reviewDjango,
-  react: reviewReact,
-  vue: reviewVue,
+  spring: easyFirst(reviewSpring),
+  nest: easyFirst(reviewNest),
+  django: easyFirst(reviewDjango),
+  react: easyFirst(reviewReact),
+  vue: easyFirst(reviewVue),
 };
 
 /** 리뷰 콘텐츠의 다른 언어 버전 (프레임워크 → 언어 → id 별 코드 · 설명) */
