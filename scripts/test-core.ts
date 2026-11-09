@@ -13,6 +13,7 @@ import {
   LESSON_QUESTION_IDS,
   QUESTION_MAP,
   QUESTION_SOURCE,
+  REVIEW_CONTENT,
 } from '../src/content';
 import type { McqChoicesQuestion, McqPoolQuestion } from '../src/content/types';
 import { backupFileName, createBackup, describeBackup, parseBackup } from '../src/features/progress/backup';
@@ -263,6 +264,16 @@ test('풀스택은 CS 후보 묶음을 번갈아 골라 한쪽으로 쏠리지 �
   const short = composeDailyQuiz({ goal: 10, wrong: [], cs: [ids('b', 1), ids('f', 30)], algo: ids('a', 30), seen: () => false, random: seededRandom(1) });
   assert.equal(short.filter((id) => id.startsWith('b')).length, 1);
   assert.equal(short.filter((id) => id.startsWith('f')).length, 6);
+});
+
+console.log('review');
+test('개선 패턴 · 리뷰 퀴즈 목록은 쉬운 것부터', () => {
+  for (const { patterns, challenges } of Object.values(REVIEW_CONTENT)) {
+    for (const list of [patterns, challenges]) {
+      const levels = list.map((item) => item.difficulty);
+      assert.deepEqual(levels, [...levels].sort((a, b) => a - b));
+    }
+  }
 });
 
 console.log('course');
