@@ -48,7 +48,7 @@ function resolveQuestions(p: Params): { ids: string[]; title: string } {
       return { ids, title: p.title ?? `${CS_CATEGORY_MAP[p.id ?? '']?.title ?? ''} 퀴즈` };
     }
     case 'lesson': {
-      // 레슨 확인 퀴즈 — 레슨에 연결된 문제 중 안 푼 문제 먼저 3개
+      // 레슨 확인 퀴즈 — 레슨에 연결된 문제 5개를 기초 → 중급 → 심화 순으로 (난이도 안에서는 안 푼 문제 먼저)
       const lesson = LESSON_MAP[p.id ?? ''];
       const ids = lesson ? pickLessonCheck(lesson.id, (id) => !!state.quiz[id]) : [];
       return { ids, title: p.title ?? `${lesson?.title ?? ''} 확인 퀴즈` };

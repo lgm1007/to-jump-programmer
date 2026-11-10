@@ -3,7 +3,7 @@ import { isCaseCategory } from '@/content';
 import { isLessonUnderstood, lessonStatus } from '@/features/progress/lessons';
 import { useProgress } from '@/features/progress/store';
 
-/** CS 이론 레슨 상태 — 안 읽음 · 읽는 중 · 완료(확인 퀴즈 2/3 이상이면 이해함) */
+/** CS 이론 레슨 상태 — 안 읽음 · 읽는 중 · 완료(확인 퀴즈 2/3 이상, 5문제면 4개 이상이면 이해함) */
 export function LessonStatusBadge({ lessonId }: { lessonId: string }) {
   const record = useProgress((s) => s.lessons[lessonId]);
   const status = lessonStatus(record);

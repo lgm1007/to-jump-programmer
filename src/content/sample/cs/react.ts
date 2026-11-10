@@ -469,6 +469,52 @@ setCount((c) => c + 1); // 3
       ],
     },
     {
+      id: 'cs-react-q19',
+      categoryId: 'react',
+      lessonId: 'cs-react-l01',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: 'React가 화면을 갱신하는 과정(트리거 → 렌더 → 커밋) 중 **렌더 단계**에서 일어나는 일로 옳은 것은?',
+      correct: '컴포넌트 함수를 호출해 새 엘리먼트 트리를 만들 뿐, DOM은 건드리지 않는다',
+      distractors: [
+        {
+          text: '이전 트리와 비교해 찾은 차이를 실제 DOM에 반영한다',
+          why: 'DOM 반영은 다음 단계인 커밋에서 일어납니다. 렌더 단계는 컴포넌트 함수를 호출해 화면 모습을 계산할 뿐입니다.',
+        },
+        {
+          text: 'state 변경을 감지해 렌더링을 예약한다',
+          why: '렌더링을 예약하는 것은 트리거 단계입니다. 렌더 단계는 예약된 렌더링에 따라 컴포넌트 함수를 호출합니다.',
+        },
+        {
+          text: '`useEffect`에 넣은 effect를 실행해 외부 시스템과 동기화한다',
+          why: 'effect는 커밋이 끝나 DOM에 반영된 뒤에 실행됩니다. 렌더 단계에서는 실행되지 않습니다.',
+        },
+        {
+          text: '이전 DOM을 모두 지우고 새 트리로 DOM 전체를 다시 만든다',
+          why: 'React는 DOM을 통째로 다시 만들지 않습니다. 이전 트리와 비교해 찾은 차이만 커밋 단계에서 반영합니다.',
+        },
+        {
+          text: '결과가 이전과 같을 컴포넌트는 함수 호출을 건너뛴다',
+          why: '결과가 같은지는 함수를 호출해 봐야 알 수 있습니다. 결과가 같을 때 달라지는 것은 커밋 단계에서 DOM이 바뀌지 않는다는 점입니다.',
+        },
+        {
+          text: 'JSX를 HTML 문자열로 바꿔 `innerHTML`로 화면에 넣는다',
+          why: 'React 엘리먼트는 화면 모습을 적은 자바스크립트 객체입니다. 렌더 단계는 이 객체 트리를 만들 뿐이고, DOM 반영은 커밋 단계에서 바뀐 부분만 고칩니다.',
+        },
+      ],
+      explanation: `렌더 단계에서 React는 컴포넌트 함수를 호출해 **새 React 엘리먼트 트리**(흔히 가상 DOM이라 부르는 자바스크립트 객체 트리)를 만듭니다. 이 단계에서는 DOM을 건드리지 않습니다.
+
+1. **트리거**: 첫 마운트나 state 변경이 렌더링을 예약합니다.
+2. **렌더**: 컴포넌트 함수를 호출해 새 트리를 계산합니다.
+3. **커밋**: 이전 트리와 비교해 찾은 차이만 실제 DOM에 반영하고, 그다음 effect를 실행합니다.
+
+그래서 **렌더링 = 컴포넌트 함수 호출**이고, 렌더링이 일어나도 결과가 같으면 DOM은 바뀌지 않습니다.`,
+      tags: [
+        'rendering',
+        'commit',
+      ],
+    },
+    {
       id: 'cs-react-q06',
       categoryId: 'react',
       lessonId: 'cs-react-l01',
@@ -593,6 +639,60 @@ React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동
       ],
     },
     {
+      id: 'cs-react-q20',
+      categoryId: 'react',
+      lessonId: 'cs-react-l01',
+      type: 'mcq',
+      difficulty: 3,
+      prompt: '목록에서 다른 사용자를 고르면 `selectedUser`가 바뀝니다. 그런데 A의 이름을 고치던 중 B를 고르면 입력창에 여전히 A의 이름이 남아 있습니다. 원인과 해결로 옳은 것은?',
+      code: {
+        language: 'tsx',
+        source: `function ProfileForm({ user }: { user: User }) {
+  const [name, setName] = useState(user.name);
+  return <input value={name} onChange={(e) => setName(e.target.value)} />;
+}
+
+function ProfilePage({ selectedUser }: { selectedUser: User }) {
+  return <ProfileForm user={selectedUser} />;
+}`,
+      },
+      correct: '같은 자리에 같은 타입이 있어 state가 유지되므로, `key={selectedUser.id}`를 줘서 사용자가 바뀌면 새로 마운트한다',
+      distractors: [
+        {
+          text: '`user` prop이 바뀌면 `useState(user.name)`의 초깃값이 다시 적용되므로, 원인은 다른 곳에 있다',
+          why: '초깃값은 컴포넌트가 처음 마운트될 때만 쓰입니다. 같은 자리에 같은 타입이 남아 있으면 React는 기존 state를 그대로 유지합니다.',
+        },
+        {
+          text: '`key={Math.random()}`을 줘서 렌더링될 때마다 `ProfileForm`을 새로 마운트한다',
+          why: '`ProfilePage`가 렌더링될 때마다 key가 바뀌어, 사용자가 그대로여도 폼이 새로 만들어지고 입력하던 값을 잃습니다. key는 초기화 기준이 되는 사용자의 id로 줍니다.',
+        },
+        {
+          text: '`ProfileForm`을 `memo`로 감싸면 `user` prop이 바뀐 것을 감지해 state를 새로 만든다',
+          why: '`memo`는 props가 같을 때 렌더링을 건너뛰게 할 뿐 state를 초기화하지 않습니다. props가 바뀌면 다시 렌더링되지만 state는 그대로입니다.',
+        },
+        {
+          text: '`ProfileForm` 함수 하나가 모든 사용자의 state를 공유하므로, 사용자마다 다른 컴포넌트 함수를 만든다',
+          why: 'state는 컴포넌트 함수가 아니라 트리 안의 위치에 붙어 있습니다. 같은 함수라도 다른 자리나 다른 key로 렌더링되면 각자 state를 가집니다.',
+        },
+        {
+          text: '`ProfileForm`을 `div`로 한 번 감싸면 감싸는 요소가 생겨 사용자가 바뀔 때 새로 마운트된다',
+          why: '감싸는 요소의 타입이 렌더링마다 같으면 하위 트리는 유지됩니다. 사용자와 관계없이 늘 `div`이므로 state는 그대로 남습니다.',
+        },
+      ],
+      explanation: `React는 같은 자리에 같은 타입의 컴포넌트가 렌더링되는 동안 **state를 유지**합니다. \`selectedUser\`가 바뀌어도 그 자리에는 여전히 \`ProfileForm\`이 있으므로 React는 같은 컴포넌트로 보고 props만 새로 넘깁니다. \`useState(user.name)\`의 초깃값은 처음 마운트될 때만 쓰이므로 입력창에는 A의 이름이 남습니다.
+
+\`\`\`tsx
+<ProfileForm key={selectedUser.id} user={selectedUser} />
+\`\`\`
+
+key가 바뀌면 React는 다른 컴포넌트로 보고 이전 것을 언마운트한 뒤 새로 마운트하므로, 사용자가 바뀔 때 폼 state가 깔끔하게 초기화됩니다. key는 목록 밖에서도 이렇게 쓸 수 있습니다.`,
+      tags: [
+        'key',
+        'state-preservation',
+        'reconciliation',
+      ],
+    },
+    {
       id: 'cs-react-q03',
       categoryId: 'react',
       lessonId: 'cs-react-l02',
@@ -648,6 +748,69 @@ React는 key 0이 그대로 있으니 첫 번째 \`li\`의 텍스트만 \`운동
       ],
     },
     {
+      id: 'cs-react-q10',
+      categoryId: 'react',
+      lessonId: 'cs-react-l02',
+      type: 'mcq',
+      difficulty: 2,
+      prompt: '버튼을 클릭하면 타이머 콜백이 실행된 뒤 `render`가 몇 번 출력될까요? 횟수와 그 이유로 옳은 것을 고르세요. (React 18 · `createRoot` · 프로덕션 빌드)',
+      code: {
+        language: 'tsx',
+        source: `function Panel() {
+  const [count, setCount] = useState(0);
+  const [open, setOpen] = useState(false);
+  console.log('render');
+
+  const handleClick = () => {
+    setTimeout(() => {
+      setCount((c) => c + 1);
+      setOpen((o) => !o);
+    }, 0);
+  };
+
+  return <button onClick={handleClick}>{count} {open ? '열림' : '닫힘'}</button>;
+}`,
+      },
+      correct: '1번 — React 18부터 타이머 · Promise 콜백 안의 업데이트도 자동으로 배칭된다',
+      distractors: [
+        {
+          text: '2번 — React 이벤트 핸들러 밖에서 호출한 업데이트는 배칭되지 않는다',
+          why: 'React 17 이하(또는 React 18의 레거시 `ReactDOM.render`)의 동작입니다. 그때는 React 이벤트 핸들러 안에서만 배칭되어 타이머 안의 두 업데이트가 렌더링을 두 번 일으켰지만, `createRoot`에서는 어디서 호출하든 배칭됩니다.',
+        },
+        {
+          text: '2번 — 서로 다른 state 변수의 업데이트는 각각 따로 렌더링된다',
+          why: '배칭은 몇 개의 state를 건드렸는지와 상관없습니다. 같은 작업 안에서 일어난 업데이트는 서로 다른 state라도 한 번의 렌더링으로 합쳐집니다.',
+        },
+        {
+          text: '0번 — 비동기 콜백에서 호출한 업데이트는 다음 사용자 이벤트까지 보류된다',
+          why: '비동기 콜백의 업데이트도 보류되지 않고 곧바로 렌더링이 예약됩니다.',
+        },
+        {
+          text: '3번 — 클릭 이벤트 처리와 두 업데이트가 각각 렌더링을 일으킨다',
+          why: '클릭 핸들러는 타이머만 예약하고 state를 바꾸지 않으므로 렌더링을 일으키지 않습니다. 렌더링은 타이머 안의 업데이트로만 일어나고, 그 둘은 배칭됩니다.',
+        },
+        {
+          text: '1번 — 타이머가 React 이벤트 핸들러 안에서 예약되었으므로 그 이벤트의 배칭에 포함된다',
+          why: '타이머 콜백은 클릭 이벤트 처리가 끝난 뒤 따로 실행되므로 그 이벤트의 배칭과는 관계가 없습니다. 한 번만 렌더링되는 것은 어디서 호출된 업데이트든 자동으로 배칭되기 때문입니다.',
+        },
+        {
+          text: '1번 — 두 업데이트가 모두 함수형 업데이트라서 하나로 합쳐진다',
+          why: '배칭은 업데이트 형태와 상관없습니다. `setCount(count + 1)`처럼 값을 바로 넘겨도 같은 작업 안의 업데이트라면 한 번의 렌더링으로 합쳐집니다.',
+        },
+      ],
+      explanation: `React 18의 **자동 배칭(automatic batching)** 덕분에 \`createRoot\`로 렌더링한 앱에서는 React 이벤트 핸들러뿐 아니라 \`setTimeout\`, Promise, 네이티브 이벤트 핸들러 안의 업데이트도 하나로 모아 **한 번만** 렌더링합니다.
+
+배칭을 피하고 DOM에 즉시 반영해야 하는 드문 경우(업데이트 직후 스크롤 위치 측정 등)에는 \`react-dom\`의 \`flushSync\`를 씁니다.
+
+\`\`\`tsx
+flushSync(() => setCount((c) => c + 1)); // 이 줄이 끝나면 DOM 반영 완료
+\`\`\``,
+      tags: [
+        'batching',
+        'react18',
+      ],
+    },
+    {
       id: 'cs-react-q04',
       categoryId: 'react',
       lessonId: 'cs-react-l02',
@@ -666,6 +829,107 @@ ref는 화면과 관계없지만 렌더링 사이에 유지해야 하는 값에 
 > 렌더링 중에 \`ref.current\`를 읽거나 쓰면 결과를 예측하기 어려워지므로, ref는 이벤트 핸들러와 effect 안에서 다루는 것이 원칙입니다(최초 1회 초기화는 예외).`,
       tags: [
         'useRef',
+      ],
+    },
+    {
+      id: 'cs-react-q05',
+      categoryId: 'react',
+      lessonId: 'cs-react-l02',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: 'React 폼 입력에서 **제어 컴포넌트(controlled component)**에 대한 설명으로 옳은 것은?',
+      correct: '입력값을 state로 관리하고 `value`와 `onChange`로 연결해, React state가 단일 진실 공급원이 된다',
+      distractors: [
+        {
+          text: '`defaultValue`로 초깃값만 주고, 제출할 때 `ref`로 DOM에서 값을 읽는다',
+          why: 'DOM이 입력값을 갖고 필요할 때 ref로 읽는 이 방식은 비제어 컴포넌트입니다.',
+        },
+        {
+          text: '`value`만 지정하고 `onChange`를 생략하면 브라우저가 입력값을 관리하는 비제어 컴포넌트가 된다',
+          why: '`onChange` 없이 `value`만 주면 비제어가 되는 것이 아니라, React가 값을 고정해 입력할 수 없는 필드가 되고 콘솔 경고가 납니다.',
+        },
+        {
+          text: '키 입력마다 리렌더링이 일어나지 않아 항상 비제어 컴포넌트보다 성능이 좋다',
+          why: '제어 컴포넌트는 키 입력마다 state가 바뀌어 리렌더링되므로 오히려 비용이 더 듭니다.',
+        },
+        {
+          text: '`useState()`처럼 초깃값을 비워 둬도 처음부터 제어 컴포넌트로 동작한다',
+          why: '`value`가 `undefined`이면 React는 비제어로 보고, 입력 후 문자열이 되면 "uncontrolled to controlled" 경고를 냅니다. 문자열 입력은 `\'\'`에서 시작합니다.',
+        },
+        {
+          text: 'React Hook Form처럼 필드가 많은 폼 라이브러리가 기본으로 쓰는 방식이다',
+          why: 'React Hook Form은 키 입력마다 리렌더링되는 비용을 피하려고 ref로 DOM 값을 읽는 비제어 방식을 기본으로 씁니다.',
+        },
+      ],
+      explanation: `제어 컴포넌트는 입력값을 React state에 두고 \`value\` + \`onChange\`로 연결합니다. 입력할 때마다 state가 바뀌고 그 값이 다시 \`value\`로 내려가므로, 즉시 검증 · 포맷팅 · 버튼 활성화 같은 처리가 쉽습니다.
+
+\`\`\`tsx
+const [email, setEmail] = useState('');
+<input value={email} onChange={(e) => setEmail(e.target.value)} />
+\`\`\`
+
+> \`useState()\`처럼 초깃값 없이 시작하면 \`value\`가 \`undefined\`에서 문자열로 바뀌면서 "uncontrolled to controlled" 경고가 납니다. 초깃값은 \`''\`로 둡니다.`,
+      tags: [
+        'controlled-component',
+        'form',
+      ],
+    },
+    {
+      id: 'cs-react-q21',
+      categoryId: 'react',
+      lessonId: 'cs-react-l03',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: '의존성 배열을 **생략한** 아래 effect는 언제 실행될까요?',
+      code: {
+        language: 'tsx',
+        source: `function CartBadge({ count }: { count: number }) {
+  useEffect(() => {
+    document.title = \`장바구니 (\${count})\`;
+  });
+
+  return <span>{count}</span>;
+}`,
+      },
+      correct: '마운트 후, 그리고 이후 **모든 렌더링**이 커밋된 뒤마다',
+      distractors: [
+        {
+          text: '마운트 후 한 번만',
+          why: '마운트 후 한 번만 실행되는 것은 의존성 배열을 `[]`로 적었을 때입니다. 배열을 생략하면 매 렌더링 후 실행됩니다.',
+        },
+        {
+          text: '`count`가 바뀐 렌더링 후에만',
+          why: '그렇게 동작하려면 `[count]`를 의존성 배열로 적어야 합니다. React가 effect 안에서 읽는 값을 알아서 의존성으로 골라 주지는 않습니다.',
+        },
+        {
+          text: '컴포넌트 함수가 호출되는 도중, DOM에 반영되기 전',
+          why: 'effect는 렌더링 도중이 아니라 커밋이 끝난 뒤, 즉 화면에 반영된 뒤 실행됩니다.',
+        },
+        {
+          text: '의존성 배열이 없으므로 한 번도 실행되지 않는다',
+          why: '의존성 배열은 생략할 수 있는 인자이며, 생략하면 실행 조건이 없는 것이 아니라 매 렌더링 후 실행됩니다.',
+        },
+        {
+          text: '컴포넌트가 언마운트될 때만',
+          why: '언마운트 때 실행되는 것은 effect가 반환한 정리 함수입니다. 이 effect는 정리 함수가 없고, 본문은 렌더링 후마다 실행됩니다.',
+        },
+        {
+          text: 'React 18부터는 의존성을 생략하면 `[]`로 취급되어 마운트 후 한 번만',
+          why: '그런 규칙은 없습니다. 의존성 배열을 생략한 effect는 버전과 관계없이 매 렌더링 후 실행됩니다.',
+        },
+      ],
+      explanation: `effect의 실행 시점은 의존성 배열을 어떻게 적느냐로 정해집니다.
+
+| 작성 | 실행 시점 |
+|---|---|
+| 생략 | 매 렌더링 후 |
+| \`[]\` | 마운트 후 한 번 |
+| \`[a, b]\` | 마운트 후, 그리고 \`a\`나 \`b\`가 바뀐 렌더링 후 |
+
+이 코드는 배열을 생략했으므로 마운트 후와 이후 렌더링이 커밋될 때마다 실행됩니다. 의존성 배열은 실행 조건을 고르는 스위치가 아니라 effect가 읽는 값을 적는 목록이므로, 여기서는 \`[count]\`를 적는 것이 정확합니다.`,
+      tags: [
+        'useEffect',
+        'dependency-array',
       ],
     },
     {
@@ -746,6 +1010,66 @@ ref는 화면과 관계없지만 렌더링 사이에 유지해야 하는 값에 
       ],
     },
     {
+      id: 'cs-react-q12',
+      categoryId: 'react',
+      lessonId: 'cs-react-l03',
+      type: 'mcq',
+      difficulty: 3,
+      prompt: '마운트되고 5초가 지난 뒤 화면에 표시되는 값과 그 이유로 옳은 것은?',
+      code: {
+        language: 'tsx',
+        source: `function Timer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCount(count + 1);
+    }, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return <p>{count}</p>;
+}`,
+      },
+      correct: '`1` — interval 콜백이 첫 렌더링의 `count`(0)를 캡처한 채로 계속 실행된다',
+      distractors: [
+        {
+          text: '`5` — `count`는 state라서 interval 콜백이 실행될 때마다 최신 값을 읽는다',
+          why: '`count`는 렌더링마다 고정된 스냅샷입니다. 콜백은 자신이 만들어진 첫 렌더링의 `count`(0)를 클로저로 붙잡고 있어 매초 `setCount(0 + 1)`만 반복합니다.',
+        },
+        {
+          text: '`0` — 의존성 배열이 비어 있으면 effect 안의 setState가 무시된다',
+          why: '의존성 배열은 effect를 다시 실행할 시점만 정할 뿐 setState를 막지 않습니다. 첫 콜백에서 `setCount(1)`이 반영되어 화면은 1이 됩니다.',
+        },
+        {
+          text: '`1` — 1초 뒤 `clearInterval`이 실행되어 타이머가 멈춘다',
+          why: '`clearInterval`은 언마운트 때 실행되는 정리 함수 안에 있어 타이머는 계속 돕니다. 같은 값 1을 계속 넣고 있을 뿐입니다.',
+        },
+        {
+          text: '`1` — 같은 값을 연달아 넣으면 React가 interval을 자동으로 멈춘다',
+          why: 'React는 interval을 알지 못하고 멈추지도 않습니다. 같은 값이면 렌더링을 건너뛸 뿐, 콜백은 매초 계속 `setCount(1)`을 호출합니다.',
+        },
+        {
+          text: '`0` — interval 콜백은 React 이벤트가 아니라서 setState가 화면에 반영되지 않는다',
+          why: '타이머 콜백에서 호출한 setState도 정상적으로 렌더링을 예약합니다. 첫 콜백에서 화면이 1로 바뀝니다.',
+        },
+      ],
+      explanation: `의존성 배열이 \`[]\`이라 effect는 마운트 때 한 번만 실행되고, 그때 만든 interval 콜백은 첫 렌더링의 \`count\`(0)를 클로저로 계속 참조합니다. 매초 \`setCount(0 + 1)\`만 반복하므로 값은 \`1\`에 머무릅니다. 이런 현상을 **오래된 클로저(stale closure)**라고 합니다.
+
+가장 간단한 해결은 현재 값을 읽지 않는 **함수형 업데이트**입니다.
+
+\`\`\`tsx
+setCount((c) => c + 1);
+\`\`\`
+
+\`[count]\`를 의존성에 넣어도 동작하지만 매초 interval을 지우고 다시 만듭니다. \`eslint-plugin-react-hooks\`의 \`exhaustive-deps\` 규칙이 이런 의존성 누락을 경고해 줍니다.`,
+      tags: [
+        'useEffect',
+        'stale-closure',
+        'dependency-array',
+      ],
+    },
+    {
       id: 'cs-react-q09',
       categoryId: 'react',
       lessonId: 'cs-react-l03',
@@ -803,6 +1127,97 @@ const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
       tags: [
         'useEffect',
         'derived-state',
+      ],
+    },
+    {
+      id: 'cs-react-q22',
+      categoryId: 'react',
+      lessonId: 'cs-react-l04',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: '`useMemo`와 `useCallback`이 기억하는 것을 바르게 설명한 것은?',
+      correct: '`useMemo`는 계산 결과를, `useCallback`은 함수 자체를 의존성이 바뀔 때까지 기억한다',
+      distractors: [
+        {
+          text: '`useMemo`는 함수 자체를, `useCallback`은 함수를 실행한 결과를 기억한다',
+          why: '반대입니다. `useMemo`는 전달한 함수를 실행한 결과를, `useCallback`은 전달한 함수 그 자체를 기억합니다.',
+        },
+        {
+          text: '`useMemo`는 이전 props를 기억해, 같으면 컴포넌트 렌더링을 건너뛴다',
+          why: '이전 props를 비교해 렌더링을 건너뛰는 것은 `React.memo`입니다. `useMemo`는 컴포넌트 안에서 계산 결과를 기억하는 Hook입니다.',
+        },
+        {
+          text: '`useCallback`으로 감싼 함수는 몇 번을 호출해도 처음 한 번만 실행된다',
+          why: '`useCallback`은 함수의 참조를 고정할 뿐 실행을 막지 않습니다. 호출할 때마다 함수 본문은 그대로 실행됩니다.',
+        },
+        {
+          text: '둘 다 의존성 배열을 깊은 비교해, 내용이 같으면 이전 값을 돌려준다',
+          why: '의존성은 항목마다 `Object.is`로 비교합니다. 내용이 같아도 새로 만든 객체라면 다른 값으로 봅니다.',
+        },
+        {
+          text: '`useCallback`은 `useMemo`와 달리 의존성 배열을 받지 않는다',
+          why: '`useCallback(fn, deps)`도 의존성 배열을 받으며, `useMemo(() => fn, deps)`와 같은 일을 합니다. 의존성이 바뀌면 새 함수를 기억합니다.',
+        },
+        {
+          text: '둘 다 DOM 노드를 기억해 커밋 단계를 건너뛰게 한다',
+          why: 'DOM 노드를 담아 두는 것은 `useRef`의 쓰임입니다. `useMemo` · `useCallback`은 렌더링 사이에 값과 함수의 참조를 유지할 뿐입니다.',
+        },
+      ],
+      explanation: `두 Hook 모두 의존성이 바뀌지 않는 한 이전 렌더링에서 만든 것을 다시 돌려줍니다. 차이는 무엇을 기억하느냐입니다.
+
+| 도구 | 기억하는 것 |
+|---|---|
+| \`useMemo(fn, deps)\` | \`fn\`을 실행한 계산 결과 |
+| \`useCallback(fn, deps)\` | \`fn\` 함수 자체 |
+| \`React.memo(Component)\` | 이전 props (같으면 렌더링을 건너뜀) |
+
+\`useCallback(fn, deps)\`는 \`useMemo(() => fn, deps)\`와 같은 일을 합니다. 무거운 계산이나 \`memo\` 자식에 넘길 객체에는 \`useMemo\`를, \`memo\` 자식에 넘기거나 effect 의존성으로 쓰는 함수에는 \`useCallback\`을 씁니다.`,
+      tags: [
+        'useMemo',
+        'useCallback',
+        'memoization',
+      ],
+    },
+    {
+      id: 'cs-react-q23',
+      categoryId: 'react',
+      lessonId: 'cs-react-l04',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: '입력할 때마다 화면이 버벅여 리렌더링 최적화를 하려고 합니다. **가장 먼저** 할 일로 알맞은 것은?',
+      correct: 'React DevTools Profiler로 실제로 오래 걸리는 컴포넌트를 찾는다',
+      distractors: [
+        {
+          text: '화면에 보이는 모든 컴포넌트를 `memo`로 감싼다',
+          why: '측정 없이 붙인 `memo`는 props 비교 비용만 늘릴 수 있습니다. 느린 곳을 확인하고 구조 개선을 먼저 해 본 뒤, 효과가 확인된 곳에 씁니다.',
+        },
+        {
+          text: '컴포넌트 안의 모든 함수를 `useCallback`으로 감싼다',
+          why: '`useCallback`은 `memo` 자식에 넘기거나 effect 의존성으로 쓸 때만 의미가 있습니다. 어디가 느린지 모른 채 감싸면 의존성 관리 부담만 늘어납니다.',
+        },
+        {
+          text: '리렌더링되면 DOM도 다시 그려지므로, 콘솔로 렌더링 횟수를 세어 모두 없앤다',
+          why: '렌더링은 컴포넌트 함수 호출이고 DOM은 바뀐 부분만 갱신되므로, 리렌더링이 일어났다는 사실만으로 느려지지는 않습니다. 실제로 오래 걸리는 곳을 측정해야 합니다.',
+        },
+        {
+          text: '입력 state를 최상위 컴포넌트로 끌어올려 한곳에서 관리한다',
+          why: 'state를 위로 올리면 그 아래 전체가 함께 렌더링되어 범위가 오히려 넓어집니다. 구조 개선은 반대로 state를 쓰는 곳 가까이로 내리는 것입니다.',
+        },
+        {
+          text: '앱의 state를 모두 Context 하나로 옮긴다',
+          why: 'Context 값이 바뀌면 그 Context를 읽는 모든 컴포넌트가 렌더링됩니다. 값을 한 Context에 모으면 렌더링 범위가 더 넓어집니다.',
+        },
+      ],
+      explanation: `렌더링은 컴포넌트 함수 호출이고 DOM은 바뀐 부분만 갱신되므로, 리렌더링이 일어난다는 사실만으로 느려지지는 않습니다. 그래서 최적화는 **측정 → 구조 개선 → 메모이제이션** 순서로 합니다.
+
+1. React DevTools Profiler로 실제로 오래 걸리는 컴포넌트를 찾습니다.
+2. state를 쓰는 곳 가까이로 내리거나 무거운 트리를 \`children\`으로 받아 렌더링 범위를 줄입니다.
+3. 그래도 필요하면 효과가 확인된 곳에만 \`memo\` · \`useMemo\` · \`useCallback\`을 씁니다.
+
+메모이제이션은 비교 비용 · 메모리 · 의존성 관리 부담이 있어, 측정 없이 붙이면 코드만 복잡해질 수 있습니다.`,
+      tags: [
+        'performance',
+        'profiler',
       ],
     },
     {
@@ -878,6 +1293,28 @@ const handleSelect = useCallback((id: string) => console.log(id), []);
       ],
     },
     {
+      id: 'cs-react-q17',
+      categoryId: 'react',
+      lessonId: 'cs-react-l04',
+      type: 'ox',
+      difficulty: 2,
+      prompt: '부모가 `useCallback`으로 함수 참조를 고정해 자식에게 넘기더라도, 자식이 `memo`로 감싸져 있지 않다면 부모가 다시 렌더링될 때 자식도 함께 다시 렌더링된다.',
+      answer: true,
+      explanation: `O. 자식 렌더링을 건너뛰게 하는 것은 \`memo\`의 props 비교입니다. \`memo\`가 없으면 React는 props가 같은지 확인하지 않고 부모를 따라 자식을 렌더링하므로, 함수 참조를 아무리 고정해도 렌더링 횟수는 줄지 않습니다.
+
+\`useCallback\`이 의미 있는 경우는 다음 두 가지입니다.
+
+- \`memo\`로 감싼 자식에게 넘겨, 얕은 비교가 성공하게 할 때
+- \`useEffect\` 같은 Hook의 의존성으로 쓰여, 렌더링마다 effect가 다시 실행되지 않게 할 때
+
+그 밖의 경우에는 의존성 비교 비용만 더합니다. 참고로 \`useCallback(fn, deps)\`는 \`useMemo(() => fn, deps)\`와 같은 일을 합니다.`,
+      tags: [
+        'useCallback',
+        'memo',
+        'performance',
+      ],
+    },
+    {
       id: 'cs-react-q13',
       categoryId: 'react',
       lessonId: 'cs-react-l04',
@@ -945,25 +1382,128 @@ function UserBadge() {
       ],
     },
     {
-      id: 'cs-react-q17',
+      id: 'cs-react-q24',
       categoryId: 'react',
-      lessonId: 'cs-react-l04',
+      lessonId: 'cs-react-l05',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: 'React 18의 `startTransition`으로 감싸기에 **알맞은** 업데이트는?',
+      correct: '검색어에 따라 결과 목록 1만 개를 다시 그리는 state 업데이트',
+      distractors: [
+        {
+          text: '입력창 `value`에 묶인, 사용자가 타이핑한 글자를 반영하는 업데이트',
+          why: '타이핑은 즉시 반응해야 하는 긴급 업데이트입니다. 입력창에 묶인 state를 전환에 넣으면 글자가 늦게 찍힙니다.',
+        },
+        {
+          text: '체크박스를 눌렀을 때 체크 표시를 바로 바꾸는 업데이트',
+          why: '클릭에 대한 즉각적인 피드백은 긴급 업데이트입니다. 전환은 조금 늦어도 되는 무거운 화면 갱신에 씁니다.',
+        },
+        {
+          text: '서버 요청 횟수를 줄이려고 300ms 동안 미뤄 둘 업데이트',
+          why: '`startTransition`은 정해진 시간을 기다리지 않고, 브라우저가 한가하면 곧바로 렌더링합니다. 요청 횟수를 줄이려면 디바운스를 따로 겁니다.',
+        },
+        {
+          text: '메인 스레드를 막지 않도록 웹 워커로 넘길 무거운 계산',
+          why: '전환 렌더링도 메인 스레드에서 실행됩니다. React가 작업 사이사이에 브라우저에 차례를 양보할 뿐, 계산을 다른 스레드로 옮기지 않습니다.',
+        },
+        {
+          text: '업데이트 직후 바뀐 DOM의 크기를 바로 측정해야 하는 업데이트',
+          why: 'DOM에 즉시 반영해야 하는 업데이트를 전환으로 표시하면 오히려 늦게 반영됩니다. 전환은 조금 늦어도 되는 업데이트에 붙이는 표시입니다.',
+        },
+      ],
+      explanation: `React 18은 업데이트를 두 종류로 나눕니다.
+
+- **긴급 업데이트**: 타이핑, 클릭처럼 즉시 반응해야 하는 것
+- **전환(transition)**: 결과 목록 갱신, 탭 내용 교체처럼 조금 늦어도 되는 것
+
+무거운 결과 목록을 다시 그리는 업데이트를 \`startTransition\`으로 감싸면, React는 그 렌더링을 잘게 나눠 진행하다가 새 입력이 오면 버리고 최신 값으로 다시 시작합니다. 그래서 입력창은 즉시 반응하고 목록은 여유가 생길 때 따라옵니다. 진행 중에는 \`useTransition\`의 \`isPending\`이 \`true\`입니다.`,
+      tags: [
+        'concurrent',
+        'useTransition',
+      ],
+    },
+    {
+      id: 'cs-react-q25',
+      categoryId: 'react',
+      lessonId: 'cs-react-l05',
+      type: 'mcq',
+      difficulty: 1,
+      prompt: 'Next.js App Router에서 컴포넌트의 기본값인 **서버 컴포넌트**에서 할 수 있는 일은?',
+      correct: '`async` 함수로 만들어 DB나 내부 API를 직접 조회한다',
+      distractors: [
+        {
+          text: '`useState`로 state를 두고 버튼을 누를 때마다 바꾼다',
+          why: 'state는 브라우저에서 상호작용할 때 쓰는 기능이라 클라이언트 컴포넌트에서만 쓸 수 있습니다.',
+        },
+        {
+          text: '`useEffect`로 마운트 뒤에 데이터를 불러온다',
+          why: 'effect는 브라우저에서 커밋 이후에 실행되는 기능이라, 서버에서만 실행되는 서버 컴포넌트에서는 쓸 수 없습니다.',
+        },
+        {
+          text: '`button`에 `onClick` 이벤트 핸들러를 직접 붙인다',
+          why: '서버 컴포넌트의 코드는 브라우저에 내려가지 않아 이벤트 핸들러를 실행할 수 없습니다. 클릭을 처리하는 부분은 `\'use client\'` 파일로 분리합니다.',
+        },
+        {
+          text: '`window`나 `localStorage` 같은 브라우저 API를 읽는다',
+          why: '서버 컴포넌트는 서버에서만 실행되므로 브라우저 API가 없습니다. 브라우저 API는 클라이언트 컴포넌트에서 씁니다.',
+        },
+        {
+          text: '`setInterval`로 매초 화면의 시계를 갱신한다',
+          why: '화면을 계속 갱신하려면 브라우저에서 state와 effect가 필요하므로 클라이언트 컴포넌트에서 합니다. 서버 컴포넌트는 서버에서 렌더링될 뿐 브라우저에서 다시 실행되지 않습니다.',
+        },
+      ],
+      explanation: `App Router에서는 \`'use client'\`로 표시하지 않은 컴포넌트가 **서버 컴포넌트**입니다. 서버에서만 실행되므로 \`async\` 함수로 만들어 DB · 내부 API를 직접 조회하거나 비밀 키를 쓸 수 있고, 그 코드는 JS 번들에 포함되지 않습니다.
+
+| | 서버 컴포넌트 | 클라이언트 컴포넌트 |
+|---|---|---|
+| 할 수 있는 일 | \`async\` 데이터 조회, 비밀 키 사용 | state, effect, 이벤트 핸들러, 브라우저 API |
+| JS 번들 | 포함되지 않음 | 포함됨 |
+
+그래서 데이터를 읽어 그리는 부분은 서버 컴포넌트로 두고, 상호작용이 필요한 작은 조각(버튼, 입력 폼)에만 \`'use client'\`를 붙입니다.`,
+      tags: [
+        'server-components',
+        'nextjs',
+      ],
+    },
+    {
+      id: 'cs-react-q18',
+      categoryId: 'react',
+      lessonId: 'cs-react-l05',
       type: 'ox',
       difficulty: 2,
-      prompt: '부모가 `useCallback`으로 함수 참조를 고정해 자식에게 넘기더라도, 자식이 `memo`로 감싸져 있지 않다면 부모가 다시 렌더링될 때 자식도 함께 다시 렌더링된다.',
-      answer: true,
-      explanation: `O. 자식 렌더링을 건너뛰게 하는 것은 \`memo\`의 props 비교입니다. \`memo\`가 없으면 React는 props가 같은지 확인하지 않고 부모를 따라 자식을 렌더링하므로, 함수 참조를 아무리 고정해도 렌더링 횟수는 줄지 않습니다.
+      prompt: '아래 `OrderList`를 `<Suspense fallback={<Spinner />}>`로 감싸면, 주문 데이터를 불러오는 동안 `Spinner`가 표시된다.',
+      code: {
+        language: 'tsx',
+        source: `function OrderList() {
+  const [orders, setOrders] = useState<Order[]>([]);
 
-\`useCallback\`이 의미 있는 경우는 다음 두 가지입니다.
+  useEffect(() => {
+    fetch('/api/orders')
+      .then((res) => res.json())
+      .then(setOrders);
+  }, []);
 
-- \`memo\`로 감싼 자식에게 넘겨, 얕은 비교가 성공하게 할 때
-- \`useEffect\` 같은 Hook의 의존성으로 쓰여, 렌더링마다 effect가 다시 실행되지 않게 할 때
+  return (
+    <ul>
+      {orders.map((o) => (
+        <li key={o.id}>{o.title}</li>
+      ))}
+    </ul>
+  );
+}`,
+      },
+      answer: false,
+      explanation: `X. Suspense 폴백은 하위 컴포넌트가 렌더링 도중 **일시 중단(suspend)**할 때만 보입니다. 이 컴포넌트는 빈 배열로 렌더링을 바로 마치고, 커밋 뒤 effect에서 데이터를 가져와 state를 바꿉니다. 렌더링이 중단된 적이 없으므로 \`Spinner\`는 나오지 않고 빈 목록이 먼저 보입니다.
 
-그 밖의 경우에는 의존성 비교 비용만 더합니다. 참고로 \`useCallback(fn, deps)\`는 \`useMemo(() => fn, deps)\`와 같은 일을 합니다.`,
+일시 중단을 일으키는 것은 다음과 같습니다.
+
+- \`React.lazy\`로 불러오는 컴포넌트
+- Suspense를 지원하는 데이터 소스: TanStack Query의 \`useSuspenseQuery\`, React 19의 \`use\`로 읽는 Promise, Next.js 같은 프레임워크의 데이터 로딩
+
+이 컴포넌트에 로딩 표시가 필요하면 로딩 state를 직접 두거나, 위 방식 중 하나로 바꿔 Suspense 경계를 활용합니다. 실패는 에러 바운더리로 함께 처리합니다.`,
       tags: [
-        'useCallback',
-        'memo',
-        'performance',
+        'suspense',
+        'data-fetching',
       ],
     },
     {
@@ -1103,47 +1643,6 @@ export default function AddToCartButton({ productId }: { productId: string }) {
         'server-components',
         'nextjs',
         'use-client',
-      ],
-    },
-    {
-      id: 'cs-react-q18',
-      categoryId: 'react',
-      lessonId: 'cs-react-l05',
-      type: 'ox',
-      difficulty: 2,
-      prompt: '아래 `OrderList`를 `<Suspense fallback={<Spinner />}>`로 감싸면, 주문 데이터를 불러오는 동안 `Spinner`가 표시된다.',
-      code: {
-        language: 'tsx',
-        source: `function OrderList() {
-  const [orders, setOrders] = useState<Order[]>([]);
-
-  useEffect(() => {
-    fetch('/api/orders')
-      .then((res) => res.json())
-      .then(setOrders);
-  }, []);
-
-  return (
-    <ul>
-      {orders.map((o) => (
-        <li key={o.id}>{o.title}</li>
-      ))}
-    </ul>
-  );
-}`,
-      },
-      answer: false,
-      explanation: `X. Suspense 폴백은 하위 컴포넌트가 렌더링 도중 **일시 중단(suspend)**할 때만 보입니다. 이 컴포넌트는 빈 배열로 렌더링을 바로 마치고, 커밋 뒤 effect에서 데이터를 가져와 state를 바꿉니다. 렌더링이 중단된 적이 없으므로 \`Spinner\`는 나오지 않고 빈 목록이 먼저 보입니다.
-
-일시 중단을 일으키는 것은 다음과 같습니다.
-
-- \`React.lazy\`로 불러오는 컴포넌트
-- Suspense를 지원하는 데이터 소스: TanStack Query의 \`useSuspenseQuery\`, React 19의 \`use\`로 읽는 Promise, Next.js 같은 프레임워크의 데이터 로딩
-
-이 컴포넌트에 로딩 표시가 필요하면 로딩 state를 직접 두거나, 위 방식 중 하나로 바꿔 Suspense 경계를 활용합니다. 실패는 에러 바운더리로 함께 처리합니다.`,
-      tags: [
-        'suspense',
-        'data-fetching',
       ],
     },
   ],

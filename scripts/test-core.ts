@@ -15,7 +15,7 @@ import {
   QUESTION_SOURCE,
   REVIEW_CONTENT,
 } from '../src/content';
-import type { McqChoicesQuestion, McqPoolQuestion } from '../src/content/types';
+import type { Difficulty, McqChoicesQuestion, McqPoolQuestion } from '../src/content/types';
 import { backupFileName, createBackup, describeBackup, parseBackup } from '../src/features/progress/backup';
 import { arrangeMcq, correctChoiceText, presentMcq, shuffledOrder } from '../src/features/progress/choices';
 import {
@@ -32,8 +32,10 @@ import {
 } from '../src/features/progress/course';
 import { composeDailyQuiz, dailyQuizQuota, type DailyQuizInput } from '../src/features/progress/daily-quiz';
 import {
+  arrangeLessonCheck,
   categoryLessons,
   isLessonUnderstood,
+  LESSON_CHECK_COUNT,
   lessonStatus,
   nextLessonCandidates,
   pickLessonCheck,
@@ -500,7 +502,7 @@ test('이전 버전 학습 기록 옮기기 (v1 → 백엔드 코스, v2 → 레
 });
 
 console.log('lessons');
-test('레슨 상태: 안 읽음 → 읽는 중 → 완료, 2/3 이상이면 이해함', () => {
+test('레슨 상태: 안 읽음 → 읽는 중 → 완료, 2/3 이상(5문제면 4개)이면 이해함', () => {
   assert.equal(lessonStatus(undefined), 'new');
   assert.equal(lessonStatus({ startedAt: 1, lastAt: 1 }), 'reading');
   assert.equal(lessonStatus({ startedAt: 1, readAt: 2, lastAt: 2 }), 'reading');
@@ -509,19 +511,49 @@ test('레슨 상태: 안 읽음 → 읽는 중 → 완료, 2/3 이상이면 이�
   assert.equal(isLessonUnderstood(done(2, 3)), true);
   assert.equal(isLessonUnderstood(done(1, 3)), false);
   assert.equal(isLessonUnderstood(done(2, 2)), true);
+  assert.equal(isLessonUnderstood(done(4, 5)), true);
+  assert.equal(isLessonUnderstood(done(3, 5)), false);
   assert.equal(isLessonUnderstood({ startedAt: 1, lastAt: 1 }), false);
 });
-test('레슨마다 확인 퀴즈 3개 이상이 연결되고, 안 푼 문제를 먼저 3개 고름', () => {
-  for (const l of ALL_LESSONS) assert.ok((LESSON_QUESTION_IDS[l.id]?.length ?? 0) >= 3, `${l.id}: 확인 퀴즈 부족`);
-  const lesson = ALL_LESSONS.find((l) => (LESSON_QUESTION_IDS[l.id]?.length ?? 0) >= 4);
+
+/** 난이도 d 문제 n개 — id 는 `d<난이도>-<번호>` */
+const qs = (d: Difficulty, n: number) => Array.from({ length: n }, (_, i) => ({ id: `d${d}-${i + 1}`, difficulty: d }));
+const levelsOf = (ids: string[]) => ids.map((id) => Number(id[1]));
+const none = () => false;
+test('확인 퀴즈: 기초 2 · 중급 2 · 심화 1 을 난이도 순으로, 난이도 안에서는 안 푼 문제 먼저', () => {
+  const pool = [...qs(3, 3), ...qs(2, 4), ...qs(1, 4)];
+  assert.deepEqual(levelsOf(arrangeLessonCheck(pool, none, seededRandom(1))), [1, 1, 2, 2, 3]);
+  const seen = new Set(['d1-1', 'd1-2', 'd2-1', 'd2-2', 'd3-1', 'd3-2']);
+  const picked = arrangeLessonCheck(pool, (id) => seen.has(id), seededRandom(2));
+  assert.ok(picked.every((id) => !seen.has(id))); // 난이도마다 안 푼 문제가 충분하면 그것만
+  assert.deepEqual(levelsOf(picked), [1, 1, 2, 2, 3]);
+  // 같은 시드는 같은 결과, 모두 풀었어도 5문제
+  assert.deepEqual(arrangeLessonCheck(pool, none, seededRandom(7)), arrangeLessonCheck(pool, none, seededRandom(7)));
+  assert.equal(arrangeLessonCheck(pool, () => true, seededRandom(3)).length, 5);
+});
+test('확인 퀴즈: 모자란 난이도는 가까운 난이도로 — 기초가 없으면 중급부터', () => {
+  assert.deepEqual(levelsOf(arrangeLessonCheck([...qs(2, 3), ...qs(3, 3)], none, seededRandom(1))), [2, 2, 2, 3, 3]);
+  assert.deepEqual(levelsOf(arrangeLessonCheck([...qs(1, 4), ...qs(2, 3)], none, seededRandom(1))), [1, 1, 2, 2, 2]);
+  assert.deepEqual(levelsOf(arrangeLessonCheck(qs(3, 6), none, seededRandom(1))), [3, 3, 3, 3, 3]);
+  // 5문제보다 적으면 있는 만큼, 순서는 그대로 난이도 순
+  assert.deepEqual(levelsOf(arrangeLessonCheck([...qs(3, 1), ...qs(1, 1), ...qs(2, 1)], none, seededRandom(1))), [1, 2, 3]);
+  assert.deepEqual(arrangeLessonCheck([], none), []);
+});
+test('레슨마다 확인 퀴즈 5개 이상(기초 포함)이 연결되고, 레슨의 문제로 5문제를 고름', () => {
+  for (const l of ALL_LESSONS) {
+    const ids = LESSON_QUESTION_IDS[l.id] ?? [];
+    assert.ok(ids.length >= LESSON_CHECK_COUNT, `${l.id}: 확인 퀴즈 부족`);
+    assert.ok(ids.some((id) => QUESTION_MAP[id].difficulty === 1), `${l.id}: 기초 문제 없음`);
+  }
+  const lesson = ALL_LESSONS[0];
   if (!lesson) return;
-  const ids = LESSON_QUESTION_IDS[lesson.id];
-  const seen = new Set(ids.slice(0, ids.length - 3));
-  const picked = pickLessonCheck(lesson.id, (id) => seen.has(id), seededRandom(3));
-  assert.equal(picked.length, 3);
-  assert.equal(new Set(picked).size, 3);
-  assert.ok(picked.every((id) => !seen.has(id))); // 안 푼 문제가 3개 있으면 그것만
+  const picked = pickLessonCheck(lesson.id, none, seededRandom(3));
+  assert.equal(picked.length, LESSON_CHECK_COUNT);
+  assert.equal(new Set(picked).size, LESSON_CHECK_COUNT);
   assert.ok(picked.every((id) => QUESTION_MAP[id].lessonId === lesson.id));
+  const levels = picked.map((id) => QUESTION_MAP[id].difficulty);
+  assert.deepEqual(levels, [...levels].sort());
+  assert.equal(levels[0], 1);
 });
 test('오늘 읽을 레슨: 카테고리마다 다음 레슨, 읽다 만 레슨이 있으면 그것', () => {
   const cat = CS_CATEGORIES.find((c) => categoryLessons(c.id).length >= 2);
