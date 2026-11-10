@@ -308,7 +308,7 @@ async function importDefault<T>(file: string): Promise<T | null> {
   return (mod.default ?? null) as T | null;
 }
 
-/** 레슨 구조와 퀴즈 연결 — 레슨마다 확인 퀴즈 3개 이상, 퀴즈의 lessonId 는 같은 카테고리의 레슨 */
+/** 레슨 구조와 퀴즈 연결 — 레슨마다 확인 퀴즈 5개 이상(기초 포함), 퀴즈의 lessonId 는 같은 카테고리의 레슨 */
 function checkLessons(lessons: CsLesson[], quiz: QuizQuestion[], categoryId: string, where: string) {
   const ids = new Set<string>();
   lessons.forEach((l, i) => {
@@ -325,8 +325,11 @@ function checkLessons(lessons: CsLesson[], quiz: QuizQuestion[], categoryId: str
     if (typeof l.body === 'string' && !/^###\s/m.test(l.body)) warn(w, "body 에 '###' 섹션 제목이 없습니다");
     if (!Array.isArray(l.keyPoints) || l.keyPoints.length < 3 || l.keyPoints.length > 6) err(w, 'keyPoints 는 3~6개');
     l.keyPoints?.forEach((k, j) => nonEmpty(k, w, `keyPoints[${j}]`, 5) && checkInline(k, w, `keyPoints[${j}]`));
-    const linked = quiz.filter((q) => q.lessonId === l.id).length;
-    if (linked < 3) err(w, `확인 퀴즈(lessonId 로 연결된 문제)가 ${linked}개입니다 — 3개 이상 필요`);
+    // 확인 퀴즈는 5문제를 기초 → 중급 → 심화 순으로 낸다 (progress/lessons.ts 의 arrangeLessonCheck)
+    const linked = quiz.filter((q) => q.lessonId === l.id);
+    if (linked.length < 5) err(w, `확인 퀴즈(lessonId 로 연결된 문제)가 ${linked.length}개입니다 — 5개 이상 필요`);
+    else if (!linked.some((q) => q.difficulty === 1)) err(w, '확인 퀴즈에 기초(난이도 1) 문제가 없어 중급부터 출제됩니다 — 기초 문제 1개 이상 필요');
+    else if (new Set(linked.map((q) => q.difficulty)).size === 1) warn(w, '확인 퀴즈가 한 난이도로만 되어 있습니다');
   });
   for (const q of quiz) {
     if (q.lessonId && !ids.has(q.lessonId)) err(`${where}/${q.id}`, `lessonId '${q.lessonId}' 레슨이 이 카테고리에 없습니다`);

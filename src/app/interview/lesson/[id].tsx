@@ -14,7 +14,7 @@ import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { CS_CATEGORY_MAP, LESSON_MAP, LESSON_QUESTION_IDS, type CsLesson } from '@/content';
 import { AdSlot } from '@/features/ads';
-import { categoryLessons, lessonStatus } from '@/features/progress/lessons';
+import { categoryLessons, LESSON_CHECK_COUNT, lessonStatus } from '@/features/progress/lessons';
 import { useProgress } from '@/features/progress/store';
 import { haptic } from '@/lib/haptics';
 import { useColors } from '@/theme/theme-provider';
@@ -51,7 +51,7 @@ function LessonContent({ lesson, fromQuiz }: { lesson: CsLesson; fromQuiz: boole
   const index = siblings.findIndex((l) => l.id === lesson.id);
   const prev = siblings[index - 1];
   const next = siblings[index + 1];
-  const checkCount = Math.min(3, LESSON_QUESTION_IDS[lesson.id]?.length ?? 0);
+  const checkCount = Math.min(LESSON_CHECK_COUNT, LESSON_QUESTION_IDS[lesson.id]?.length ?? 0);
   const status = lessonStatus(record);
 
   useEffect(() => {

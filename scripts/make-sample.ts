@@ -3,7 +3,7 @@
  *   npm run content:sync && npm run content:sample
  *
  * 샘플 범위: 알고리즘 토픽마다 개념 첫 단락 + 퀴즈 2문항, 대표 토픽(SAMPLE_PATTERN_TOPICS)의 문제 유형 전체,
- * CS 카테고리마다 퀴즈 2문항 + 카드 1장(대표 카테고리 SAMPLE_LESSONS 는 이론 레슨 + 확인 퀴즈 — 실전 사례는 대표 사례 1개),
+ * CS 카테고리마다 퀴즈 2문항 + 카드 1장(대표 카테고리 SAMPLE_LESSONS 는 이론 레슨 + 레슨마다 확인 퀴즈 5문제 — 실전 사례는 대표 사례 1개),
  * 프레임워크마다 개선 패턴 2개 + 리뷰 퀴즈 1개(다른 언어 버전 포함).
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -30,6 +30,12 @@ const SAMPLE_LESSONS: Record<string, number> = { os: Infinity, react: Infinity, 
 
 /** 문제 유형 · 구현 예제를 샘플에 싣는 대표 토픽 */
 const SAMPLE_PATTERN_TOPICS = ['binary-search', 'bfs-dfs'];
+
+/** 샘플에 싣는 레슨 확인 퀴즈 — 난이도마다 앞에서부터 기초 2 · 중급 2 · 심화 1, 모자라면 나머지로 5문제 */
+function sampleLessonCheck<T extends { difficulty: number }>(linked: T[]): T[] {
+  const picked = ([1, 2, 3] as const).flatMap((d, i) => linked.filter((q) => q.difficulty === d).slice(0, [2, 2, 1][i]));
+  return [...picked, ...linked.filter((q) => !picked.includes(q))].slice(0, 5);
+}
 
 const HEADER = '// 공개 저장소용 샘플 콘텐츠 — `npm run content:sample` 로 생성. 전체 콘텐츠는 비공개 저장소에 있습니다.';
 
@@ -110,10 +116,11 @@ async function main() {
 
   for (const cat of CS_CATEGORIES) {
     const c = await load<CsCategoryContent>(join(DATA, 'cs', `${cat.id}.ts`));
-    // 대표 카테고리는 이론 레슨 전체 + 레슨마다 확인 퀴즈 3문제, 나머지는 레슨 없이 퀴즈 연결을 뗀다
+    // 대표 카테고리는 이론 레슨 전체 + 레슨마다 확인 퀴즈 5문제(기초 2 · 중급 2 · 심화 1, 모자라면 다른 난이도),
+    // 나머지는 레슨 없이 퀴즈 연결을 뗀다
     const lessons = (c.lessons ?? []).slice(0, SAMPLE_LESSONS[cat.id] ?? 0);
     const lessonIds = new Set(lessons.map((l) => l.id));
-    const linked = lessons.flatMap((l) => c.quiz.filter((q) => q.lessonId === l.id).slice(0, 3));
+    const linked = lessons.flatMap((l) => sampleLessonCheck(c.quiz.filter((q) => q.lessonId === l.id)));
     const quiz = [...new Map([...c.quiz.slice(0, 2), ...linked].map((q) => [q.id, q])).values()].map((q) =>
       q.lessonId && !lessonIds.has(q.lessonId) ? { ...q, lessonId: undefined } : q,
     );
