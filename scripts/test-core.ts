@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 
 import {
   ALL_LESSONS,
+  CHALLENGE_MAP,
   CS_CATEGORIES,
   CS_CATEGORY_MAP,
   CS_CONTENT,
@@ -706,6 +707,10 @@ test('웹 정적 페이지: 콘텐츠 화면마다 제목 · 설명 · 본문 HT
     const page = pages.find((x) => x.path === p)!;
     assert.ok(page.noindex && page.html === '', p);
   }
+  // 리뷰 실전 퀴즈(문제를 푸는 화면)는 첫 화면용 본문을 둔 채 noindex — sitemap 에서 빠진다
+  const challenges = pages.filter((p) => p.path.startsWith('review/challenge/'));
+  assert.equal(challenges.length, Object.keys(CHALLENGE_MAP).length);
+  for (const page of challenges) assert.ok(page.noindex && /<h1>/.test(page.html), page.path);
   // 하위 경로 배포에서도 링크가 그 경로 아래를 가리킨다
   assert.ok(staticPages('/sub/').every((p) => !/href="\/(?!sub\/)/.test(p.html)));
 });

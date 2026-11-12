@@ -45,7 +45,10 @@ export interface StaticPage {
   description: string;
   /** #root 에 넣을 본문 HTML (빈 문자열이면 앱 셸 그대로) */
   html: string;
-  /** 검색 결과에 넣지 않는 앱 기능 화면 (온보딩 · 퀴즈 풀이 · 설정 …) */
+  /**
+   * 검색 결과 · sitemap 에 넣지 않는 화면 — 앱 기능 화면(온보딩 · 퀴즈 풀이 · 설정 …, 본문 없음)과
+   * 문제를 푸는 화면(리뷰 실전 퀴즈 — 정답 · 해설은 풀어야 보여 페이지만으로는 내용이 얇다, 본문은 첫 화면용으로 둔다)
+   */
   noindex?: boolean;
 }
 
@@ -313,6 +316,8 @@ ${list(ch.question.options.map((o) => inline(o.text)))}
     title: `${ch.title} — ${f.title} 리뷰 실전 퀴즈`,
     description: `${describe(ch.context, 90)} ${f.title} 코드에서 문제가 되는 줄을 찾고 개선점을 고르는 코드 리뷰 실전 퀴즈입니다.`.trim(),
     html: layout(href, [['review', '코드 리뷰'], [`review/challenge/${ch.id}`, ch.title]], body),
+    // 문제를 푸는 화면이라 검색 결과에는 넣지 않는다 (개선 패턴 페이지가 같은 주제를 해설까지 담고 있다)
+    noindex: true,
   };
 }
 
@@ -397,7 +402,7 @@ const APP_SCREENS: [string, string][] = [
 
 /**
  * 웹에 내보낼 모든 정적 페이지. prefix 는 사이트 루트 경로('/' 또는 '/하위경로/').
- * 콘텐츠 페이지는 sitemap 에 넣고, 앱 기능 화면(noindex)은 넣지 않는다.
+ * 콘텐츠 페이지는 sitemap 에 넣고, noindex 화면(앱 기능 화면 · 리뷰 실전 퀴즈)은 넣지 않는다.
  */
 export function staticPages(prefix = '/'): StaticPage[] {
   const href: Href = (path) => (path ? `${prefix}${path}/` : prefix);
@@ -412,7 +417,13 @@ export function staticPages(prefix = '/'): StaticPage[] {
     ...Object.values(CHALLENGE_MAP).map((ch) => challengePage(href, ch)),
     ...CS_CATEGORIES.map((c) => categoryPage(href, c.id)),
     ...ALL_LESSONS.map((l) => lessonPage(href, l)),
-    textPage(href, 'about', '서비스 소개', `${SITE_NAME}가 어떤 서비스인지, 콘텐츠를 어떻게 만드는지, 운영자와 문의처를 소개합니다.`, aboutText()),
+    textPage(
+      href,
+      'about',
+      '서비스 소개',
+      `${SITE_NAME}가 어떤 서비스인지, 콘텐츠를 어떻게 만들고 검수하는지, 업데이트 기록과 운영자 · 문의처를 소개합니다.`,
+      aboutText(),
+    ),
     textPage(href, 'privacy', '개인정보 처리방침', `${SITE_NAME}의 개인정보 처리방침 — 수집하는 정보, 기기에 저장되는 정보, 광고(Google AdSense · AdMob)와 문의처.`, PRIVACY_POLICY),
     ...APP_SCREENS.map(([path, title]) => ({ path, title, description: SITE_DESCRIPTION, html: '', noindex: true })),
   ];
