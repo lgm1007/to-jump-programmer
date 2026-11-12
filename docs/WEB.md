@@ -12,7 +12,7 @@
 | 항목 | 내용 |
 | --- | --- |
 | 빌드 | `npm run build:web` → `scripts/build-web.mjs` (expo export → PWA 태그 · manifest · 서비스 워커 · 페이지별 index.html · sitemap · robots.txt · ads.txt) |
-| 페이지별 HTML | 콘텐츠 화면(홈 · 탭 · 토픽 · 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침)마다 `<경로>/index.html` 에 **제목 · 설명 · canonical 과 실제 본문 HTML** 을 넣는다(`scripts/lib/prerender.ts`). JS 를 실행하지 않는 크롤러(검색 · AdSense 심사)도 콘텐츠를 읽고, 사용자에게는 앱을 불러오는 동안의 첫 화면이 된다. 앱 JS 가 뜨면 React 가 `#root` 를 비우고 앱 화면을 그린다. 앱 기능 화면(온보딩 · 퀴즈 · 카드 · 설정 · 북마크 · 오답노트 · 마이)은 본문 없이 `noindex` |
+| 페이지별 HTML | 콘텐츠 화면(홈 · 탭 · 토픽 · 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침)마다 `<경로>/index.html` 에 **제목 · 설명 · canonical 과 실제 본문 HTML** 을 넣는다(`scripts/lib/prerender.ts`). JS 를 실행하지 않는 크롤러(검색 · AdSense 심사)도 콘텐츠를 읽고, 사용자에게는 앱을 불러오는 동안의 첫 화면이 된다. 앱 JS 가 뜨면 React 가 `#root` 를 비우고 앱 화면을 그린다. 앱 기능 화면(온보딩 · 퀴즈 · 카드 · 설정 · 북마크 · 오답노트 · 마이)은 본문 없이 `noindex`. 리뷰 실전 퀴즈는 문제를 푸는 화면이라(정답 · 해설은 풀어야 보임) 본문은 둔 채 `noindex` 이고 sitemap 에서 빠진다 |
 | 앱 화면의 링크 · 제목 | JS 를 실행하는 크롤러 · 심사자는 앱 화면을 본다. 콘텐츠 화면으로 가는 `Card` · `Button` 은 `href` 를 줘 웹에서 `<a href="/…/">` 로 그리고(그냥 누르면 새로고침 없이 앱 안에서 이동, Ctrl/⌘ 클릭은 새 탭 — `src/lib/links.ts` `linkProps`), 화면 제목 · 섹션 제목은 `Text heading` · `SectionHeader` 로 `<h1>`~`<h3>` 이 된다 |
 | 주소 처리 | `not_found_handling: 404-page` — 화면마다 index.html 이 있으므로 없는 경로만 404 상태 코드와 앱 셸(`404.html`)을 내려 준다. 앱은 그대로 열린다 |
 | 앱 셸 | `app-shell.html` — 본문 없는 index.html. 서비스 워커가 화면 이동에 이것을 내려 줘, 설치 · 재방문 사용자는 본문 HTML 없이 바로 앱 화면을 본다 |
@@ -84,6 +84,11 @@ npm run preview:web
 - 확인: 시크릿 창에서 `https://jumpprogrammer.app/` 를 열고 개발자 도구 콘솔에서 `document.querySelectorAll('a[href]').length` 가 수십 개인지, 레슨 화면에서 `document.querySelector('h1')` 에 제목이 있는지 본다. Search Console › URL 검사 › '실제 URL 테스트' › 스크린샷 · HTML 에서도 링크와 본문이 보여야 한다.
 - 코드로 고칠 수 없는 부분: 심사는 사이트의 운영 기간 · 방문자 · 검색 노출도 본다. Search Console 에서 페이지가 색인되었는지(페이지 › 색인 생성됨) 확인하고, 색인이 거의 없으면 sitemap 을 다시 제출하고 색인이 늘어난 뒤에 검토를 요청한다.
 
+**같은 사유로 다시 거절되었을 때 (2026-11-12)**
+- 확인: 11-01 대응(링크 · 제목 · 전체 콘텐츠 목록)은 라이브에서 그대로 동작했다. 콘텐츠를 못 본 것이 아니라, 거절 문구의 '웹에서 꾸준히 운영'(도메인 2026-10-12 등록, 심사 시점에 약 한 달)과 '사용자 관심'(검색 유입 · 외부 링크가 거의 없음)을 채우지 못한 것으로 판단했다. 한 달 사이 같은 틀의 페이지가 400개 넘게 생긴 것(11-10 하루에 리뷰 페이지 80개)도 대량 생산 콘텐츠처럼 보일 수 있다.
+- 수정: 리뷰 실전 퀴즈 60개를 `noindex` · sitemap 제외(정답 없이 문제만 보이는 얇은 페이지), sitemap 의 `lastmod` 제거(배포마다 모든 페이지가 같은 날짜라 신뢰받지 못함), 서비스 소개에 콘텐츠 작성 · 검수 방식과 업데이트 기록(`src/content/updates.ts`).
+- 다시 요청하기 전에: 공식 기준은 없지만 Search Console › 실적에서 검색 클릭이 꾸준히 생기고 색인이 늘어날 때까지(최소 1~2개월) 기다린다. 그동안 외부 링크와 유입을 만들고(GitHub README · 앱 스토어 소개 · 개발 커뮤니티 · 블로그, 네이버 서치어드바이저 sitemap 제출), 콘텐츠는 한 번에 대량으로 올리기보다 나눠서 꾸준히 올리고 업데이트 기록에 남긴다.
+
 광고 배치 원칙 (AdSense 정책):
 - 메뉴 · 버튼 같은 누를 수 있는 요소 바로 옆에 두지 않습니다(실수 클릭 유도 금지). 그래서 앱의 탭 바 위 고정 배너는 웹에서 쓰지 않습니다.
 - 사용자가 화면을 옮길 때만 새 광고를 요청하고, 같은 자리를 시간마다 새로고침하지 않습니다.
@@ -94,7 +99,7 @@ npm run preview:web
 
 - **도메인 속성** `jumpprogrammer.app` 으로 등록하고, 안내되는 TXT 레코드(`google-site-verification=…`)를 Cloudflare › DNS › Records 에 추가해 확인합니다.
 - **URL 접두어 속성** `https://jumpprogrammer.app/` 으로 등록할 때는 HTML 파일 방법을 쓸 수 있습니다. 내려받은 `google….html` 을 `public/` 에 두면 빌드가 도메인 루트로 복사합니다(이미 `public/google6f2d767f4614ac15.html` 이 있음 — 확인된 상태를 유지하려면 지우지 않습니다).
-- **Sitemaps** 에 `https://jumpprogrammer.app/sitemap.xml` 을 제출합니다. (홈 · 탭 · 토픽 · 알고리즘 유형 · 개선 패턴 · 리뷰 퀴즈 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침, `robots.txt` 에도 들어 있음)
+- **Sitemaps** 에 `https://jumpprogrammer.app/sitemap.xml` 을 제출합니다. (홈 · 탭 · 토픽 · 알고리즘 유형 · 개선 패턴 · 면접 카테고리 · CS 레슨 · 소개 · 개인정보 처리방침, `robots.txt` 에도 들어 있음. 리뷰 실전 퀴즈 · 앱 기능 화면은 noindex 라 넣지 않고, 페이지마다 실제 수정일을 알 수 없어 `lastmod` 도 넣지 않음)
 - 페이지마다 제목 · 설명 · canonical 이 다르고 본문이 HTML 에 들어 있어, [URL 검사]의 '크롤링된 페이지 보기'에서 본문이 보여야 합니다.
 - **네이버 서치어드바이저**: 사이트 `https://jumpprogrammer.app` 은 HTML 메타 태그 방법으로 확인합니다. `scripts/build-web.mjs` 의 `headTags()` 에 `naver-site-verification` 태그가 있어 모든 페이지 `<head>` 에 들어갑니다(지우면 확인이 풀림). 확인 뒤 [요청 › 사이트맵 제출]에 `https://jumpprogrammer.app/sitemap.xml` 을 넣습니다. Bing 웹마스터 도구는 Google Search Console 에서 사이트를 가져올 수 있습니다.
 

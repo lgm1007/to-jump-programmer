@@ -5,8 +5,10 @@
  * - 콘텐츠 화면마다 <경로>/index.html 을 만든다. 앱 셸(dist/app-shell.html)에 그 화면의 제목 · 설명과 실제 본문
  *   HTML(scripts/lib/prerender.ts)을 넣어, JS 를 실행하지 않는 크롤러(검색 · AdSense 심사)도 콘텐츠를 읽을 수 있게 한다.
  *   앱 JS 가 뜨면 React 가 #root 를 비우고 앱 화면을 그린다. 홈('/')은 dist/index.html 을 이 방식으로 다시 쓴다.
- * - 앱 기능 화면(온보딩 · 퀴즈 풀이 · 설정 …)은 본문 없이 noindex 로 만든다.
- * - 사이트 주소를 주면 콘텐츠 페이지로 sitemap.xml 을 만들고, 페이지마다 canonical · og:url 을 넣는다.
+ * - 앱 기능 화면(온보딩 · 퀴즈 풀이 · 설정 …)은 본문 없이, 리뷰 실전 퀴즈(문제를 푸는 화면)는 본문을 둔 채 noindex 로 만든다.
+ * - 사이트 주소를 주면 색인할 콘텐츠 페이지로 sitemap.xml 을 만들고, 페이지마다 canonical · og:url 을 넣는다.
+ *   lastmod 는 넣지 않는다 — 페이지마다 실제로 고친 날을 알 수 없어, 넣으면 배포할 때마다 모든 페이지가 같은 날짜가 되고
+ *   검색엔진은 그런 값을 믿지 않는다.
  */
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -57,15 +59,17 @@ for (const page of pages) {
   writeFileSync(join(dir, 'index.html'), render(page));
 }
 const content = pages.filter((p) => !p.noindex);
-console.log(`✓ 페이지 ${pages.length}개 (콘텐츠 ${content.length}개는 본문 HTML 포함, 앱 기능 화면 ${pages.length - content.length}개는 noindex)`);
+const solving = pages.filter((p) => p.noindex && p.html).length;
+console.log(
+  `✓ 페이지 ${pages.length}개 (색인할 콘텐츠 ${content.length}개, 리뷰 실전 퀴즈 ${solving}개는 본문 포함 noindex, 앱 기능 화면 ${pages.length - content.length - solving}개는 본문 없이 noindex)`,
+);
 
 if (site) {
-  const today = new Date().toISOString().slice(0, 10);
   // 폴더 주소는 / 로 끝나는 주소로 리디렉션되므로 처음부터 / 를 붙인다
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...content.map((p) => `  <url><loc>${site}${p.path ? `${p.path}/` : ''}</loc><lastmod>${today}</lastmod></url>`),
+    ...content.map((p) => `  <url><loc>${site}${p.path ? `${p.path}/` : ''}</loc></url>`),
     '</urlset>',
     '',
   ].join('\n');
