@@ -73,6 +73,7 @@ for a, b in [(0, 1), (2, 3), (1, 3), (4, 5)]:
     union(a, b)
 print(len({find(x) for x in range(6)}))`,
       },
+      output: '2',
       correct: '`2`',
       distractors: [
         {
@@ -106,9 +107,154 @@ print(len({find(x) for x in range(6)}))`,
 최종 그룹은 {0, 1, 2, 3}, {4, 5}로 **2개**입니다.
 
 > 그룹 수는 서로 다른 \`find(x)\` 값의 개수로 셉니다. \`parent[x]\`는 루트가 아닌 중간 노드를 가리킬 수 있기 때문입니다.`,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `import java.util.*;
+
+public class Main {
+    static int[] parent = {0, 1, 2, 3, 4, 5};
+
+    static int find(int x) {
+        if (parent[x] != x) parent[x] = find(parent[x]);
+        return parent[x];
+    }
+
+    static void union(int a, int b) {
+        a = find(a);
+        b = find(b);
+        if (a != b) parent[b] = a;
+    }
+
+    public static void main(String[] args) {
+        int[][] pairs = {{0, 1}, {2, 3}, {1, 3}, {4, 5}};
+        for (int[] p : pairs) union(p[0], p[1]);
+        Set<Integer> roots = new HashSet<>();
+        for (int x = 0; x < 6; x++) roots.add(find(x));
+        System.out.println(roots.size());
+    }
+}`,
+          },
+          output: '2',
+          distractors: [
+            {
+              text: '`1`',
+              why: '(4, 5)는 0~3 쪽과 한 번도 이어지지 않으므로 모든 원소가 한 그룹이 될 수 없습니다.',
+            },
+            {
+              text: '`3`',
+              why: '`parent` 배열에 든 서로 다른 값을 그대로 센 결과입니다. 합친 직후 `parent`는 `[0, 0, 0, 2, 4, 4]`라 3이 중간 노드 2를 가리키지만, 3의 루트는 0입니다.',
+            },
+            {
+              text: '`4`',
+              why: '성공한 union 횟수와 그룹 수를 혼동한 값입니다. union이 성공할 때마다 그룹이 하나씩 줄어 6 - 4 = 2개가 남습니다.',
+            },
+            {
+              text: '`6`',
+              why: '`union` 안에서 매개변수 `a`, `b`에 다시 대입하는 것은 바깥에 영향이 없지만, `parent[b] = a`는 `static` 배열의 원소를 직접 바꾸므로 합친 결과가 그대로 남습니다.',
+            },
+            {
+              text: '`StackOverflowError`가 발생한다',
+              why: '`find`의 재귀는 `parent[x] == x`인 루트에서 멈춥니다. 이 트리들은 높이가 낮아 재귀가 깊어지지 않습니다.',
+            },
+          ],
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `val parent = IntArray(6) { it }
+
+fun find(x: Int): Int {
+    if (parent[x] != x) parent[x] = find(parent[x])
+    return parent[x]
+}
+
+fun union(a: Int, b: Int) {
+    val ra = find(a)
+    val rb = find(b)
+    if (ra != rb) parent[rb] = ra
+}
+
+fun main() {
+    for ((a, b) in listOf(0 to 1, 2 to 3, 1 to 3, 4 to 5)) union(a, b)
+    println((0 until 6).map { find(it) }.toSet().size)
+}`,
+          },
+          output: '2',
+          distractors: [
+            {
+              text: '`1`',
+              why: '(4, 5)는 0~3 쪽과 한 번도 이어지지 않으므로 모든 원소가 한 그룹이 될 수 없습니다.',
+            },
+            {
+              text: '`3`',
+              why: '`parent.toSet().size`처럼 `parent` 값을 그대로 센 결과입니다. 합친 직후 `parent`는 `[0, 0, 0, 2, 4, 4]`라 3이 중간 노드 2를 가리키지만, 3의 루트는 0입니다.',
+            },
+            {
+              text: '`4`',
+              why: '성공한 union 횟수와 그룹 수를 혼동한 값입니다. union이 성공할 때마다 그룹이 하나씩 줄어 6 - 4 = 2개가 남습니다.',
+            },
+            {
+              text: '`6`',
+              why: '매개변수는 바꿀 수 없어 루트를 `ra`, `rb`에 따로 담지만, `parent[rb] = ra`는 바깥 배열의 원소를 직접 바꾸므로 합친 결과가 그대로 남습니다.',
+            },
+            {
+              text: '컴파일 에러 — `val`로 선언한 배열의 원소는 바꿀 수 없다',
+              why: '`val`은 `parent`가 다른 배열을 가리키지 못하게 막을 뿐, 배열 원소에 대입하는 것은 막지 않습니다.',
+            },
+          ],
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `const parent = [0, 1, 2, 3, 4, 5];
+
+function find(x) {
+  if (parent[x] !== x) parent[x] = find(parent[x]);
+  return parent[x];
+}
+
+function union(a, b) {
+  a = find(a);
+  b = find(b);
+  if (a !== b) parent[b] = a;
+}
+
+for (const [a, b] of [[0, 1], [2, 3], [1, 3], [4, 5]]) union(a, b);
+const roots = new Set();
+for (let x = 0; x < 6; x++) roots.add(find(x));
+console.log(roots.size);`,
+          },
+          output: '2',
+          distractors: [
+            {
+              text: '`1`',
+              why: '(4, 5)는 0~3 쪽과 한 번도 이어지지 않으므로 모든 원소가 한 그룹이 될 수 없습니다.',
+            },
+            {
+              text: '`3`',
+              why: '`new Set(parent).size`처럼 `parent` 값을 그대로 센 결과입니다. 합친 직후 `parent`는 `[0, 0, 0, 2, 4, 4]`라 3이 중간 노드 2를 가리키지만, 3의 루트는 0입니다.',
+            },
+            {
+              text: '`4`',
+              why: '성공한 union 횟수와 그룹 수를 혼동한 값입니다. union이 성공할 때마다 그룹이 하나씩 줄어 6 - 4 = 2개가 남습니다.',
+            },
+            {
+              text: '`6`',
+              why: '`union` 안에서 매개변수 `a`, `b`에 다시 대입하는 것은 바깥에 영향이 없지만, `parent[b] = a`는 바깥 배열의 원소를 직접 바꾸므로 합친 결과가 그대로 남습니다.',
+            },
+            {
+              text: '`TypeError`가 발생한다 — `const` 배열의 원소를 바꿨다',
+              why: '`const`는 `parent`에 다른 값을 다시 대입하는 것만 막고, 배열의 원소를 바꾸는 것은 허용합니다.',
+            },
+          ],
+        },
+      },
       tags: [
         '코드 읽기',
         '그룹 개수',
+        'output',
       ],
     },
   ],

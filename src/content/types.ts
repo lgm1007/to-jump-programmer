@@ -52,6 +52,13 @@ interface QuestionBase {
   prompt: RichText;
   /** 질문과 함께 보여줄 코드 (선택) */
   code?: CodeSnippet;
+  /** `code` 의 실제 출력(표준 출력 전체). 'output' 태그 문제는 검증 스크립트가 실행해 맞춰 본다 */
+  output?: string;
+  /**
+   * 출력 맞추기 문제의 다른 언어 버전 — 같은 개념을 그 언어답게 새로 쓴 코드와, 언어마다 달라지는 것만 덮어쓴다.
+   * 대표 언어(`code.language`)는 넣지 않는다. 화면은 `progress/code-variant.ts` 의 `resolveQuestionVariant` 로 고른다
+   */
+  variants?: Partial<Record<OutputLanguage, QuestionVariant>>;
   /** 해설 (RichText) — 정답 이유 + 오답 선택지가 틀린 이유 */
   explanation: RichText;
   tags?: string[];
@@ -109,6 +116,28 @@ export interface OxQuestion extends QuestionBase {
 }
 
 export type QuizQuestion = McqQuestion | OxQuestion;
+
+/** 출력 맞추기 문제를 바꿔 볼 수 있는 코드 언어 (TypeScript 는 따로 두지 않고 JavaScript 로 쓴다) */
+export type OutputLanguage = 'python' | 'javascript' | 'java' | 'kotlin';
+
+/** 출력 맞추기 문제의 다른 언어 버전. 지정하지 않은 필드는 대표 언어 버전을 그대로 쓴다 */
+export interface QuestionVariant {
+  /** 그 언어로 새로 쓴 코드 (`language` 는 이 버전의 언어) */
+  code: CodeSnippet;
+  /** 이 코드의 실제 출력 — 'output' 태그 문제는 필수 */
+  output?: string;
+  /** 질문에 언어 이름이 들어 있거나 언어마다 묻는 말이 다를 때 */
+  prompt?: RichText;
+  /** 언어마다 정답 이유가 달라질 때 (출력 형식 차이 · 언어 특성) */
+  explanation?: RichText;
+  /** 오답 풀 문제: 출력 형식이 달라 정답 · 오답 보기가 바뀔 때 */
+  correct?: string;
+  distractors?: Distractor[];
+  /** 고정 보기 문제: 보기 · 정답 인덱스가 바뀔 때 */
+  choices?: string[];
+  /** 고정 보기 문제의 정답 인덱스, O/X 문제의 정답 */
+  answer?: number | boolean;
+}
 
 /* ------------------------------------------------------------------ */
 /* 기술 면접 질문 카드                                                   */

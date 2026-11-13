@@ -54,13 +54,14 @@ const content: AlgoTopicContent = {
       categoryId: 'implementation',
       type: 'mcq',
       difficulty: 1,
-      prompt: '다음 Python 코드의 출력 결과는?',
+      prompt: '다음 코드의 출력 결과는?',
       code: {
         language: 'python',
         source: `grid = [[0] * 3] * 2
 grid[0][1] = 5
 print(grid)`,
       },
+      output: '[[0, 5, 0], [0, 5, 0]]',
       correct: '`[[0, 5, 0], [0, 5, 0]]`',
       distractors: [
         {
@@ -91,9 +92,128 @@ print(grid)`,
 \`\`\`python
 grid = [[0] * 3 for _ in range(2)]
 \`\`\``,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `int[][] grid = new int[2][];
+Arrays.fill(grid, new int[3]);
+grid[0][1] = 5;
+System.out.println(Arrays.deepToString(grid));`,
+          },
+          output: '[[0, 5, 0], [0, 5, 0]]',
+          distractors: [
+            {
+              text: '`[[0, 5, 0], [0, 0, 0]]`',
+              why: '행마다 `new int[3]` 으로 새 배열을 만들었을 때의 결과입니다. 여기서는 `Arrays.fill` 이 같은 배열 하나를 두 칸에 채웠습니다.',
+            },
+            {
+              text: '`[[5, 5, 5], [0, 0, 0]]`',
+              why: '`grid[0][1] = 5` 는 배열의 칸 하나만 바꿉니다. 한 행 안의 다른 칸에는 영향이 없습니다.',
+            },
+            {
+              text: '`[[5, 5, 5], [5, 5, 5]]`',
+              why: '공유되는 것은 행 배열이고, 칸에 대입하면 그 칸만 바뀝니다. 같은 행의 다른 칸까지 5가 되지는 않습니다.',
+            },
+            {
+              text: '`[[0, 5], [0, 0], [0, 0]]`',
+              why: '`new int[2][]` 가 행 수, `new int[3]` 이 한 행의 길이라서 2행 3열입니다. 행과 열을 뒤바꿔 읽은 답입니다.',
+            },
+            {
+              text: '`NullPointerException` 이 발생한다',
+              why: '`new int[2][]` 의 두 칸은 처음엔 `null` 이지만, `Arrays.fill` 이 배열을 채운 뒤에 접근하므로 예외가 나지 않습니다.',
+            },
+          ],
+          explanation: `\`Arrays.fill(grid, new int[3])\` 은 \`new int[3]\` 을 **한 번만** 만들고, 그 배열의 참조를 두 칸에 똑같이 넣습니다. 그래서 \`grid[0]\` 을 바꾸면 \`grid[1]\` 도 바뀐 것처럼 보입니다.
+
+격자는 행마다 새 배열을 만들어야 합니다.
+
+\`\`\`java
+int[][] grid = new int[2][3];
+\`\`\``,
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `val row = MutableList(3) { 0 }
+val grid = List(2) { row }
+grid[0][1] = 5
+println(grid)`,
+          },
+          output: '[[0, 5, 0], [0, 5, 0]]',
+          distractors: [
+            {
+              text: '`[[0, 5, 0], [0, 0, 0]]`',
+              why: '`List(2) { MutableList(3) { 0 } }` 처럼 람다 안에서 행을 만들었을 때의 결과입니다. 여기서는 람다가 밖에서 만든 `row` 를 두 번 돌려줍니다.',
+            },
+            {
+              text: '`[[5, 5, 5], [0, 0, 0]]`',
+              why: '`grid[0][1] = 5` 는 리스트의 칸 하나만 바꿉니다. 한 행 안의 다른 칸에는 영향이 없습니다.',
+            },
+            {
+              text: '`[[5, 5, 5], [5, 5, 5]]`',
+              why: '공유되는 것은 행 리스트이고, 칸에 대입하면 그 칸만 바뀝니다. 같은 행의 다른 칸까지 5가 되지는 않습니다.',
+            },
+            {
+              text: '`[[0, 5], [0, 0], [0, 0]]`',
+              why: '`List(2)` 가 행 수, `MutableList(3)` 이 한 행의 길이라서 2행 3열입니다. 행과 열을 뒤바꿔 읽은 답입니다.',
+            },
+            {
+              text: '컴파일 에러 — `List` 의 원소는 바꿀 수 없다',
+              why: '바깥 `List` 는 읽기 전용이지만 원소인 `MutableList` 는 바꿀 수 있어서 `grid[0][1] = 5` 는 컴파일됩니다.',
+            },
+          ],
+          explanation: `\`List(2) { row }\` 의 람다는 칸마다 \`row\` 를 돌려줄 뿐이라, 두 칸이 **같은 리스트 객체**를 가리킵니다. 그래서 \`grid[0]\` 을 바꾸면 \`grid[1]\` 도 바뀐 것처럼 보입니다.
+
+격자는 람다 안에서 행마다 새 리스트를 만들어야 합니다.
+
+\`\`\`kotlin
+val grid = List(2) { MutableList(3) { 0 } }
+\`\`\``,
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `const grid = new Array(2).fill(new Array(3).fill(0));
+grid[0][1] = 5;
+console.log(JSON.stringify(grid));`,
+          },
+          output: '[[0,5,0],[0,5,0]]',
+          correct: '`[[0,5,0],[0,5,0]]`',
+          distractors: [
+            {
+              text: '`[[0,5,0],[0,0,0]]`',
+              why: '`Array.from({ length: 2 }, () => new Array(3).fill(0))` 처럼 행마다 새 배열을 만들었을 때의 결과입니다. 여기서는 `fill` 이 같은 배열 하나를 두 칸에 채웠습니다.',
+            },
+            {
+              text: '`[[5,5,5],[0,0,0]]`',
+              why: '`grid[0][1] = 5` 는 배열의 칸 하나만 바꿉니다. 한 행 안의 다른 칸에는 영향이 없습니다.',
+            },
+            {
+              text: '`[[5,5,5],[5,5,5]]`',
+              why: '공유되는 것은 행 배열이고, 칸에 대입하면 그 칸만 바뀝니다. 같은 행의 다른 칸까지 5가 되지는 않습니다.',
+            },
+            {
+              text: '`[[0,5],[0,0],[0,0]]`',
+              why: '`new Array(2)` 가 행 수, `new Array(3)` 이 한 행의 길이라서 2행 3열입니다. 행과 열을 뒤바꿔 읽은 답입니다.',
+            },
+            {
+              text: '`[[0,0,0],[0,0,0]]`',
+              why: '`fill` 은 값을 복사하지 않고 같은 배열의 참조를 넣으므로, 대입한 5가 그대로 보입니다.',
+            },
+          ],
+          explanation: `\`fill(new Array(3).fill(0))\` 은 안쪽 배열을 **한 번만** 만들고, 그 참조를 두 칸에 똑같이 넣습니다. 그래서 \`grid[0]\` 을 바꾸면 \`grid[1]\` 도 바뀐 것처럼 보입니다.
+
+격자는 행마다 새 배열을 만들어야 합니다.
+
+\`\`\`javascript
+const grid = Array.from({ length: 2 }, () => new Array(3).fill(0));
+\`\`\``,
+        },
+      },
       tags: [
         '2차원 배열',
-        'Python',
+        'output',
       ],
     },
   ],

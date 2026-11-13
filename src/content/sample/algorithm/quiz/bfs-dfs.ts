@@ -70,6 +70,7 @@ while q:
             q.append(nxt)
 print(order)`,
       },
+      output: '[1, 2, 3, 4, 5]',
       correct: '`[1, 2, 3, 4, 5]`',
       distractors: [
         {
@@ -100,12 +101,147 @@ print(order)`,
 3. 3을 꺼냅니다. 4는 이미 방문 표시가 되어 있으니 5만 넣습니다. → 큐: 4, 5
 4. 4와 5를 차례로 꺼냅니다.
 
-따라서 \`[1, 2, 3, 4, 5]\`입니다.
+따라서 방문 순서는 1, 2, 3, 4, 5입니다.
 
 > BFS는 시작점에서 가까운 정점부터 방문합니다. 1에서 2 · 3은 거리 1, 4 · 5는 거리 2입니다.`,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `int[][] graph = {{}, {2, 3}, {4}, {4, 5}, {}, {}};
+boolean[] visited = new boolean[6];
+visited[1] = true;
+Deque<Integer> q = new ArrayDeque<>();
+q.add(1);
+List<Integer> order = new ArrayList<>();
+while (!q.isEmpty()) {
+    int v = q.poll();
+    order.add(v);
+    for (int nxt : graph[v]) {
+        if (!visited[nxt]) {
+            visited[nxt] = true;
+            q.add(nxt);
+        }
+    }
+}
+System.out.println(order);`,
+          },
+          output: '[1, 2, 3, 4, 5]',
+          distractors: [
+            {
+              text: '`[1, 2, 4, 3, 5]`',
+              why: '재귀 DFS의 방문 순서입니다. 2를 꺼낸 뒤 4를 넣지만 큐에는 3이 먼저 들어 있으므로, 3이 4보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1, 3, 5, 4, 2]`',
+              why: '스택으로 구현한 반복 DFS의 방문 순서입니다. `add`는 큐의 뒤에 넣고 `poll()`은 앞에서 꺼내므로 먼저 넣은 2가 3보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1, 2, 3, 5, 4]`',
+              why: '4는 2를 처리할 때 이미 큐에 들어가, 3을 처리하며 넣은 5보다 앞에 있습니다. 큐는 넣은 순서대로 꺼내므로 4가 5보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1, 3, 2, 5, 4]`',
+              why: '이웃을 거꾸로 넣었을 때의 순서입니다. 이 코드는 `graph[v]`에 적힌 순서대로 넣으므로 1의 이웃 중 2가 먼저 큐에 들어갑니다.',
+            },
+            {
+              text: '`[1, 2, 3, 4, 4, 5]`',
+              why: '방문 확인 없이 넣었을 때의 결과입니다. 이 코드는 넣을 때 `visited[nxt] = true`로 표시하므로, 3을 처리할 때 4는 이미 방문 표시가 되어 다시 들어가지 않습니다.',
+            },
+          ],
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `val graph = mapOf(1 to listOf(2, 3), 2 to listOf(4), 3 to listOf(4, 5), 4 to emptyList(), 5 to emptyList())
+val visited = mutableSetOf(1)
+val q = ArrayDeque(listOf(1))
+val order = mutableListOf<Int>()
+while (q.isNotEmpty()) {
+    val v = q.removeFirst()
+    order.add(v)
+    for (nxt in graph.getValue(v)) {
+        if (nxt !in visited) {
+            visited.add(nxt)
+            q.addLast(nxt)
+        }
+    }
+}
+println(order)`,
+          },
+          output: '[1, 2, 3, 4, 5]',
+          distractors: [
+            {
+              text: '`[1, 2, 4, 3, 5]`',
+              why: '재귀 DFS의 방문 순서입니다. 2를 꺼낸 뒤 4를 넣지만 큐에는 3이 먼저 들어 있으므로, 3이 4보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1, 3, 5, 4, 2]`',
+              why: '스택으로 구현한 반복 DFS의 방문 순서입니다. `addLast`로 뒤에 넣고 `removeFirst()`로 앞에서 꺼내므로 먼저 넣은 2가 3보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1, 2, 3, 5, 4]`',
+              why: '4는 2를 처리할 때 이미 큐에 들어가, 3을 처리하며 넣은 5보다 앞에 있습니다. 큐는 넣은 순서대로 꺼내므로 4가 5보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1, 3, 2, 5, 4]`',
+              why: '이웃을 거꾸로 넣었을 때의 순서입니다. 이 코드는 `graph`에 적힌 이웃 순서대로 넣으므로 1의 이웃 중 2가 먼저 큐에 들어갑니다.',
+            },
+            {
+              text: '`[1, 2, 3, 4, 4, 5]`',
+              why: '방문 확인 없이 넣었을 때의 결과입니다. 이 코드는 넣을 때 `visited`에 추가하므로, 3을 처리할 때 4는 이미 방문 표시가 되어 다시 들어가지 않습니다.',
+            },
+          ],
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `const graph = { 1: [2, 3], 2: [4], 3: [4, 5], 4: [], 5: [] };
+const visited = new Set([1]);
+const q = [1];
+const order = [];
+while (q.length > 0) {
+  const v = q.shift();
+  order.push(v);
+  for (const nxt of graph[v]) {
+    if (!visited.has(nxt)) {
+      visited.add(nxt);
+      q.push(nxt);
+    }
+  }
+}
+console.log(JSON.stringify(order));`,
+          },
+          output: '[1,2,3,4,5]',
+          correct: '`[1,2,3,4,5]`',
+          distractors: [
+            {
+              text: '`[1,2,4,3,5]`',
+              why: '재귀 DFS의 방문 순서입니다. 2를 꺼낸 뒤 4를 넣지만 큐에는 3이 먼저 들어 있으므로, 3이 4보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1,3,5,4,2]`',
+              why: '스택으로 구현한 반복 DFS의 방문 순서입니다. `push`는 배열 뒤에 넣고 `shift()`는 앞에서 꺼내므로 먼저 넣은 2가 3보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1,2,3,5,4]`',
+              why: '4는 2를 처리할 때 이미 큐에 들어가, 3을 처리하며 넣은 5보다 앞에 있습니다. 큐는 넣은 순서대로 꺼내므로 4가 5보다 먼저 나옵니다.',
+            },
+            {
+              text: '`[1,3,2,5,4]`',
+              why: '이웃을 거꾸로 넣었을 때의 순서입니다. 이 코드는 `graph[v]`에 적힌 순서대로 넣으므로 1의 이웃 중 2가 먼저 큐에 들어갑니다.',
+            },
+            {
+              text: '`[1,2,3,4,4,5]`',
+              why: '방문 확인 없이 넣었을 때의 결과입니다. 이 코드는 넣을 때 `visited`에 추가하므로, 3을 처리할 때 4는 이미 방문 표시가 되어 다시 들어가지 않습니다.',
+            },
+          ],
+        },
+      },
       tags: [
         '코드 읽기',
         'BFS',
+        'output',
       ],
     },
   ],

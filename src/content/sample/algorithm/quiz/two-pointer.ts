@@ -102,7 +102,71 @@ print(solve([4, -1, 2, 7, -3, 5, 1], 3))`,
 | 7, -3, 5 | 9 |
 | -3, 5, 1 | 3 |
 
-최댓값은 9입니다. 구간마다 \`sum()\`을 다시 하면 \`O(N × K)\`지만, 이 방식은 \`O(N)\`입니다.`,
+최댓값은 9입니다. 구간마다 K개를 처음부터 다시 더하면 \`O(N × K)\`지만, 이 방식은 \`O(N)\`입니다.`,
+      output: '9',
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `public class Main {
+    static int solve(int[] nums, int k) {
+        int window = 0;
+        for (int i = 0; i < k; i++) window += nums[i];
+        int best = window;
+        for (int i = k; i < nums.length; i++) {
+            window += nums[i] - nums[i - k];
+            best = Math.max(best, window);
+        }
+        return best;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(solve(new int[]{4, -1, 2, 7, -3, 5, 1}, 3));
+    }
+}`,
+          },
+          output: '9',
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `fun solve(nums: IntArray, k: Int): Int {
+    var window = nums.take(k).sum()
+    var best = window
+    for (i in k until nums.size) {
+        window += nums[i] - nums[i - k]
+        best = maxOf(best, window)
+    }
+    return best
+}
+
+fun main() {
+    println(solve(intArrayOf(4, -1, 2, 7, -3, 5, 1), 3))
+}`,
+          },
+          output: '9',
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `function solve(nums, k) {
+  let window = nums.slice(0, k).reduce((a, b) => a + b, 0);
+  let best = window;
+  for (let i = k; i < nums.length; i++) {
+    window += nums[i] - nums[i - k];
+    best = Math.max(best, window);
+  }
+  return best;
+}
+
+console.log(solve([4, -1, 2, 7, -3, 5, 1], 3));`,
+          },
+          output: '9',
+        },
+      },
+      tags: [
+        'output',
+      ],
     },
   ],
 };

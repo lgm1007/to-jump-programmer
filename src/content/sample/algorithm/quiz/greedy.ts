@@ -69,6 +69,7 @@ const content: AlgoTopicContent = {
 
 print(greedy_coins([1, 4, 6], 8))`,
       },
+      output: '3',
       correct: '`3` — 최소 개수가 아니다',
       distractors: [
         {
@@ -95,9 +96,136 @@ print(greedy_coins([1, 4, 6], 8))`,
       explanation: `큰 동전부터 고르면 6원 1개를 쓰고, 남은 2원을 1원 2개로 채워 **3**이 출력됩니다. 하지만 4원 2개를 쓰면 **2개**로 8원을 만들 수 있으므로 최소 개수가 아닙니다.
 
 동전 단위가 배수 관계가 아니면 큰 동전부터 고르는 그리디는 최적해를 보장하지 않습니다. 이럴 때는 \`dp[x] = min(dp[x - c] + 1)\` 형태의 DP로 풀어야 합니다.`,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `import java.util.*;
+
+public class Main {
+    static int greedyCoins(Integer[] coins, int amount) {
+        Arrays.sort(coins, Collections.reverseOrder());
+        int count = 0;
+        for (int c : coins) {
+            count += amount / c;
+            amount %= c;
+        }
+        return count;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(greedyCoins(new Integer[]{1, 4, 6}, 8));
+    }
+}`,
+          },
+          output: '3',
+          distractors: [
+            {
+              text: '`2` — 최소 개수다',
+              why: '2개는 4원 2개로 만드는 실제 최소 개수지만, 이 코드는 큰 동전부터 고르므로 6원을 먼저 써서 3을 출력합니다.',
+            },
+            {
+              text: '`3` — 최소 개수다',
+              why: '출력은 3이 맞지만, 4원 2개를 쓰면 2개로 8원을 만들 수 있어 최소 개수가 아닙니다.',
+            },
+            {
+              text: '`4` — 최소 개수가 아니다',
+              why: '6원 1개를 쓰고 남은 2원을 1원 2개로 채우므로 모두 3개입니다.',
+            },
+            {
+              text: '`8` — 최소 개수가 아니다',
+              why: '작은 동전부터 고른다고 읽은 답입니다. `Collections.reverseOrder()`로 내림차순 정렬하므로 6원부터 고릅니다.',
+            },
+            {
+              text: '`11` — 최소 개수가 아니다',
+              why: '`amount %= c`로 남은 금액을 줄이는 것을 놓쳐 8을 6, 4, 1로 나눈 몫(1 + 2 + 8)을 모두 더한 값입니다. 다음 동전은 남은 금액 2원으로 셉니다.',
+            },
+          ],
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `fun greedyCoins(coins: List<Int>, amount: Int): Int {
+    var remain = amount
+    var count = 0
+    for (c in coins.sortedDescending()) {
+        count += remain / c
+        remain %= c
+    }
+    return count
+}
+
+fun main() {
+    println(greedyCoins(listOf(1, 4, 6), 8))
+}`,
+          },
+          output: '3',
+          distractors: [
+            {
+              text: '`2` — 최소 개수다',
+              why: '2개는 4원 2개로 만드는 실제 최소 개수지만, 이 코드는 큰 동전부터 고르므로 6원을 먼저 써서 3을 출력합니다.',
+            },
+            {
+              text: '`3` — 최소 개수다',
+              why: '출력은 3이 맞지만, 4원 2개를 쓰면 2개로 8원을 만들 수 있어 최소 개수가 아닙니다.',
+            },
+            {
+              text: '`4` — 최소 개수가 아니다',
+              why: '6원 1개를 쓰고 남은 2원을 1원 2개로 채우므로 모두 3개입니다.',
+            },
+            {
+              text: '`8` — 최소 개수가 아니다',
+              why: '작은 동전부터 고른다고 읽은 답입니다. `sortedDescending()`은 내림차순이라 6원부터 고릅니다.',
+            },
+            {
+              text: '`11` — 최소 개수가 아니다',
+              why: '`remain %= c`로 남은 금액을 줄이는 것을 놓쳐 8을 6, 4, 1로 나눈 몫(1 + 2 + 8)을 모두 더한 값입니다. 다음 동전은 남은 금액 2원으로 셉니다.',
+            },
+          ],
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `function greedyCoins(coins, amount) {
+  let count = 0;
+  for (const c of [...coins].sort((a, b) => b - a)) {
+    count += Math.floor(amount / c);
+    amount %= c;
+  }
+  return count;
+}
+
+console.log(greedyCoins([1, 4, 6], 8));`,
+          },
+          output: '3',
+          distractors: [
+            {
+              text: '`2` — 최소 개수다',
+              why: '2개는 4원 2개로 만드는 실제 최소 개수지만, 이 코드는 큰 동전부터 고르므로 6원을 먼저 써서 3을 출력합니다.',
+            },
+            {
+              text: '`3` — 최소 개수다',
+              why: '출력은 3이 맞지만, 4원 2개를 쓰면 2개로 8원을 만들 수 있어 최소 개수가 아닙니다.',
+            },
+            {
+              text: '`4` — 최소 개수가 아니다',
+              why: '6원 1개를 쓰고 남은 2원을 1원 2개로 채우므로 모두 3개입니다.',
+            },
+            {
+              text: '`8` — 최소 개수가 아니다',
+              why: '작은 동전부터 고른다고 읽은 답입니다. `sort((a, b) => b - a)`는 내림차순이라 6원부터 고릅니다.',
+            },
+            {
+              text: '`11` — 최소 개수가 아니다',
+              why: '`amount %= c`로 남은 금액을 줄이는 것을 놓쳐 8을 6, 4, 1로 나눈 몫(1 + 2 + 8)을 모두 더한 값입니다. 다음 동전은 남은 금액 2원으로 셉니다.',
+            },
+          ],
+        },
+      },
       tags: [
         '반례',
         '거스름돈',
+        'output',
       ],
     },
   ],

@@ -7,13 +7,13 @@
  *   npx tsx scripts/validate-content.ts --section cs --only os,network
  *   npx tsx scripts/validate-content.ts --section patterns --only binary-search   # 토픽 id 또는 유형 id
  *
- * --section: cs | review | algo-quiz | patterns (쉼표로 여러 개)
+ * --section: cs | review | algo-quiz | patterns | output (쉼표로 여러 개 — output 은 출력 맞추기 문제의 코드를 실행해 출력을 맞춰 본다)
  * --langs: python | javascript | java | kotlin | cpp (기본: 전부)
  *
  * Kotlin 은 KOTLINC(컴파일러 경로)와 KOTLIN_JAVA_HOME(컴파일·실행 JDK)로 다른 버전 조합(예: 1.8 · JDK 8)을 지정할 수 있다.
  */
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -31,6 +31,7 @@ import type {
   CsLesson,
   FollowUp,
   InterviewCard,
+  OutputLanguage,
   QuizQuestion,
   ReviewChallenge,
   ReviewFrameworkContent,
@@ -40,6 +41,8 @@ import type {
   TestCase,
   ValueType,
 } from '../src/content/types';
+import { correctChoiceText } from '../src/features/progress/choices';
+import { isOutputLanguage, OUTPUT_LANGUAGES, resolveQuestionVariant } from '../src/features/progress/code-variant';
 import { formatValue, resultsMatch } from './lib/harness/compare';
 import { buildCppProgram, mapCppErrors } from './lib/harness/cpp-harness';
 import { buildJavaProgram, mapJavaErrors } from './lib/harness/java-harness';
@@ -64,7 +67,7 @@ function option(name: string): string | undefined {
 }
 const QUICK = flag('quick');
 const ONLY = option('only')?.split(',').filter(Boolean);
-const SECTIONS = new Set((option('section') ?? 'cs,review,algo-quiz,patterns').split(','));
+const SECTIONS = new Set((option('section') ?? 'cs,review,algo-quiz,patterns,output').split(','));
 const ALL_LANGS: SolveLanguage[] = ['python', 'javascript', 'java', 'kotlin', 'cpp'];
 const LANGS = (option('langs')?.split(',') ?? ALL_LANGS) as SolveLanguage[];
 
@@ -209,9 +212,55 @@ function checkMcqText(text: unknown, w: string, field: string, used: Set<string>
   used.add(key);
 }
 
-function checkQuestion(q: QuizQuestion, categoryId: string, where: string) {
-  const w = `${where}/${q?.id}`;
-  checkId(q.id, w);
+/** 질문 · 해설에 쓰인 언어 이름 — 다른 언어 버전에서도 그대로 보이면 안 된다 */
+const LANGUAGE_NAME = /Python|파이썬|JavaScript|자바스크립트|TypeScript|타입스크립트|Kotlin|코틀린|Java(?!Script)|자바(?!스크립트)/;
+
+/**
+ * 출력 맞추기 문제 — 'output' 태그는 실행해 맞춰 볼 출력(`output`)이 있어야 하고, 다른 언어 버전(`variants`)은 'output' 문제에만 둔다.
+ * 언어 버전은 대표 언어 버전과 같은 규칙으로 검사하고(`resolveQuestionVariant` 로 합친 문제), 언어 이름이 든 질문 · 해설은 덮어써야 한다.
+ */
+function checkOutputQuestion(q: QuizQuestion, categoryId: string, where: string, w: string) {
+  const tagged = q.tags?.includes('output') ?? false;
+  const variants = Object.entries(q.variants ?? {}) as [string, NonNullable<QuizQuestion['variants']>[OutputLanguage]][];
+  if (variants.length && !tagged) err(w, `다른 언어 버전(variants)이 있으면 tags 에 'output' 을 답니다`);
+  if (!tagged) {
+    if (q.output !== undefined) err(w, `output 은 'output' 태그 문제에만 씁니다`);
+    return;
+  }
+  const base = q.code?.language;
+  if (!isOutputLanguage(base)) {
+    err(w, `'output' 문제의 코드는 ${OUTPUT_LANGUAGES.join(' · ')} 중 하나여야 합니다 (현재 ${base ?? '코드 없음'})`);
+    return;
+  }
+  if (typeof q.output !== 'string' || !q.output.trim()) err(w, `'output' 문제는 대표 코드의 실제 출력(output)이 필요합니다`);
+  for (const [lang, v] of variants) {
+    const vw = `${w}@${lang}`;
+    if (!isOutputLanguage(lang)) {
+      err(vw, `언어 버전은 ${OUTPUT_LANGUAGES.join(' · ')} 만 둡니다`);
+      continue;
+    }
+    if (lang === base) err(vw, `대표 언어(${base})와 같은 언어 버전은 두지 않습니다`);
+    if (!v) continue;
+    checkSnippet(v.code, vw, 'code');
+    if (v.code && v.code.language !== lang) err(vw, `code.language 가 '${lang}' 이어야 합니다 (현재 '${v.code.language}')`);
+    if (typeof v.output !== 'string' || !v.output.trim()) err(vw, `언어 버전에도 실제 출력(output)이 필요합니다`);
+    if (q.type === 'ox' && v.answer !== undefined && typeof v.answer !== 'boolean') err(vw, 'O/X 문제의 answer 는 boolean');
+    if (q.type === 'mcq' && q.correct !== undefined && (v.choices !== undefined || v.answer !== undefined)) err(vw, '오답 풀 문제는 correct · distractors 로 덮어씁니다');
+    if (q.type === 'mcq' && q.correct === undefined && (v.correct !== undefined || v.distractors !== undefined)) err(vw, '고정 보기 문제는 choices · answer 로 덮어씁니다');
+    if (v.prompt === undefined && LANGUAGE_NAME.test(q.prompt)) err(vw, `질문에 언어 이름("${q.prompt.match(LANGUAGE_NAME)?.[0]}")이 있어 ${lang} 버전에서도 보입니다 — prompt 를 덮어쓰거나 질문에서 언어 이름을 빼세요`);
+    if (v.prompt !== undefined) checkRich(v.prompt, vw, 'prompt', 5);
+    if (v.explanation === undefined && LANGUAGE_NAME.test(q.explanation)) err(vw, `해설에 언어 이름("${q.explanation.match(LANGUAGE_NAME)?.[0]}")이 있어 ${lang} 버전에서도 보입니다 — explanation 을 덮어쓰세요`);
+    if (v.explanation === undefined && new RegExp('^\\s*```' + base, 'm').test(q.explanation)) err(vw, `해설에 ${base} 코드 블록이 있어 ${lang} 버전에서도 보입니다 — explanation 을 덮어쓰세요`);
+    checkQuestion(resolveQuestionVariant(q, lang).question, categoryId, where, lang);
+  }
+}
+
+function checkQuestion(q: QuizQuestion, categoryId: string, where: string, variantOf?: OutputLanguage) {
+  const w = variantOf ? `${where}/${q?.id}@${variantOf}` : `${where}/${q?.id}`;
+  if (!variantOf) {
+    checkId(q.id, w);
+    checkOutputQuestion(q, categoryId, where, w);
+  }
   if (q.categoryId !== categoryId) err(w, `categoryId 가 '${categoryId}' 이어야 합니다 (현재 '${q.categoryId}')`);
   if (![1, 2, 3].includes(q.difficulty)) err(w, `difficulty 는 1|2|3`);
   checkRich(q.prompt, w, 'prompt', 5);
@@ -381,6 +430,7 @@ async function validateCs() {
       continue;
     }
     content.quiz.forEach((q) => checkQuestion(q, cat.id, where));
+    collectOutputRuns(content.quiz, where);
     content.cards.forEach((c) => checkCard(c, cat.id, where));
     const lessons = content.lessons ?? [];
     if (!Array.isArray(lessons)) err(where, 'lessons 는 배열이어야 합니다');
@@ -401,7 +451,206 @@ async function validateAlgoQuiz() {
     }
     checkRich(content.primer, where, 'primer', content.questions.length ? 100 : 0);
     content.questions.forEach((q) => checkQuestion(q, topic.id, where));
+    collectOutputRuns(content.questions, where);
     console.log(`  algo-quiz/${topic.id}: 퀴즈 ${content.questions.length}`);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 출력 맞추기 문제 실행                                                 */
+/* ------------------------------------------------------------------ */
+
+interface OutputRun {
+  where: string;
+  language: OutputLanguage;
+  source: string;
+  expected: string;
+  /** 정답 보기 (객관식) — 실제 출력의 줄이 모두 들어 있어야 한다 */
+  correct?: string;
+  /** 오답 보기 — 실제 출력과 같으면 안 된다 */
+  wrong?: string[];
+}
+
+const outputRuns: OutputRun[] = [];
+
+/** 'output' 태그 문제의 대표 코드와 언어 버전을 실행 목록에 넣는다 (실행은 output 섹션에서) */
+function collectOutputRuns(questions: QuizQuestion[], where: string) {
+  for (const q of questions) {
+    if (!q.tags?.includes('output')) continue;
+    const resolved = resolveQuestionVariant(q, undefined);
+    for (const lang of resolved.languages) {
+      const r = resolveQuestionVariant(q, lang).question;
+      if (!r.code || typeof r.output !== 'string') continue;
+      outputRuns.push({
+        where: `${where}/${q.id}${lang === resolved.language ? '' : `@${lang}`}`,
+        language: lang,
+        source: r.code.source,
+        expected: r.output,
+        correct: r.type === 'mcq' ? correctChoiceText(r) : undefined,
+        wrong: r.type !== 'mcq' ? undefined : r.correct !== undefined ? r.distractors.map((d) => d.text) : r.choices.filter((_, i) => i !== r.answer),
+      });
+    }
+  }
+}
+
+/** 줄 끝 공백과 끝의 빈 줄을 무시하고 비교한다 */
+const normalizeOutput = (s: string) =>
+  s
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((l) => l.trimEnd())
+    .join('\n')
+    .replace(/\n+$/, '')
+    .replace(/^\n+/, '');
+
+/** import 줄은 밖으로 빼고, main 이 없으면 문장들을 main 으로 감싼다 (Java · Kotlin 문제 코드는 보통 main 없이 쓴다) */
+function splitImports(source: string): { imports: string[]; body: string } {
+  const lines = source.replace(/^\n+/, '').split('\n');
+  const imports = lines.filter((l) => /^import\s/.test(l));
+  return { imports, body: lines.filter((l) => !/^import\s/.test(l)).join('\n') };
+}
+
+function javaProgram(source: string): { file: string; mainClass: string; text: string } {
+  if (/\bstatic\s+void\s+main\s*\(/.test(source)) {
+    const before = source.slice(0, source.search(/\bstatic\s+void\s+main\s*\(/));
+    const mainClass = [...before.matchAll(/\bclass\s+(\w+)/g)].pop()?.[1] ?? 'Main';
+    const publicClass = source.match(/public\s+(?:final\s+)?class\s+(\w+)/)?.[1];
+    return { file: `${publicClass ?? mainClass}.java`, mainClass, text: source };
+  }
+  const { imports, body } = splitImports(source);
+  const text = [
+    'import java.util.*;',
+    'import java.util.function.*;',
+    'import java.util.stream.*;',
+    ...imports,
+    'public class Main {',
+    '    public static void main(String[] args) throws Exception {',
+    body,
+    '    }',
+    '}',
+  ].join('\n');
+  return { file: 'Main.java', mainClass: 'Main', text };
+}
+
+function kotlinProgram(source: string, pkg: string): string {
+  if (/\bfun\s+main\s*\(/.test(source)) return `package ${pkg}\n${source}`;
+  const { imports, body } = splitImports(source);
+  return [`package ${pkg}`, ...imports, 'fun main() {', body, '}'].join('\n');
+}
+
+async function hasTool(cmd: string, args: string[], env?: NodeJS.ProcessEnv): Promise<boolean> {
+  const r = await exec(cmd, args, { timeoutMs: 60_000, env });
+  return r.code === 0;
+}
+
+/** 실행 결과를 기대 출력 · 정답 보기와 맞춰 본다 */
+function compareOutput(run: OutputRun, r: ExecOutput): void {
+  if (r.timedOut) {
+    err(run.where, `실행 시간이 초과되었습니다 (${run.language})`);
+    return;
+  }
+  if (r.code !== 0) {
+    const lines = (r.stderr || r.stdout).trim().split('\n');
+    // 예외 이름이 든 줄(Python 은 마지막 줄, Node 는 스택 앞, JVM 은 첫 줄)을 보여 준다
+    const reason = lines.find((l) => /^\s*(Exception in thread|[\w.$]*(Error|Exception)\b)/.test(l)) ?? lines.slice(-3).join(' / ');
+    err(run.where, `실행 실패 (${run.language}, 종료 코드 ${r.code}): ${reason.trim().slice(0, 300)}`);
+    return;
+  }
+  const actual = normalizeOutput(r.stdout);
+  if (actual !== normalizeOutput(run.expected)) {
+    err(run.where, `실제 출력이 output 과 다릅니다 (${run.language})\n      output: ${JSON.stringify(normalizeOutput(run.expected))}\n      실제:   ${JSON.stringify(actual)}`);
+    return;
+  }
+  const flat = (t: string) => t.replace(/`/g, '').replace(/\s+/g, ' ').trim();
+  const same = run.wrong?.find((w) => flat(w) === flat(actual));
+  if (same) err(run.where, `오답 보기 "${same}" 가 실제 출력과 같습니다`);
+  if (run.correct !== undefined) {
+    const correct = run.correct.replace(/`/g, '');
+    const missing = actual.split('\n').map((l) => l.trim()).filter((l) => l && !correct.includes(l));
+    if (missing.length) err(run.where, `정답 보기에 실제 출력 ${missing.map((l) => `"${l}"`).join(', ')} 이(가) 보이지 않습니다 — 정답 보기 또는 output 을 확인하세요`);
+  }
+}
+
+async function runOutputs() {
+  if (QUICK) {
+    console.log(`  output: 출력 맞추기 코드 ${outputRuns.length}개 (--quick 이라 실행하지 않음)`);
+    return;
+  }
+  if (!outputRuns.length) return;
+  const dir = mkdtempSync(join(tmpdir(), 'tj-output-'));
+  try {
+    const tools = {
+      python: await hasTool('python3', ['--version']),
+      javascript: await hasTool('node', ['--version']),
+      java: await hasTool('javac', ['-version']),
+      kotlin: await hasTool(KOTLINC, ['-version'], KOTLIN_ENV),
+    };
+    for (const lang of OUTPUT_LANGUAGES) {
+      if (!tools[lang] && outputRuns.some((r) => r.language === lang)) warn('output', `${lang} 실행 도구가 없어 ${lang} 출력 맞추기 코드를 실행하지 않았습니다`);
+    }
+    const byLang = (lang: OutputLanguage) => (tools[lang] ? outputRuns.filter((r) => r.language === lang) : []);
+    const parallel = async <T,>(items: T[], n: number, fn: (item: T, i: number) => Promise<void>) => {
+      let next = 0;
+      await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+        while (next < items.length) {
+          const i = next++;
+          await fn(items[i], i);
+        }
+      }));
+    };
+
+    await parallel(byLang('python'), 6, async (run, i) => {
+      const file = join(dir, `p${i}.py`);
+      writeFileSync(file, run.source);
+      compareOutput(run, await exec('python3', ['-I', file], { cwd: dir, timeoutMs: 10_000 }));
+    });
+    await parallel(byLang('javascript'), 6, async (run, i) => {
+      const file = join(dir, /^\s*(import|export)\s/m.test(run.source) ? `j${i}.mjs` : `j${i}.js`);
+      writeFileSync(file, run.source);
+      compareOutput(run, await exec('node', [file], { cwd: dir, timeoutMs: 10_000 }));
+    });
+    await parallel(byLang('java'), 4, async (run, i) => {
+      const prog = javaProgram(run.source);
+      const sub = join(dir, `java${i}`);
+      mkdirSync(join(sub, 'out'), { recursive: true });
+      writeFileSync(join(sub, prog.file), prog.text);
+      const c = await exec('javac', ['-encoding', 'UTF-8', '-nowarn', '-d', 'out', prog.file], { cwd: sub, timeoutMs: 60_000 });
+      if (c.code !== 0) {
+        err(run.where, `컴파일 실패 (java): ${(c.stderr || c.stdout).trim().split('\n').slice(0, 4).join(' / ').slice(0, 400)}`);
+        return;
+      }
+      compareOutput(run, await exec('java', ['-cp', 'out', prog.mainClass], { cwd: sub, timeoutMs: 10_000 }));
+    });
+
+    // Kotlin 은 컴파일이 느려 한 번에 컴파일한다 (문제마다 패키지를 나눠 main 이 겹치지 않게). 실패한 파일은 빼고 한 번 더
+    let kotlin = byLang('kotlin').map((run, i) => ({ run, pkg: `q${i}` }));
+    for (let round = 0; round < 2 && kotlin.length; round++) {
+      const kdir = join(dir, `kotlin${round}`);
+      mkdirSync(kdir, { recursive: true });
+      kotlin.forEach(({ run, pkg }) => writeFileSync(join(kdir, `${pkg}.kt`), kotlinProgram(run.source, pkg)));
+      const c = await exec(KOTLINC, ['-nowarn', kdir, '-include-runtime', '-d', join(kdir, 'out.jar')], { timeoutMs: 600_000, env: KOTLIN_ENV });
+      if (c.code !== 0) {
+        const failed = new Set([...(c.stderr + c.stdout).matchAll(/(q\d+)\.kt:\d+:\d+: error: (.*)/g)].map((m) => m[1]));
+        for (const k of kotlin.filter((k) => failed.has(k.pkg))) {
+          const first = (c.stderr + c.stdout).match(new RegExp(`${k.pkg}\\.kt:(\\d+):\\d+: error: (.*)`));
+          err(k.run.where, `컴파일 실패 (kotlin): ${first ? `${first[1]}번째 줄 근처: ${first[2]}` : '알 수 없는 오류'}`);
+        }
+        if (!failed.size) {
+          err('output', `Kotlin 컴파일 실패: ${(c.stderr || c.stdout).trim().slice(0, 400)}`);
+          break;
+        }
+        kotlin = kotlin.filter((k) => !failed.has(k.pkg));
+        continue;
+      }
+      await parallel(kotlin, 4, async ({ run, pkg }) => {
+        compareOutput(run, await exec(KOTLIN_JAVA, ['-cp', join(kdir, 'out.jar'), `${pkg}.${pkg.charAt(0).toUpperCase()}${pkg.slice(1)}Kt`], { timeoutMs: 10_000 }));
+      });
+      break;
+    }
+    const counts = OUTPUT_LANGUAGES.map((l) => `${l} ${byLang(l).length}`).join(' · ');
+    console.log(`  output: 출력 맞추기 코드 ${outputRuns.length}개 실행 (${counts})`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 }
 
@@ -1073,12 +1322,29 @@ async function validateAlgoPatterns() {
 
 /* ------------------------------------------------------------------ */
 
+/** --section output 만 실행할 때 — 문제 검사 없이 출력 맞추기 문제만 모은다 */
+async function collectOutputSources() {
+  for (const cat of CS_CATEGORIES.filter((c) => !ONLY || ONLY.includes(c.id))) {
+    const content = await importDefault<CsCategoryContent>(join(CONTENT, 'cs', `${cat.id}.ts`));
+    if (content) collectOutputRuns(content.quiz, `cs/${cat.id}`);
+  }
+  for (const topic of ALGO_TOPICS.filter((t) => !ONLY || ONLY.includes(t.id))) {
+    const content = await importDefault<AlgoTopicContent>(join(CONTENT, 'algorithm', 'quiz', `${topic.id}.ts`));
+    if (content) collectOutputRuns(content.questions, `algo-quiz/${topic.id}`);
+  }
+}
+
 async function main() {
   console.log('콘텐츠 검증 시작\n');
   if (SECTIONS.has('cs')) await validateCs();
   if (SECTIONS.has('algo-quiz')) await validateAlgoQuiz();
   if (SECTIONS.has('review')) await validateReview();
   if (SECTIONS.has('patterns')) await validateAlgoPatterns();
+  if (SECTIONS.has('output')) {
+    // 출력 맞추기 문제는 cs · algo-quiz 를 읽을 때 모은다 — output 만 고르면 두 섹션의 문제를 따로 모은다
+    if (!SECTIONS.has('cs') && !SECTIONS.has('algo-quiz')) await collectOutputSources();
+    await runOutputs();
+  }
 
   console.log('');
   if (warnings.length) {

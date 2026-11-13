@@ -49,6 +49,86 @@ print(heapq.heappop(h), heapq.heappop(h))`,
       explanation: `\`heapq\`는 **최소 힙**이라 \`heappop\`은 항상 남은 값 중 가장 작은 값을 꺼내고 힙에서 제거합니다. 1을 꺼낸 뒤 남은 3, 5, 8 중 최솟값 3이 나옵니다.
 
 힙은 넣은 순서와 상관없이 값의 크기(우선순위)로 꺼냅니다.`,
+      output: '1 3',
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `PriorityQueue<Integer> pq = new PriorityQueue<>();
+for (int x : new int[]{5, 1, 8, 3}) {
+    pq.offer(x);
+}
+System.out.println(pq.poll() + " " + pq.poll());`,
+          },
+          output: '1 3',
+          distractors: [
+            {
+              text: '`8 5`',
+              why: '최대 힙으로 착각한 답입니다. `PriorityQueue`는 기본이 최소 힙이라, 최대 힙이 필요하면 `new PriorityQueue<>(Collections.reverseOrder())`로 만듭니다.',
+            },
+            {
+              text: '`5 1`',
+              why: '넣은 순서대로 꺼내는 큐로 착각한 답입니다. `PriorityQueue`는 넣은 순서와 상관없이 값의 크기(우선순위)로 꺼냅니다.',
+            },
+            {
+              text: '`3 8`',
+              why: '나중에 넣은 것부터 꺼내는 스택으로 착각한 답입니다. `poll`은 넣은 순서가 아니라 남은 값 중 최솟값을 꺼냅니다.',
+            },
+            {
+              text: '`1 1`',
+              why: '`poll`은 최솟값을 돌려주면서 큐에서 **제거**합니다. 제거하지 않고 최솟값을 보기만 하는 것은 `peek()`입니다.',
+            },
+            {
+              text: '`1 5`',
+              why: '최솟값 하나만 앞으로 나오고 나머지는 넣은 순서를 지킨다고 본 답입니다. 두 번째 `poll`도 남은 5, 8, 3 중 최솟값인 3을 꺼냅니다.',
+            },
+          ],
+          explanation: `\`PriorityQueue\`는 기본이 **최소 힙**이라 \`poll\`은 항상 남은 값 중 가장 작은 값을 꺼내고 큐에서 제거합니다. 1을 꺼낸 뒤 남은 3, 5, 8 중 최솟값 3이 나옵니다.
+
+힙은 넣은 순서와 상관없이 값의 크기(우선순위)로 꺼냅니다.`,
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `import java.util.PriorityQueue
+
+val pq = PriorityQueue<Int>()
+for (x in listOf(5, 1, 8, 3)) {
+    pq.add(x)
+}
+println("\${pq.poll()} \${pq.poll()}")`,
+          },
+          output: '1 3',
+          distractors: [
+            {
+              text: '`8 5`',
+              why: '최대 힙으로 착각한 답입니다. `PriorityQueue`는 기본이 최소 힙이라, 최대 힙이 필요하면 `PriorityQueue<Int>(reverseOrder())`로 만듭니다.',
+            },
+            {
+              text: '`5 1`',
+              why: '넣은 순서대로 꺼내는 큐로 착각한 답입니다. `PriorityQueue`는 넣은 순서와 상관없이 값의 크기(우선순위)로 꺼냅니다.',
+            },
+            {
+              text: '`3 8`',
+              why: '나중에 넣은 것부터 꺼내는 스택으로 착각한 답입니다. `poll`은 넣은 순서가 아니라 남은 값 중 최솟값을 꺼냅니다.',
+            },
+            {
+              text: '`1 1`',
+              why: '`poll`은 최솟값을 돌려주면서 큐에서 **제거**합니다. 제거하지 않고 최솟값을 보기만 하는 것은 `peek()`입니다.',
+            },
+            {
+              text: '`1 5`',
+              why: '최솟값 하나만 앞으로 나오고 나머지는 넣은 순서를 지킨다고 본 답입니다. 두 번째 `poll`도 남은 5, 8, 3 중 최솟값인 3을 꺼냅니다.',
+            },
+          ],
+          explanation: `\`PriorityQueue\`는 기본이 **최소 힙**이라 \`poll\`은 항상 남은 값 중 가장 작은 값을 꺼내고 큐에서 제거합니다. 1을 꺼낸 뒤 남은 3, 5, 8 중 최솟값 3이 나옵니다.
+
+힙은 넣은 순서와 상관없이 값의 크기(우선순위)로 꺼냅니다.`,
+        },
+      },
+      tags: [
+        'output',
+      ],
     },
     {
       id: 'algo-heap-q02',

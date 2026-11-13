@@ -89,6 +89,132 @@ print(cnt["a"], cnt["z"], len(cnt))`,
 - \`len(cnt)\`: 서로 다른 키의 개수인 3입니다.
 
 일반 \`dict\`라면 \`d["z"]\`에서 \`KeyError\`가 나므로 \`d.get("z", 0)\`을 씁니다.`,
+      output: '3 0 3',
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `Map<Character, Integer> cnt = new HashMap<>();
+for (char ch : "banana".toCharArray()) {
+    cnt.merge(ch, 1, Integer::sum);
+}
+System.out.println(cnt.get('a') + " " + cnt.get('z') + " " + cnt.size());`,
+          },
+          output: '3 null 3',
+          correct: '`3 null 3`',
+          distractors: [
+            {
+              text: '`3 0 3`',
+              why: '`HashMap`의 `get`은 없는 키를 읽으면 0이 아니라 `null`을 돌려줍니다. 0이 필요하면 `cnt.getOrDefault(\'z\', 0)`을 씁니다.',
+            },
+            {
+              text: '`3 null 6`',
+              why: '`size()`는 서로 다른 키의 개수(3)입니다. 전체 문자 수 6은 값을 모두 더해야 나옵니다.',
+            },
+            {
+              text: '`NullPointerException`이 발생한다',
+              why: '`null`을 문자열에 이어 붙이면 `"null"`이 될 뿐 예외가 나지 않습니다. 예외는 `int z = cnt.get(\'z\');`처럼 `int`로 언박싱할 때 납니다.',
+            },
+            {
+              text: '`3 null 4`',
+              why: '`get`은 없는 키를 읽어도 키를 추가하지 않습니다. 없는 키를 새로 만드는 것은 `computeIfAbsent` 같은 메서드입니다.',
+            },
+            {
+              text: '`1 null 3`',
+              why: '`merge(ch, 1, Integer::sum)`은 키가 이미 있으면 기존 값에 1을 더합니다. 매번 1로 덮어쓰는 것은 `put(ch, 1)`입니다.',
+            },
+          ],
+          explanation: `\`cnt.merge(ch, 1, Integer::sum)\`은 키가 없으면 1을 넣고, 있으면 기존 값에 1을 더해 각 문자의 등장 횟수 \`{a=3, b=1, n=2}\`를 셉니다.
+
+- \`cnt.get('a')\`: 3
+- \`cnt.get('z')\`: 없는 키는 0이 아니라 **\`null\`**을 반환하고, 문자열에 이어 붙이면 \`null\`로 찍힙니다. 이때 키가 추가되지는 않습니다.
+- \`cnt.size()\`: 서로 다른 키의 개수인 3입니다.
+
+빈도를 세는 맵이라도 없는 키를 0으로 바꿔 주지 않습니다. 0으로 읽으려면 \`cnt.getOrDefault('z', 0)\`을 씁니다.`,
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `val cnt = "banana".groupingBy { it }.eachCount()
+println("\${cnt['a']} \${cnt['z']} \${cnt.size}")`,
+          },
+          output: '3 null 3',
+          correct: '`3 null 3`',
+          distractors: [
+            {
+              text: '`3 0 3`',
+              why: '`cnt[\'z\']`(`get`)는 없는 키를 읽으면 0이 아니라 `null`을 돌려줍니다. 0이 필요하면 `cnt[\'z\'] ?: 0`처럼 기본값을 붙입니다.',
+            },
+            {
+              text: '`3 null 6`',
+              why: '`size`는 서로 다른 키의 개수(3)입니다. 전체 문자 수 6은 `cnt.values.sum()`으로 구합니다.',
+            },
+            {
+              text: '`NoSuchElementException`이 발생한다',
+              why: '`cnt[\'z\']`는 없는 키에 예외 대신 `null`을 돌려줍니다. 없는 키에서 예외를 던지는 것은 `cnt.getValue(\'z\')`입니다.',
+            },
+            {
+              text: '컴파일 에러 — `Int?` 값은 문자열 템플릿에 넣을 수 없다',
+              why: '문자열 템플릿은 nullable 값도 받아 `null`이면 `"null"`로 바꿉니다. `Int?`가 컴파일 에러가 되는 것은 `cnt[\'z\'] + 1`처럼 바로 계산할 때입니다.',
+            },
+            {
+              text: '`3 null 4`',
+              why: '`cnt[\'z\']`는 읽기만 할 뿐 키를 추가하지 않습니다. 없는 키를 새로 만드는 것은 `MutableMap`의 `getOrPut`입니다.',
+            },
+          ],
+          explanation: `\`groupingBy { it }.eachCount()\`는 문자열의 각 문자를 키로 등장 횟수 \`{b=1, a=3, n=2}\`를 셉니다.
+
+- \`cnt['a']\`: 3
+- \`cnt['z']\`: 없는 키는 0이 아니라 **\`null\`**을 반환하고(반환 타입 \`Int?\`), 문자열 템플릿에서는 \`null\`로 찍힙니다. 이때 키가 추가되지는 않습니다.
+- \`cnt.size\`: 서로 다른 키의 개수인 3입니다.
+
+빈도를 센 맵이라도 없는 키를 0으로 바꿔 주지 않습니다. 0으로 읽으려면 \`cnt['z'] ?: 0\` 또는 \`cnt.getOrDefault('z', 0)\`을 씁니다.`,
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `const cnt = new Map();
+for (const ch of "banana") {
+  cnt.set(ch, (cnt.get(ch) ?? 0) + 1);
+}
+console.log(cnt.get("a"), cnt.get("z"), cnt.size);`,
+          },
+          output: '3 undefined 3',
+          correct: '`3 undefined 3`',
+          distractors: [
+            {
+              text: '`3 0 3`',
+              why: '`Map`의 `get`은 없는 키를 읽으면 0이 아니라 `undefined`를 돌려줍니다. 0이 필요하면 `cnt.get("z") ?? 0`처럼 기본값을 붙입니다.',
+            },
+            {
+              text: '`3 null 3`',
+              why: '`Map.get`이 없는 키에 돌려주는 값은 `null`이 아니라 `undefined`입니다.',
+            },
+            {
+              text: '`3 undefined 6`',
+              why: '`size`는 서로 다른 키의 개수(3)입니다. 전체 문자 수 6은 값을 모두 더해야 나옵니다.',
+            },
+            {
+              text: '`3 undefined 4`',
+              why: '`get`은 읽기만 할 뿐 키를 추가하지 않습니다. 키는 `set`을 부를 때만 생깁니다.',
+            },
+            {
+              text: '`TypeError`가 발생한다',
+              why: '`for...of`는 문자열을 문자 하나씩 돌고, 없는 키를 `get`해도 예외 없이 `undefined`를 돌려줍니다. 코드 어디에서도 오류가 나지 않습니다.',
+            },
+          ],
+          explanation: `반복문이 문자마다 \`(cnt.get(ch) ?? 0) + 1\`을 저장해 \`b\` 1번, \`a\` 3번, \`n\` 2번을 셉니다.
+
+- \`cnt.get("a")\`: 3
+- \`cnt.get("z")\`: 없는 키는 0이 아니라 **\`undefined\`**를 반환합니다. 이때 키가 추가되지는 않습니다.
+- \`cnt.size\`: 서로 다른 키의 개수인 3입니다.
+
+빈도를 세는 \`Map\`이라도 없는 키를 0으로 바꿔 주지 않습니다. 0으로 읽으려면 \`cnt.get("z") ?? 0\`처럼 기본값을 붙입니다.`,
+        },
+      },
+      tags: [
+        'output',
+      ],
     },
   ],
 };

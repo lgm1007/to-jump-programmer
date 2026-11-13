@@ -39,6 +39,7 @@ out = []
 visit('A', out)
 print(''.join(out))`,
       },
+      output: 'DBEACF',
       correct: '`DBEACF`',
       distractors: [
         {
@@ -65,9 +66,168 @@ print(''.join(out))`,
       explanation: `\`out.append(node)\`가 왼쪽 재귀와 오른쪽 재귀 **사이**에 있으므로 **중위 순회**(왼쪽 → 루트 → 오른쪽)입니다.
 
 A의 왼쪽 서브트리(D, B, E)를 먼저 방문하고, 다음으로 A, 마지막으로 오른쪽 서브트리(C, F)를 방문하므로 \`DBEACF\`입니다.`,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `import java.util.*;
+
+public class Main {
+    // 노드: {왼쪽 자식, 오른쪽 자식}
+    static Map<String, String[]> tree = Map.of(
+        "A", new String[]{"B", "C"},
+        "B", new String[]{"D", "E"},
+        "C", new String[]{null, "F"},
+        "D", new String[]{null, null},
+        "E", new String[]{null, null},
+        "F", new String[]{null, null}
+    );
+
+    static void visit(String node, StringBuilder out) {
+        if (node == null) return;
+        String left = tree.get(node)[0], right = tree.get(node)[1];
+        visit(left, out);
+        out.append(node);
+        visit(right, out);
+    }
+
+    public static void main(String[] args) {
+        StringBuilder out = new StringBuilder();
+        visit("A", out);
+        System.out.println(out);
+    }
+}`,
+          },
+          output: 'DBEACF',
+          distractors: [
+            {
+              text: '`ABDECF`',
+              why: '전위 순회(루트 → 왼쪽 → 오른쪽)의 결과입니다. 이 코드는 왼쪽 재귀가 끝난 뒤에 노드를 추가합니다.',
+            },
+            {
+              text: '`DEBFCA`',
+              why: '후위 순회(왼쪽 → 오른쪽 → 루트)의 결과입니다. 이 코드는 오른쪽 재귀보다 먼저 노드를 추가합니다.',
+            },
+            {
+              text: '`ABCDEF`',
+              why: '레벨 순회(BFS)의 결과입니다. 이 코드는 재귀로 왼쪽 서브트리를 끝까지 내려가므로 깊이 순서로 방문하지 않습니다.',
+            },
+            {
+              text: '`DBEAFC`',
+              why: 'F를 C의 왼쪽 자식으로 본 결과입니다. `{null, "F"}`에서 F는 오른쪽 자식이므로 C를 추가한 뒤에 방문합니다.',
+            },
+            {
+              text: '`FCAEBD`',
+              why: '오른쪽 서브트리부터 방문한(오른쪽 → 루트 → 왼쪽) 결과입니다. 이 코드는 `visit(left, out)`을 먼저 호출합니다.',
+            },
+          ],
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `val tree = mapOf(   // 노드: (왼쪽 자식, 오른쪽 자식)
+    "A" to ("B" to "C"),
+    "B" to ("D" to "E"),
+    "C" to (null to "F"),
+    "D" to (null to null),
+    "E" to (null to null),
+    "F" to (null to null),
+)
+
+fun visit(node: String?, out: StringBuilder) {
+    if (node == null) return
+    val (left, right) = tree.getValue(node)
+    visit(left, out)
+    out.append(node)
+    visit(right, out)
+}
+
+fun main() {
+    val out = StringBuilder()
+    visit("A", out)
+    println(out)
+}`,
+          },
+          output: 'DBEACF',
+          distractors: [
+            {
+              text: '`ABDECF`',
+              why: '전위 순회(루트 → 왼쪽 → 오른쪽)의 결과입니다. 이 코드는 왼쪽 재귀가 끝난 뒤에 노드를 추가합니다.',
+            },
+            {
+              text: '`DEBFCA`',
+              why: '후위 순회(왼쪽 → 오른쪽 → 루트)의 결과입니다. 이 코드는 오른쪽 재귀보다 먼저 노드를 추가합니다.',
+            },
+            {
+              text: '`ABCDEF`',
+              why: '레벨 순회(BFS)의 결과입니다. 이 코드는 재귀로 왼쪽 서브트리를 끝까지 내려가므로 깊이 순서로 방문하지 않습니다.',
+            },
+            {
+              text: '`DBEAFC`',
+              why: 'F를 C의 왼쪽 자식으로 본 결과입니다. `null to "F"`에서 F는 오른쪽 자식이므로 C를 추가한 뒤에 방문합니다.',
+            },
+            {
+              text: '`FCAEBD`',
+              why: '오른쪽 서브트리부터 방문한(오른쪽 → 루트 → 왼쪽) 결과입니다. 이 코드는 `visit(left, out)`을 먼저 호출합니다.',
+            },
+          ],
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `const tree = { // 노드: [왼쪽 자식, 오른쪽 자식]
+  A: ['B', 'C'],
+  B: ['D', 'E'],
+  C: [null, 'F'],
+  D: [null, null],
+  E: [null, null],
+  F: [null, null],
+};
+
+function visit(node, out) {
+  if (node === null) return;
+  const [left, right] = tree[node];
+  visit(left, out);
+  out.push(node);
+  visit(right, out);
+}
+
+const out = [];
+visit('A', out);
+console.log(out.join(''));`,
+          },
+          output: 'DBEACF',
+          distractors: [
+            {
+              text: '`ABDECF`',
+              why: '전위 순회(루트 → 왼쪽 → 오른쪽)의 결과입니다. 이 코드는 왼쪽 재귀가 끝난 뒤에 노드를 추가합니다.',
+            },
+            {
+              text: '`DEBFCA`',
+              why: '후위 순회(왼쪽 → 오른쪽 → 루트)의 결과입니다. 이 코드는 오른쪽 재귀보다 먼저 노드를 추가합니다.',
+            },
+            {
+              text: '`ABCDEF`',
+              why: '레벨 순회(BFS)의 결과입니다. 이 코드는 재귀로 왼쪽 서브트리를 끝까지 내려가므로 깊이 순서로 방문하지 않습니다.',
+            },
+            {
+              text: '`DBEAFC`',
+              why: 'F를 C의 왼쪽 자식으로 본 결과입니다. `[null, \'F\']`에서 F는 오른쪽 자식이므로 C를 추가한 뒤에 방문합니다.',
+            },
+            {
+              text: '`FCAEBD`',
+              why: '오른쪽 서브트리부터 방문한(오른쪽 → 루트 → 왼쪽) 결과입니다. 이 코드는 `visit(left, out)`을 먼저 호출합니다.',
+            },
+          ],
+          explanation: `\`out.push(node)\`가 왼쪽 재귀와 오른쪽 재귀 **사이**에 있으므로 **중위 순회**(왼쪽 → 루트 → 오른쪽)입니다.
+
+A의 왼쪽 서브트리(D, B, E)를 먼저 방문하고, 다음으로 A, 마지막으로 오른쪽 서브트리(C, F)를 방문하므로 \`DBEACF\`입니다.`,
+        },
+      },
       tags: [
         '순회',
         '코드 읽기',
+        'output',
       ],
     },
     {

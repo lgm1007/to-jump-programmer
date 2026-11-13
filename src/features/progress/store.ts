@@ -8,6 +8,7 @@ import type {
   DevTrack,
   FrameworkId,
   FrontendFrameworkId,
+  OutputLanguage,
   SolveLanguage,
   TrackSide,
 } from '@/content/types';
@@ -44,6 +45,8 @@ export interface Settings {
   reviewSide?: TrackSide;
   /** CS 이론 레슨 본문 글자 크기 */
   lessonTextSize?: 'md' | 'lg';
+  /** 출력 맞추기 퀴즈에서 고른 코드 언어. 없으면 코스에 맞춘 기본 언어(`defaultQuizCodeLanguage`) */
+  quizCodeLanguage?: OutputLanguage;
 }
 
 export interface QuizRecord {

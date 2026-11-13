@@ -130,12 +130,15 @@ export function Chip({
   onPress,
   icon,
   tint,
+  disabled,
 }: {
   label: string;
   selected?: boolean;
   onPress?: () => void;
   icon?: IconName;
   tint?: string;
+  /** 누를 수 없게 (선택 상태는 그대로 보인다) */
+  disabled?: boolean;
 }) {
   const c = useColors();
   const activeColor = tint ?? c.primary;
@@ -145,14 +148,15 @@ export function Chip({
         haptic('selection');
         onPress?.();
       }}
+      disabled={disabled}
       accessibilityRole="button"
-      accessibilityState={{ selected: !!selected }}
+      accessibilityState={{ selected: !!selected, disabled: !!disabled }}
       style={({ pressed }) => [
         styles.chip,
         {
           backgroundColor: selected ? activeColor : c.surface,
           borderColor: selected ? activeColor : c.border,
-          opacity: pressed ? 0.8 : 1,
+          opacity: disabled && !selected ? 0.45 : pressed ? 0.8 : 1,
         },
       ]}>
       {icon && <Ionicons name={icon} size={14} color={selected ? '#FFFFFF' : c.textSecondary} />}

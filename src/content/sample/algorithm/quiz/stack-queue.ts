@@ -26,6 +26,7 @@ stack.append(5)
 stack.pop()
 print(stack)`,
       },
+      output: '[1, 2, 4]',
       correct: '`[1, 2, 4]`',
       distractors: [
         {
@@ -54,6 +55,141 @@ print(stack)`,
 1. \`[1, 2, 3]\`에서 \`pop()\` → 3 제거 → \`[1, 2]\`
 2. 4, 5 추가 → \`[1, 2, 4, 5]\`
 3. \`pop()\` → 가장 나중에 넣은 5 제거 → \`[1, 2, 4]\``,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `Deque<Integer> stack = new ArrayDeque<>();
+for (int x : new int[]{1, 2, 3}) {
+    stack.push(x);
+}
+stack.pop();
+stack.push(4);
+stack.push(5);
+stack.pop();
+System.out.println(stack);`,
+          },
+          output: '[4, 2, 1]',
+          correct: '`[4, 2, 1]`',
+          distractors: [
+            {
+              text: '`[1, 2, 4]`',
+              why: '꺼낸 원소는 맞지만 출력 순서가 반대입니다. `ArrayDeque` 의 `push` 는 **맨 앞**에 넣고 `toString` 은 앞에서부터 출력하므로, 꼭대기(가장 최근 원소)가 먼저 보입니다.',
+            },
+            {
+              text: '`[5, 2, 1]`',
+              why: '`pop()` 은 가장 나중에 넣은 원소를 꺼냅니다. 4와 5 중 나중에 넣은 5가 제거됩니다.',
+            },
+            {
+              text: '`[5, 4, 3]`',
+              why: '먼저 넣은 원소부터 꺼내는 큐(FIFO)로 착각한 결과입니다. `pop()` 은 `push` 와 같은 쪽인 맨 앞, 즉 가장 최근에 넣은 원소를 꺼냅니다.',
+            },
+            {
+              text: '`[5, 4, 2, 1]`',
+              why: '두 번째 `pop()` 을 빠뜨린 결과입니다. 5를 넣은 뒤에도 `pop()` 이 한 번 더 실행됩니다.',
+            },
+            {
+              text: '`[5, 4, 3, 2, 1]`',
+              why: '`pop()` 은 값을 읽기만 하는 `peek()` 과 달리 꺼내서 지웁니다. 반환값을 쓰지 않아도 원소는 사라집니다.',
+            },
+          ],
+          explanation: `\`ArrayDeque\` 를 스택으로 쓰면 \`push\` 와 \`pop()\` 이 모두 **맨 앞**에서 동작하므로 맨 앞이 스택의 꼭대기입니다. \`println\` 은 덱을 앞에서부터 출력하므로 **꼭대기부터** 보입니다.
+
+1. 1, 2, 3을 \`push\` → \`[3, 2, 1]\`, \`pop()\` → 3 제거 → \`[2, 1]\`
+2. 4, 5를 \`push\` → \`[5, 4, 2, 1]\`
+3. \`pop()\` → 가장 나중에 넣은 5 제거 → \`[4, 2, 1]\`
+
+> 바닥부터 출력되는 \`ArrayList\` 와 보이는 순서만 다를 뿐, 꺼내는 원소(가장 최근 것)는 같습니다.`,
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `val stack = ArrayDeque<Int>()
+for (x in listOf(1, 2, 3)) {
+    stack.addLast(x)
+}
+stack.removeLast()
+stack.addLast(4)
+stack.addLast(5)
+stack.removeLast()
+println(stack)`,
+          },
+          output: '[1, 2, 4]',
+          distractors: [
+            {
+              text: '`[1, 2, 5]`',
+              why: '`removeLast()` 는 가장 나중에 넣은 원소를 꺼냅니다. 4와 5 중 나중에 넣은 5가 제거됩니다.',
+            },
+            {
+              text: '`[3, 4, 5]`',
+              why: '앞에서 꺼내는 큐(FIFO)로 착각한 결과입니다. 앞에서 꺼내는 것은 `removeFirst()` 이고, `removeLast()` 는 맨 뒤에서 꺼냅니다.',
+            },
+            {
+              text: '`[1, 2, 4, 5]`',
+              why: '두 번째 `removeLast()` 를 빠뜨린 결과입니다. 5를 넣은 뒤에도 한 번 더 꺼냅니다.',
+            },
+            {
+              text: '`[1, 2, 3, 4, 5]`',
+              why: '`removeLast()` 는 값을 읽기만 하는 `last()` 와 달리 꺼내서 지웁니다. 반환값을 쓰지 않아도 원소는 사라집니다.',
+            },
+            {
+              text: '`[4, 2, 1]`',
+              why: '`println` 은 덱을 앞(바닥)에서 뒤(꼭대기) 순서로 출력합니다. 스택의 꼭대기부터 거꾸로 보여 주지 않습니다.',
+            },
+          ],
+          explanation: `\`ArrayDeque\` 의 \`addLast\` 와 \`removeLast()\` 는 모두 **맨 뒤**에서 동작하므로 스택(LIFO)처럼 쓸 수 있습니다.
+
+1. \`[1, 2, 3]\` 에서 \`removeLast()\` → 3 제거 → \`[1, 2]\`
+2. 4, 5 추가 → \`[1, 2, 4, 5]\`
+3. \`removeLast()\` → 가장 나중에 넣은 5 제거 → \`[1, 2, 4]\``,
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `const stack = [];
+for (const x of [1, 2, 3]) {
+  stack.push(x);
+}
+stack.pop();
+stack.push(4);
+stack.push(5);
+stack.pop();
+console.log(JSON.stringify(stack));`,
+          },
+          output: '[1,2,4]',
+          correct: '`[1,2,4]`',
+          distractors: [
+            {
+              text: '`[1,2,5]`',
+              why: '`pop()` 은 가장 나중에 넣은 원소를 꺼냅니다. 4와 5 중 나중에 넣은 5가 제거됩니다.',
+            },
+            {
+              text: '`[3,4,5]`',
+              why: '앞에서 꺼내는 큐(FIFO)로 착각한 결과입니다. 앞에서 꺼내는 것은 `shift()` 이고, `pop()` 은 맨 뒤에서 꺼냅니다.',
+            },
+            {
+              text: '`[1,2,4,5]`',
+              why: '두 번째 `pop()` 을 빠뜨린 결과입니다. 5를 넣은 뒤에도 `pop()` 이 한 번 더 실행됩니다.',
+            },
+            {
+              text: '`[1,2,3,4,5]`',
+              why: '`pop()` 은 값을 읽기만 하는 것이 아니라 꺼내서 지웁니다. 반환값을 쓰지 않아도 원소는 사라집니다.',
+            },
+            {
+              text: '`[4,2,1]`',
+              why: '`JSON.stringify` 는 배열을 앞(바닥)에서 뒤(꼭대기) 순서로 출력합니다. 스택의 꼭대기부터 거꾸로 보여 주지 않습니다.',
+            },
+          ],
+          explanation: `배열의 \`push\` 와 \`pop()\` 은 모두 **맨 뒤**에서 동작하므로 스택(LIFO)처럼 쓸 수 있습니다.
+
+1. \`[1, 2, 3]\` 에서 \`pop()\` → 3 제거 → \`[1, 2]\`
+2. 4, 5 추가 → \`[1, 2, 4, 5]\`
+3. \`pop()\` → 가장 나중에 넣은 5 제거 → \`[1, 2, 4]\``,
+        },
+      },
+      tags: [
+        'output',
+      ],
     },
     {
       id: 'algo-stack-queue-q02',
