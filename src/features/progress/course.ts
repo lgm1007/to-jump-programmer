@@ -17,6 +17,7 @@ import {
   type DevTrack,
   type FrameworkId,
   type FrontendFrameworkId,
+  type OutputLanguage,
   type ReviewFramework,
   type SolveLanguage,
   type TrackSide,
@@ -127,7 +128,18 @@ export function isQuestionForCourse(id: string, c: Course, scope: QuestionScope 
   const q = QUESTION_MAP[id];
   if (!q) return false;
   if (QUESTION_SOURCE[id] === 'cs') return scope.categoryIds.has(q.categoryId);
-  return !q.code || !PROGRAMMING_LANGUAGES.has(q.code.language) || scope.codeLanguages.has(q.code.language);
+  if (!q.code || !PROGRAMMING_LANGUAGES.has(q.code.language) || scope.codeLanguages.has(q.code.language)) return true;
+  // 출력 맞추기 문제는 내 언어 버전이 있으면 그 언어로 보여 줄 수 있다
+  return Object.keys(q.variants ?? {}).some((l) => scope.codeLanguages.has(l as CodeLanguage));
+}
+
+/**
+ * 출력 맞추기 퀴즈의 기본 코드 언어 — 코스 프레임워크의 언어(풀스택은 백엔드 쪽).
+ * 코딩 테스트 언어가 그 프레임워크 언어 중 하나면 그 언어(Spring + Kotlin → Kotlin). 프론트엔드 · NestJS → JavaScript, Django → Python
+ */
+export function defaultQuizCodeLanguage(c: Course): OutputLanguage {
+  const languages = FRAMEWORK_LANGUAGE_CATEGORIES[c.track === 'frontend' ? c.frontendFramework : c.framework] as OutputLanguage[];
+  return languages.find((l) => l === c.language) ?? languages[0];
 }
 
 /** 오늘의 면접 질문 후보 카테고리. 풀스택은 그날 볼 쪽(side)과 공통 카테고리만 */

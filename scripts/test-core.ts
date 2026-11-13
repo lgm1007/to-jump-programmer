@@ -16,17 +16,20 @@ import {
   QUESTION_SOURCE,
   REVIEW_CONTENT,
 } from '../src/content';
-import type { Difficulty, McqChoicesQuestion, McqPoolQuestion } from '../src/content/types';
+import type { Difficulty, McqChoicesQuestion, McqPoolQuestion, OxQuestion } from '../src/content/types';
 import { backupFileName, createBackup, describeBackup, parseBackup } from '../src/features/progress/backup';
 import { arrangeMcq, correctChoiceText, presentMcq, shuffledOrder } from '../src/features/progress/choices';
+import { resolveQuestionVariant } from '../src/features/progress/code-variant';
 import {
   courseCodeLanguages,
   courseKey,
   csCategoriesForCourse,
   csQuestionGroupsForCourse,
+  defaultQuizCodeLanguage,
   isCategoryInTrack,
   isQuestionForCourse,
   partitionCategoriesForCourse,
+  questionScope,
   sideOfDay,
   solveLanguagesFor,
   type Course,
@@ -269,6 +272,106 @@ test('풀스택은 CS 후보 묶음을 번갈아 골라 한쪽으로 쏠리지 �
   assert.equal(short.filter((id) => id.startsWith('f')).length, 6);
 });
 
+console.log('code variants');
+const pool = (texts: string[]) => texts.map((text) => ({ text, why: '그 출력이 아닙니다.' }));
+const outputQ: McqPoolQuestion = {
+  id: 'algo-test-q01',
+  categoryId: 'test',
+  type: 'mcq',
+  difficulty: 1,
+  prompt: '다음 코드의 출력 결과는?',
+  tags: ['output'],
+  code: { language: 'python', source: 'print(1 == 1)' },
+  output: 'True',
+  correct: '`True`',
+  distractors: pool(['`False`', '`1`', '`None`', '`true`', '오류가 난다']),
+  explanation: '비교 결과는 불리언입니다.',
+  variants: {
+    java: {
+      code: { language: 'java', source: 'System.out.println(1 == 1);' },
+      output: 'true',
+      correct: '`true`',
+      distractors: pool(['`false`', '`1`', '`null`', '`True`', '컴파일 에러']),
+      explanation: 'Java 의 불리언은 소문자로 찍힙니다.',
+    },
+    javascript: { code: { language: 'javascript', source: 'console.log(1 === 1)' }, output: 'true' },
+  },
+};
+test('출력 맞추기: 고른 언어 버전으로 코드 · 보기 · 해설을 바꾸고, 없으면 대표 언어로', () => {
+  const py = resolveQuestionVariant(outputQ, 'python');
+  assert.equal(py.question, outputQ); // 대표 언어와 같으면 그대로
+  assert.equal(py.fallback, false);
+  assert.deepEqual(py.languages, ['python', 'javascript', 'java']);
+  const java = resolveQuestionVariant(outputQ, 'java');
+  assert.equal(java.language, 'java');
+  assert.equal(java.question.id, outputQ.id); // 기록 · 오답노트는 같은 문제
+  assert.equal(java.question.code?.language, 'java');
+  assert.equal(correctChoiceText(java.question as McqPoolQuestion), '`true`');
+  assert.equal(java.question.explanation, 'Java 의 불리언은 소문자로 찍힙니다.');
+  assert.equal(java.question.prompt, outputQ.prompt); // 덮어쓰지 않은 필드는 그대로
+  const kotlin = resolveQuestionVariant(outputQ, 'kotlin');
+  assert.equal(kotlin.question, outputQ); // 그 언어 버전이 없으면 대표 언어로, 안내 표시
+  assert.equal(kotlin.fallback, true);
+  assert.equal(kotlin.language, 'python');
+  // 코드가 없거나 TypeScript 처럼 4개 언어 밖의 코드면 언어를 바꾸지 않는다
+  const ts = resolveQuestionVariant({ ...outputQ, code: { language: 'typescript', source: 'let a: number = 1' } }, 'java');
+  assert.equal(ts.language, undefined);
+  assert.equal(ts.fallback, false);
+  assert.deepEqual(ts.languages, []);
+  assert.equal(resolveQuestionVariant({ ...outputQ, code: undefined }, 'java').language, undefined);
+});
+test('출력 맞추기: 보기를 덮어쓴 언어 버전만 보기 구성이 따로, 같은 언어로 보는 동안은 그대로', () => {
+  const js = resolveQuestionVariant(outputQ, 'javascript'); // 코드만 바꿈 — 보기 구성이 대표 언어와 같다
+  assert.equal(js.shuffleKey, outputQ.id);
+  assert.deepEqual(presentMcq(js.question as McqPoolQuestion, 2, js.shuffleKey), presentMcq(outputQ, 2));
+  const java = resolveQuestionVariant(outputQ, 'java');
+  assert.notEqual(java.shuffleKey, outputQ.id);
+  const shown = presentMcq(java.question as McqPoolQuestion, 1, java.shuffleKey);
+  assert.deepEqual(presentMcq(java.question as McqPoolQuestion, 1, java.shuffleKey), shown);
+  assert.equal(shown.choices[shown.answer].text, '`true`');
+  // 고정 보기 · O/X 문제도 덮어쓴 정답을 쓴다
+  const choices: McqChoicesQuestion = {
+    ...outputQ,
+    correct: undefined,
+    distractors: undefined,
+    choices: ['`1`', '`0.5`'],
+    answer: 1,
+    variants: { java: { code: { language: 'java', source: 'System.out.println(1 / 2);' }, output: '0', choices: ['`0`', '`0.5`'], answer: 0 } },
+  };
+  const javaChoices = resolveQuestionVariant(choices, 'java').question as McqChoicesQuestion;
+  assert.equal(correctChoiceText(javaChoices), '`0`');
+  const ox: OxQuestion = {
+    ...outputQ,
+    type: 'ox',
+    answer: true,
+    correct: undefined,
+    distractors: undefined,
+    variants: { java: { code: { language: 'java', source: 'System.out.println(1 / 2);' }, output: '0', answer: false } },
+  } as OxQuestion;
+  assert.equal((resolveQuestionVariant(ox, 'java').question as OxQuestion).answer, false);
+});
+test('출력 맞추기: 코스별 기본 코드 언어', () => {
+  const course = (c: Partial<Course>): Course => ({ track: 'backend', framework: 'spring', frontendFramework: 'react', ...c });
+  assert.equal(defaultQuizCodeLanguage(course({ language: 'python' })), 'java');
+  assert.equal(defaultQuizCodeLanguage(course({ language: 'kotlin' })), 'kotlin'); // Spring + Kotlin 으로 코딩 테스트
+  assert.equal(defaultQuizCodeLanguage(course({ framework: 'django' })), 'python');
+  assert.equal(defaultQuizCodeLanguage(course({ framework: 'nest' })), 'javascript');
+  assert.equal(defaultQuizCodeLanguage(course({ track: 'frontend', frontendFramework: 'vue', language: 'java' })), 'javascript');
+  assert.equal(defaultQuizCodeLanguage(course({ track: 'fullstack', framework: 'django', frontendFramework: 'react' })), 'python'); // 풀스택은 백엔드 언어
+});
+test('출력 맞추기: 내 언어 버전이 있는 알고리즘 코드 문제는 오늘의 퀴즈 범위에 들어간다', () => {
+  const java: Course = { track: 'backend', framework: 'spring', frontendFramework: 'react', language: 'java' };
+  const scope = questionScope(java);
+  const variantIds = Object.values(QUESTION_MAP)
+    .filter((q) => QUESTION_SOURCE[q.id] === 'algo' && q.code && !scope.codeLanguages.has(q.code.language) && q.variants)
+    .map((q) => q.id);
+  for (const id of variantIds) {
+    const q = QUESTION_MAP[id];
+    const inJava = Object.keys(q.variants ?? {}).some((l) => l === 'java' || l === 'kotlin');
+    assert.equal(isQuestionForCourse(id, java, scope), inJava, id);
+  }
+});
+
 console.log('review');
 test('개선 패턴 · 리뷰 퀴즈 목록은 쉬운 것부터', () => {
   for (const { patterns, challenges } of Object.values(REVIEW_CONTENT)) {
@@ -410,7 +513,8 @@ function outOfScope(id: string, c: Course): string | null {
   const lang = q.code?.language;
   if (!lang || !['python', 'java', 'kotlin', 'cpp', 'javascript', 'typescript'].includes(lang)) return null;
   if (c.language) langs.add(c.language);
-  const ok = langs.has(lang) || (lang === 'typescript' && langs.has('javascript'));
+  // 출력 맞추기 문제는 내 언어 버전이 있으면 그 언어로 보여 줄 수 있다 (#41)
+  const ok = langs.has(lang) || (lang === 'typescript' && langs.has('javascript')) || Object.keys(q.variants ?? {}).some((l) => langs.has(l));
   return ok ? null : `다른 언어 코드 ${lang}`;
 }
 const base = useProgress.getState();

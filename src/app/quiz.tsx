@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CodeBlock } from '@/components/code-block';
+import { ReviewLanguageToggle } from '@/components/review-language-toggle';
 import { Inline, RichText } from '@/components/rich-text';
 import { Badge, DifficultyBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,13 +22,17 @@ import {
   LESSON_MAP,
   QUESTION_MAP,
   QUESTION_SOURCE,
+  type OutputLanguage,
   type QuizQuestion,
 } from '@/content';
 import { showInterstitialAtBreak } from '@/features/ads';
 import { correctChoiceText, presentMcq, type PresentedChoice } from '@/features/progress/choices';
+import { resolveQuestionVariant } from '@/features/progress/code-variant';
 import { pickLessonCheck } from '@/features/progress/lessons';
+import { useQuizCodeLanguage } from '@/features/progress/quiz-language';
 import { wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
+import { LANGUAGE_LABEL } from '@/lib/highlight';
 import { formatDuration, shuffle } from '@/lib/date';
 import { plainText } from '@/lib/markdown';
 import { haptic } from '@/lib/haptics';
@@ -95,6 +100,8 @@ export default function QuizScreen() {
   const [results, setResults] = useState<Record<string, boolean>>({});
   /** 객관식에서 고른 보기 (결과 화면의 틀린 문제에 오답 이유를 보여주려고) */
   const [picks, setPicks] = useState<Record<string, PresentedChoice>>({});
+  /** 답을 고를 때 보던 코드 언어 — 결과 화면의 틀린 문제도 그 언어 버전으로 보여준다 */
+  const [shownLanguage, setShownLanguage] = useState<Record<string, OutputLanguage | undefined>>({});
   /** 답을 고른 시점의 풀이 횟수 — 답하면 기록이 늘어나도 보던 보기 구성이 바뀌지 않게 */
   const [answerAttempt, setAnswerAttempt] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -114,12 +121,19 @@ export default function QuizScreen() {
   const bookmarks = useProgress((s) => s.bookmarks);
   const toggleBookmark = useProgress((s) => s.toggleBookmark);
 
-  const q = QUESTION_MAP[ids[index]];
+  // 출력 맞추기 문제는 고른 코드 언어 버전으로 바꿔 보여준다 (그 언어 버전이 없으면 원래 문제)
+  const { language: codeLanguage, setLanguage: setCodeLanguage } = useQuizCodeLanguage();
+  const base = QUESTION_MAP[ids[index]];
+  const resolved = useMemo(() => (base ? resolveQuestionVariant(base, codeLanguage) : undefined), [base, codeLanguage]);
+  const q = resolved?.question;
   const answered = answer !== null;
   // 보기 구성은 (문제, 지금까지 푼 횟수)로 정해진다 — 보는 동안은 그대로, 다시 풀면 순서 · 오답이 바뀐다
   const liveAttempt = useProgress((s) => s.quiz[ids[index]]?.attempts ?? 0);
   const attempt = answered ? answerAttempt : liveAttempt;
-  const presented = useMemo(() => (q?.type === 'mcq' ? presentMcq(q, attempt) : null), [q, attempt]);
+  const presented = useMemo(
+    () => (q?.type === 'mcq' ? presentMcq(q, attempt, resolved?.shuffleKey) : null),
+    [q, attempt, resolved?.shuffleKey],
+  );
   const isRight = (value: number | boolean) =>
     presented && typeof value === 'number' ? !!presented.choices[value]?.correct : value === q?.answer;
   const isCorrect = answered && q ? isRight(answer) : false;
@@ -132,6 +146,7 @@ export default function QuizScreen() {
     setResults((r) => ({ ...r, [q.id]: correct }));
     const choice = presented && typeof value === 'number' ? presented.choices[value] : undefined;
     if (choice) setPicks((p) => ({ ...p, [q.id]: choice }));
+    setShownLanguage((l) => ({ ...l, [q.id]: resolved?.language }));
     recordQuiz(q.id, correct);
     haptic(correct ? 'success' : 'error');
     setTimeout(() => scrollRef.current?.scrollTo({ y: Math.max(0, explanationY.current - 120), animated: true }), 150);
@@ -196,7 +211,12 @@ export default function QuizScreen() {
                   오답노트에 자동으로 저장했어요. 다시 맞히면 오답노트에서 빠져요.
                 </Text>
                 {wrongIds.map((id) => (
-                  <WrongItem key={id} question={QUESTION_MAP[id]} picked={picks[id]} showLesson={!lessonCheckId} />
+                  <WrongItem
+                    key={id}
+                    question={resolveQuestionVariant(QUESTION_MAP[id], shownLanguage[id]).question}
+                    picked={picks[id]}
+                    showLesson={!lessonCheckId}
+                  />
                 ))}
               </View>
             )}
@@ -217,6 +237,7 @@ export default function QuizScreen() {
                 setAnswer(null);
                 setResults({});
                 setPicks({});
+                setShownLanguage({});
                 setFinished(false);
                 setRound((r) => r + 1);
                 startedAt.current = Date.now();
@@ -253,6 +274,16 @@ export default function QuizScreen() {
           </View>
 
           <RichText text={q.prompt} variant="title3" />
+          {resolved?.language && (
+            <ReviewLanguageToggle
+              languages={resolved.languages}
+              value={resolved.language}
+              onChange={setCodeLanguage}
+              tint={c.primary}
+              disabled={answered}
+              hint={onlyHint(resolved, QUESTION_SOURCE[q.id] === 'cs' && q.categoryId === resolved.language, codeLanguage)}
+            />
+          )}
           {q.code && <CodeBlock code={q.code.source} language={q.code.language} filename={q.code.filename} />}
 
           {presented ? (
@@ -317,6 +348,20 @@ export default function QuizScreen() {
       </Footer>
     </InsetView>
   );
+}
+
+/** 고른 언어 버전이 없는 출력 문제 안내 — 그 언어 카테고리의 문제(예: Python 카테고리의 Python 코드)는 안내하지 않는다 */
+function onlyHint(
+  resolved: ReturnType<typeof resolveQuestionVariant>,
+  ownLanguageCategory: boolean,
+  chosen: OutputLanguage,
+): string | undefined {
+  if (!resolved.fallback || !resolved.language || ownLanguageCategory) return undefined;
+  const label = LANGUAGE_LABEL[resolved.language];
+  const josa = resolved.language === 'python' || resolved.language === 'kotlin' ? '으로' : '로';
+  return resolved.languages.length > 1
+    ? `이 문제는 ${LANGUAGE_LABEL[chosen]} 버전이 없어 ${label}${josa} 보여 드려요`
+    : `이 문제는 ${label}${josa}만 제공돼요`;
 }
 
 function TopBar({ onClose, progress, label }: { onClose: () => void; progress: number; label: string }) {

@@ -90,7 +90,18 @@ nums.sort()
 - `ox`: `answer: true`는 O(맞는 설명), `false`는 X.
 - `explanation`: O/X · 고정 보기 형식은 정답 이유와 **오답이 왜 틀렸는지**를 함께, 오답 풀 형식은 정답 이유만 적습니다(오답 이유는 `why`). 2~6문장 + 필요하면 목록/코드.
 - 난이도: 1(신입 기본기) · 2(실무/중급) · 3(심화/경력).
-- 알고리즘 개념 퀴즈의 `code.language` 는 오늘의 퀴즈 출제 범위를 정합니다. Python · Java · Kotlin · C++ · JavaScript/TypeScript 코드가 있는 문제는 그 언어를 고른 사용자(코딩 테스트 언어 또는 프레임워크의 언어)에게만 오늘의 퀴즈로 나가고, 코드가 없거나 `text` 같은 언어 중립 코드면 모두에게 나갑니다. 언어와 상관없는 알고리즘 개념은 가능하면 코드 없이(또는 의사 코드 `text` 로) 씁니다.
+- 알고리즘 개념 퀴즈의 `code.language` 는 오늘의 퀴즈 출제 범위를 정합니다. Python · Java · Kotlin · C++ · JavaScript/TypeScript 코드가 있는 문제는 그 언어를 고른 사용자(코딩 테스트 언어 또는 프레임워크의 언어)에게만 오늘의 퀴즈로 나가고, 코드가 없거나 `text` 같은 언어 중립 코드면 모두에게 나갑니다. 언어와 상관없는 알고리즘 개념은 가능하면 코드 없이(또는 의사 코드 `text` 로) 씁니다. 다른 언어 버전(`variants`, 아래)이 있는 문제는 그 언어를 고른 사용자에게도 나갑니다.
+
+#### 출력 맞추기 문제의 언어 버전 (`variants`)
+
+"이 코드의 출력은?" 문제는 사용자가 **Python · JavaScript · Java · Kotlin** 중 고른 언어로 바꿔 볼 수 있습니다(퀴즈 화면의 언어 칩, 기본값은 코스의 언어 — Spring → Java(Kotlin 으로 코딩 테스트를 보면 Kotlin), Django → Python, NestJS · React · Vue → JavaScript, 풀스택은 백엔드 쪽). TypeScript 는 따로 두지 않고 JavaScript 로 씁니다.
+
+- **대상**: 같은 개념이 그 언어에도 있어 그 언어다운 코드로 자연스럽게 쓸 수 있는 문제. 일부 언어만 만들어도 됩니다(예: 정수 오버플로는 Java ↔ Kotlin 만). 그 언어 자체를 묻는 문제(언어 · 프레임워크 카테고리, JS 기본 `sort` 처럼 그 언어 고유 동작, GIL · 코루틴 · 타입 시스템)와 C++ 문제는 만들지 않습니다.
+- **표시**: `tags` 에 `'output'` 을 달고, 대표 코드의 실제 출력을 `output` 에 적습니다(표준 출력 전체, 여러 줄은 `\n`).
+- **언어 버전**: `variants: { java: { code, output, … } }` — 대표 언어(`code.language`)는 넣지 않습니다. 코드는 번역이 아니라 **같은 개념을 그 언어답게** 새로 씁니다. 출력 형식이 달라지면(`True`/`true`, `None`/`null`, 배열 출력, Node 의 `[ 1, 2 ]` 등) 보기를 그 언어 출력에 맞게 덮어쓰고(`correct` + `distractors`, 고정 보기는 `choices` + `answer`, O/X 는 `answer`), 해설 · 오답 이유가 대표 언어의 문법을 가리키면 덮어씁니다. 덮어쓰지 않은 필드는 대표 언어 버전을 그대로 씁니다.
+- **질문**: 언어 이름("다음 Python 코드의…")을 넣지 않습니다. 언어마다 묻는 말이 다르면 `prompt` 를 덮어씁니다.
+- **코드 형식**: Java · Kotlin 은 main 없이 문장만 써도 됩니다(검증 스크립트가 main 으로 감싸고, Java 는 `java.util.*` · `java.util.function.*` · `java.util.stream.*` 를 import). 메서드 · 클래스가 필요하면 main 을 포함한 완전한 프로그램으로 씁니다. JavaScript 는 Node 22(CommonJS), Python 3.10+, 외부 라이브러리 없이.
+- **검증**: `npm run validate`(또는 `--section output`)가 대표 코드와 언어 버전을 python3 · node · javac · kotlinc 로 **실행해** 실제 출력이 `output` 과 같은지, 정답 보기에 출력이 들어 있는지, 오답 보기가 출력과 같지 않은지 확인합니다. 도구가 없는 언어는 건너뛰고 경고합니다(`--quick` 은 실행하지 않음). 질문 · 해설에 언어 이름이 남아 있거나 `'output'` 태그 없이 `variants` 를 두면 오류입니다.
 
 ### 3-1. CS 이론 레슨 (CsLesson)
 

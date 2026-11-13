@@ -12,6 +12,8 @@ import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import { ALGO_TOPIC_MAP, CS_CATEGORY_MAP, LESSON_MAP, QUESTION_MAP, QUESTION_SOURCE } from '@/content';
 import { correctChoiceText } from '@/features/progress/choices';
+import { resolveQuestionVariant } from '@/features/progress/code-variant';
+import { useQuizCodeLanguage } from '@/features/progress/quiz-language';
 import { wrongQuestionIds } from '@/features/progress/selectors';
 import { useProgress } from '@/features/progress/store';
 import { useColors } from '@/theme/theme-provider';
@@ -24,6 +26,8 @@ export default function NotesScreen() {
   const quiz = useProgress((s) => s.quiz);
   const [filter, setFilter] = useState<Filter>('all');
   const [open, setOpen] = useState<string | null>(null);
+  // 출력 맞추기 문제는 퀴즈에서 고른 코드 언어 버전의 정답 · 해설을 보여준다
+  const { language: codeLanguage } = useQuizCodeLanguage();
   const all = wrongQuestionIds(quiz);
   const ids = all.filter((id) => filter === 'all' || QUESTION_SOURCE[id] === filter);
 
@@ -60,7 +64,7 @@ export default function NotesScreen() {
         <EmptyState icon="happy-outline" title="오답노트가 비어 있어요" description="틀린 문제가 생기면 여기에서 다시 풀 수 있어요." />
       ) : (
         ids.map((id) => {
-          const q = QUESTION_MAP[id];
+          const q = resolveQuestionVariant(QUESTION_MAP[id], codeLanguage).question;
           const rec = quiz[id];
           const expanded = open === id;
           const label =

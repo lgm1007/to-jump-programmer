@@ -10,6 +10,7 @@ export interface UpdateEntry {
 }
 
 export const UPDATES: UpdateEntry[] = [
+  { date: '2026-11-13', text: "'이 코드의 출력은?' 퀴즈를 Python · JavaScript · Java · Kotlin 중 원하는 언어로 바꿔 풀기" },
   { date: '2026-11-11', text: 'CS 이론 레슨의 확인 퀴즈를 5문제로 늘리고 기초 → 중급 → 심화 순서로 출제' },
   { date: '2026-11-10', text: '코드 리뷰 콘텐츠 확대 — 5개 프레임워크의 개선 패턴 100개 · 리뷰 실전 퀴즈 60개, 목록을 쉬운 순서로 정리' },
   { date: '2026-11-01', text: '웹: 처음 방문한 분을 위한 전체 학습 콘텐츠 목록, 토픽 개념 정리 아래에 문제 유형 목록' },

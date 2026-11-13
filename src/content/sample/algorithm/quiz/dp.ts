@@ -69,6 +69,7 @@ DP를 쓸 수 있는 조건은 두 가지입니다.
 
 print(ways(5))`,
       },
+      output: '8',
       correct: '`8`',
       distractors: [
         {
@@ -97,10 +98,76 @@ print(ways(5))`,
 \`dp[0]\`부터 \`dp[5]\`까지 채우면 1, 1, 2, 3, 5, **8**입니다.
 
 > \`dp[0] = 1\` 같은 초기값이 전체 결과를 좌우합니다. 초기값이 무엇을 뜻하는지 말로 설명할 수 있어야 합니다.`,
+      variants: {
+        java: {
+          code: {
+            language: 'java',
+            source: `public class Main {
+    static int ways(int n) {
+        int[] dp = new int[n + 1];
+        dp[0] = 1;   // 아직 안 오른 상태: 1가지
+        for (int i = 1; i <= n; i++) {
+            dp[i] = dp[i - 1];
+            if (i >= 2) {
+                dp[i] += dp[i - 2];
+            }
+        }
+        return dp[n];
+    }
+
+    public static void main(String[] args) {
+        System.out.println(ways(5));
+    }
+}`,
+          },
+          output: '8',
+        },
+        kotlin: {
+          code: {
+            language: 'kotlin',
+            source: `fun ways(n: Int): Int {
+    val dp = IntArray(n + 1)
+    dp[0] = 1   // 아직 안 오른 상태: 1가지
+    for (i in 1..n) {
+        dp[i] = dp[i - 1]
+        if (i >= 2) {
+            dp[i] += dp[i - 2]
+        }
+    }
+    return dp[n]
+}
+
+fun main() {
+    println(ways(5))
+}`,
+          },
+          output: '8',
+        },
+        javascript: {
+          code: {
+            language: 'javascript',
+            source: `function ways(n) {
+  const dp = new Array(n + 1).fill(0);
+  dp[0] = 1;   // 아직 안 오른 상태: 1가지
+  for (let i = 1; i <= n; i++) {
+    dp[i] = dp[i - 1];
+    if (i >= 2) {
+      dp[i] += dp[i - 2];
+    }
+  }
+  return dp[n];
+}
+
+console.log(ways(5));`,
+          },
+          output: '8',
+        },
+      },
       tags: [
         '코드 읽기',
         '점화식',
         '초기값',
+        'output',
       ],
     },
   ],

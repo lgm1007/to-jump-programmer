@@ -22,6 +22,7 @@
 · 시간 복잡도부터 DP·최단 경로까지 15개 토픽 개념 정리와 퀴즈
 · 자주 출제되는 문제 유형별 구현 예제를 Python · Java · Kotlin · C++ · JavaScript로 비교
 · 재귀 vs 반복, 완전 탐색 vs 최적화처럼 접근 방식이 다른 구현과 코드 줄에 연결된 핵심 해설
+· '이 코드의 출력은?' 퀴즈를 Python · JavaScript · Java · Kotlin 중 내 언어로 바꿔 풀기
 
 ■ 코드 리뷰 테스트
 · 백엔드 Spring Boot(Java · Kotlin), Node.js·NestJS, Django·Flask / 프론트엔드 React · Vue 실무 코드

@@ -80,11 +80,12 @@ function repeatsPrevious(q: McqQuestion, cur: PresentedMcq, prev: PresentedMcq):
 /**
  * `attempt` 번째 풀이(0부터 — 지금까지 푼 횟수)에 보여줄 보기 구성.
  * 같은 문제 · 같은 회차면 항상 같은 구성이고, 직전 회차와는 정답 위치(와 오답 풀이 넉넉하면 오답 조합)가 다르다.
+ * `key` 는 시드 — 코드 언어 버전이 보기를 바꾸면 언어를 넣은 키를 쓴다(`resolveQuestionVariant` 의 `shuffleKey`).
  */
-export function presentMcq(q: McqQuestion, attempt = 0): PresentedMcq {
+export function presentMcq(q: McqQuestion, attempt = 0, key = q.id): PresentedMcq {
   let prev: PresentedMcq | undefined;
   for (let n = 0; n <= Math.max(0, attempt); n++) {
-    const random = seededRandom(hashString(`${q.id}:${n}`));
+    const random = seededRandom(hashString(`${key}:${n}`));
     let cur = arrangeMcq(q, random);
     for (let k = 0; prev && k < MAX_REROLL && repeatsPrevious(q, cur, prev); k++) cur = arrangeMcq(q, random);
     prev = cur;
