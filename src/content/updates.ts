@@ -10,6 +10,8 @@ export interface UpdateEntry {
 }
 
 export const UPDATES: UpdateEntry[] = [
+  { date: '2026-11-15', text: '네트워크에 실시간 통신(폴링 · SSE · WebSocket) 레슨과 확인 퀴즈 · 면접 질문 카드 추가' },
+  { date: '2026-11-15', text: '퀴즈 전체 점검 — 보기 길이 · 문구만으로 정답이 드러나던 문항과 틀린 설명 고침' },
   { date: '2026-11-13', text: "'이 코드의 출력은?' 퀴즈를 Python · JavaScript · Java · Kotlin 중 원하는 언어로 바꿔 풀기" },
   { date: '2026-11-11', text: 'CS 이론 레슨의 확인 퀴즈를 5문제로 늘리고 기초 → 중급 → 심화 순서로 출제' },
   { date: '2026-11-10', text: '코드 리뷰 콘텐츠 확대 — 5개 프레임워크의 개선 패턴 100개 · 리뷰 실전 퀴즈 60개, 목록을 쉬운 순서로 정리' },
