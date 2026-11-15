@@ -23,7 +23,7 @@ export const CS_CATEGORIES: CsCategory[] = [
     id: 'network',
     group: 'fundamentals',
     title: '네트워크',
-    description: 'TCP/IP, HTTP/HTTPS, DNS, 로드밸런싱',
+    description: 'TCP/IP, HTTP/HTTPS, DNS, 로드밸런싱, WebSocket',
     icon: 'globe-outline',
   },
   {
