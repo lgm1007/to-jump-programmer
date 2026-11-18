@@ -33,7 +33,7 @@ import {
   type ReviewPattern,
 } from '../../src/content';
 import { aboutText } from '../../src/content/about';
-import { GITHUB_URL, PRIVACY_POLICY } from '../../src/content/legal';
+import { COPYRIGHT, GITHUB_URL, PRIVACY_POLICY } from '../../src/content/legal';
 import { formatValue } from '../../src/lib/format';
 import { parseInline, parseMarkdown, plainText, tidyCode, type InlineSpan } from '../../src/lib/markdown';
 
@@ -146,7 +146,7 @@ function layout(href: Href, crumbs: [string, string][], body: string): string {
     '<div class="tj-pre">',
     `<header><div class="bar"><a class="brand" href="${href('')}">${SITE_NAME}</a><nav>${nav}</nav></div></header>`,
     `<main>${trail}${body}</main>`,
-    `<footer><a href="${href('about')}">서비스 소개</a> · <a href="${href('privacy')}">개인정보 처리방침</a> · <a href="${GITHUB_URL}" rel="noopener">GitHub</a><br>© ${SITE_NAME} — 학습 기록은 사용자의 브라우저에만 저장됩니다.</footer>`,
+    `<footer><a href="${href('about')}">서비스 소개</a> · <a href="${href('privacy')}">개인정보 처리방침</a> · <a href="${GITHUB_URL}" rel="noopener">GitHub</a><br>학습 기록은 사용자의 브라우저에만 저장됩니다.<br>${COPYRIGHT}</footer>`,
     '</div>',
   ].join('');
 }

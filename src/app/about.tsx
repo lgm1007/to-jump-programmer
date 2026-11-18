@@ -5,7 +5,9 @@ import { RichText } from '@/components/rich-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
+import { Text } from '@/components/ui/text';
 import { aboutText } from '@/content/about';
+import { COPYRIGHT } from '@/content/legal';
 import { GITHUB_URL, openExternal } from '@/lib/links';
 import { spacing } from '@/theme/tokens';
 
@@ -21,6 +23,9 @@ export default function AboutScreen() {
         <Button title="GitHub 저장소" icon="logo-github" variant="secondary" style={{ flex: 1 }} onPress={() => openExternal(GITHUB_URL)} />
         <Button title="개인정보 처리방침" variant="secondary" style={{ flex: 1 }} href="/privacy" />
       </View>
+      <Text variant="caption" color="textTertiary" style={{ textAlign: 'center' }}>
+        {COPYRIGHT}
+      </Text>
     </Screen>
   );
 }
