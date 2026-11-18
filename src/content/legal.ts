@@ -1,6 +1,9 @@
 /** 앱 소스 저장소 (서비스 소개 · 설정 · 마이 탭의 GitHub 링크) */
 export const GITHUB_URL = 'https://github.com/lgm1007/to-jump-programmer';
 
+/** 저작권 표시 (LICENSE 첫 줄과 같은 문구) — 서비스 소개 화면 하단, 웹 정적 페이지 푸터 */
+export const COPYRIGHT = '© 2026 lgm1007. All rights reserved.';
+
 /** 개인정보 처리방침 (앱 내 화면 + 스토어 등록용 docs/PRIVACY.md 와 동일한 내용 유지) */
 export const PRIVACY_POLICY = `### 1. 수집하는 개인정보
 To Jump Programmer(이하 "앱", 모바일 앱과 웹 버전을 포함합니다)는 회원가입 기능이 없으며, 이름·이메일·전화번호 등 개인을 직접 식별할 수 있는 정보를 수집하지 않습니다. 다만 앱을 무료로 운영하기 위해 광고를 표시하며, 이 과정에서 광고 사업자(Google)가 4항의 정보를 자동으로 수집할 수 있습니다.
